@@ -1,0 +1,21 @@
+@use 'variables' as v;
+
+@mixin responsive($breakpoint) {
+  @if map-has-key(v.$breakpoints, $breakpoint) {
+    @media (min-width: map-get(v.$breakpoints, $breakpoint)) {
+      @content;
+    }
+  }
+}
+
+@mixin font-size($size) {
+  @if map-has-key(v.$font-sizes, $size) {
+    font-size: map-get(v.$font-sizes, $size);
+  }
+}
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

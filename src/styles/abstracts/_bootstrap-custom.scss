@@ -1,0 +1,19 @@
+@use './variables' as v;
+
+// Cores do tema
+$success: v.$success-color;
+$danger: v.$danger-color;
+$warning: v.$warning-color;
+$light-grey: v.$light-grey-sfm;
+
+// Importe o Bootstrap após definir as variáveis
+// @use "../node_modules/bootstrap/scss/bootstrap;
+
+// Required
+// Importe o Bootstrap usando @use
+@use "bootstrap" with (
+  $success: $success,
+  $danger: $danger,
+  $warning: $warning,
+  $gray-200: $light-grey
+);

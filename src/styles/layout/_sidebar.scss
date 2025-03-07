@@ -1,0 +1,26 @@
+.sidebar {
+  width: 300px;
+  transition: width 0.3s;
+  height: 100vh;
+  position: fixed;
+}
+
+.main-content {
+  margin-left: 300px;
+  transition: margin-left 0.3s;
+  
+  &.collapsed {
+    margin-left: 90px;
+  }
+}
+
+.sidebar.collapsed {
+  width: 90px;
+}
+
+.side-pill-h {
+  &:hover {
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
+}

@@ -1,0 +1,24 @@
+// Colors
+$primary-color: #228be6;
+$secondary-color: #868e96;
+$success-color: #00A13A;
+$danger-color: #E30613;
+$warning-color: #FFDD00;
+$light-grey-sfm: #E3E3E3;
+
+// Breakpoints
+$breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px
+);
+
+// Typography
+$font-sizes: (
+  small: clamp(0.875rem, 1.5vw, 1rem),
+  base: clamp(1rem, 2vw, 1.25rem),
+  large: clamp(1.25rem, 3vw, 1.5rem),
+  xlarge: clamp(1.5rem, 4vw, 2.5rem)
+);

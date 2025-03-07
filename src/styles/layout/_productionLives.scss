@@ -1,0 +1,45 @@
+@use '../abstracts/variables' as v;
+@use 'sass:color';
+
+.table-pLive {
+  background-color: v.$light-grey-sfm;
+  margin: 0 auto;
+  padding: 7px;
+  text-align: center;
+  width: 98%;
+
+  tr { 
+    background-color: white; 
+  }
+
+  th {
+    background-color: color.adjust(v.$light-grey-sfm, $lightness: -5%);
+    border-bottom: v.$light-grey-sfm 5px solid;
+    color: rgb(39, 39, 39);
+    height: 80px;
+    padding: 8px;
+    font-size: 1vw;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  td {
+    padding: 8px;
+    font-size: 0.9vw;
+    border-bottom: 3px solid v.$light-grey-sfm;
+    height: 50px;
+  }
+
+  tbody {
+    tr:hover {
+      background-color: whitesmoke;
+      cursor: pointer;
+    }
+
+    td:hover {
+      background-color: rgb(39, 39, 39);
+      color: whitesmoke;
+    }
+  }
+}
