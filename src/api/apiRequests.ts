@@ -1,4 +1,7 @@
+//cSpell: words movimentacao absenteismo
+import { format, startOfDay } from 'date-fns';
 import { iCartCount } from '../interfaces/Carrinhos.interface';
+import { iAbsenceForm } from '../pages/Supervision/interface/AbsenceForm.interface';
 import api from './axiosConfig';
 type DateParam = string | string[];
 
@@ -170,5 +173,57 @@ export const getHourProduction = async (data: string) => {
     // Para outros erros, mantém a mensagem original
     console.error('Erro ao buscar produção por hora:', error);
     throw new Error('Erro ao buscar dados de produção');
+  }
+};
+
+
+export const getAbsenceData = async (data: DateParam) => {
+  const params = { data_occ: data };
+
+  try {
+    const response = await api.get('api/absenteismo/', { params: params });
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao buscar dados de ausência', error);
+    throw error;
+  }
+};
+
+export const getAbsenceNames = async (nome: string, fields?: string[]) => {
+  try {
+    const response = await api.get('api/absenteismo/', {
+      params: { nome: nome, ...(fields && { fields: fields.join(',') }) },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao buscar nomes de ausência', error);
+    throw error;
+  }
+};
+
+export const createAbsenceData = async (formData: iAbsenceForm) => {
+  try {
+    const response = await api.post('api/absenteismo/', {
+      ...formData,
+      data_registro: format(startOfDay(new Date()), 'yyyy-MM-dd'),
+      hora_registro: new Date().toLocaleTimeString(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao criar registro de ausência', error);
+    throw error;
+  }
+}
+
+export const getPresenceData = async (data: DateParam) => {
+  const dateFilter = createDateFilter(data);
+  const params = { ...dateFilter };
+
+  try {
+    const response = await api.get('api/presence_log/', { params: params });
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao buscar dados de presença', error);
+    throw error;
   }
 };

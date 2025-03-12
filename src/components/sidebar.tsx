@@ -17,7 +17,9 @@ const Sidebar: React.FC = () => {
   // const [isLoggedIn, setIsLoggedIn] = useState(false);
   // const [userName, setUserName] = useState('');
   // const [userGroups, setUserGroups] = useState<string[]>([]);
-  const { isCollapsed } = useAppSelector((state: { sidebar: SidebarState }) => state.sidebar);
+  const { isCollapsed } = useAppSelector(
+    (state: { sidebar: SidebarState }) => state.sidebar
+  );
   const {
     isLoggedIn,
     fullName: userName,
@@ -60,25 +62,52 @@ const Sidebar: React.FC = () => {
     3: userGroups.some((group) => groupLevels[3].includes(group)),
     4: userGroups.some((group) => groupLevels[4].includes(group)),
     5: userGroups.some((group) => groupLevels[5].includes(group)),
+    6: userGroups.some((group) => groupLevels[6].includes(group)),
+    7: userGroups.some((group) => groupLevels[7].includes(group)),
+    8: userGroups.some((group) => groupLevels[8].includes(group)),
+    9: userGroups.some((group) => groupLevels[9].includes(group)),
+    10: userGroups.some((group) => groupLevels[10].includes(group)),
   };
 
   const navItems = [
-    location.pathname === '/login' && { label: 'Login', icon: 'bi bi-box-arrow-in-right', href: '/login' },
+    location.pathname === '/login' && {
+      label: 'Login',
+      icon: 'bi bi-box-arrow-in-right',
+      href: '/login',
+    },
     { label: 'Home', icon: 'bi bi-house', href: '/' },
-    userLevels[5] && { label: 'Shop Floor Management', icon: 'bi bi-graph-up', href: '/sfm' },
-    userLevels[4] && { label: 'Produção por hora', icon: 'bi bi-box-seam', href: '/p-live' },
-    userLevels[5] && { label: 'Linhas do Recheio', icon: 'bi bi-speedometer2', href: '/live' },
-    userLevels[4] && { label: 'Gestão', icon: 'bi bi-gear', href: '/management' },
+    userLevels[4] && { label: 'Supervisão', icon: 'bi bi-eye', href: '/supervision' },
+    userLevels[10] && {
+      label: 'Shop Floor Management',
+      icon: 'bi bi-graph-up',
+      href: '/sfm',
+    },
+    userLevels[9] && {
+      label: 'Produção por hora',
+      icon: 'bi bi-box-seam',
+      href: '/p-live',
+    },
+    userLevels[10] && {
+      label: 'Linhas do Recheio',
+      icon: 'bi bi-speedometer2',
+      href: '/live',
+    },
+    userLevels[9] && { label: 'Gestão', icon: 'bi bi-gear', href: '/management' },
   ];
 
   /* ------------------------------------------------ Layout ------------------------------------------------ */
   return (
     <>
-      <div className={`d-flex flex-column flex-shrink-0 p-3 text-bg-light sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+      <div
+        className={`d-flex flex-column flex-shrink-0 p-3 text-bg-light sidebar ${isCollapsed ? 'collapsed' : ''}`}
+      >
         <button className='btn btn-link align-self-end' onClick={toggleSidebar}>
           <i className={`bi ${isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'}`}></i>
         </button>
-        <Link to='/init' className='d-flex align-items-center mb-3 mb-md-0 me-md-auto text-black text-decoration-none'>
+        <Link
+          to='/init'
+          className='d-flex align-items-center mb-3 mb-md-0 me-md-auto text-black text-decoration-none'
+        >
           <img
             src={STMLogo}
             alt='Logo Colorido Santa Massa'
@@ -94,7 +123,9 @@ const Sidebar: React.FC = () => {
               item && (
                 <li key={item.label} className='nav-item side-pill-h mb-1'>
                   <Link to={item.href} className='nav-link text-black'>
-                    <i className={`bi ${item.icon} ${isCollapsed ? 'me-0 fs-3' : 'me-2 fs-5'}`}></i>
+                    <i
+                      className={`bi ${item.icon} ${isCollapsed ? 'me-0 fs-3' : 'me-2 fs-5'}`}
+                    ></i>
                     {!isCollapsed && <span>{item.label}</span>}
                   </Link>
                 </li>
@@ -109,7 +140,13 @@ const Sidebar: React.FC = () => {
             data-bs-toggle='dropdown'
             aria-expanded='false'
           >
-            <img src={STMLogoPxB} alt='' width='32' height='32' className='rounded-circle me-2'></img>
+            <img
+              src={STMLogoPxB}
+              alt=''
+              width='32'
+              height='32'
+              className='rounded-circle me-2'
+            ></img>
             {!isCollapsed && <strong>{userName.length > 0 ? userName : 'Entrar'}</strong>}
           </Link>
           <ul className='dropdown-menu dropdown-menu-light text-small shadow'>
@@ -151,7 +188,10 @@ const Sidebar: React.FC = () => {
           </ul>
         </div>
       </div>
-      <ChangePasswordModal show={showChangePassword} onHide={() => setShowChangePassword(false)} />
+      <ChangePasswordModal
+        show={showChangePassword}
+        onHide={() => setShowChangePassword(false)}
+      />
     </>
   );
 };

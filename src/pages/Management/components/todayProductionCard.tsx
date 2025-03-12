@@ -77,7 +77,6 @@ const TodayProductionCards: React.FC<iTodayProductionCardsProps> = ({ today }) =
     });
   };
 
-  console.log(productionCF);
   /* -------------------------------------------- CICLO DE VIDA -------------------------------------------- */
   useEffect(() => {
     fetchTodayProduction();

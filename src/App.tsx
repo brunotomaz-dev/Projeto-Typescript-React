@@ -13,6 +13,7 @@ import LoginPage from './pages/Login/login';
 import Management from './pages/Management/management';
 import ProductionLive from './pages/ProductionLive/productionLive';
 import ShopFloor from './pages/ShopFloor/sfm';
+import SupervisionPage from './pages/Supervision/supervision';
 
 function App() {
   useEffect(() => {
@@ -28,23 +29,50 @@ function App() {
           <Route path='login' element={<LoginPage />} />
           <Route
             path='sfm'
-            element={<PrivateRoute element={<ShopFloor />} allowedGroups={[...groupLevels[5]]} />}
+            element={
+              <PrivateRoute
+                element={<ShopFloor />}
+                allowedGroups={[...groupLevels[10]]}
+              />
+            }
           />
           <Route
             path='p-live'
             element={
-              <PrivateRoute element={<ProductionLive />} allowedGroups={[...groupLevels[4]]} />
+              <PrivateRoute
+                element={<ProductionLive />}
+                allowedGroups={[...groupLevels[9]]}
+              />
             }
           />
           <Route
             path='live'
-            element={<PrivateRoute element={<LiveLines />} allowedGroups={[...groupLevels[5]]} />}
+            element={
+              <PrivateRoute
+                element={<LiveLines />}
+                allowedGroups={[...groupLevels[10]]}
+              />
+            }
           />
           <Route
             path='management'
-            element={<PrivateRoute element={<Management />} allowedGroups={[...groupLevels[4]]} />}
+            element={
+              <PrivateRoute
+                element={<Management />}
+                allowedGroups={[...groupLevels[9]]}
+              />
+            }
           />
           <Route path='init' element={<HomeFake />} />
+          <Route
+            path='supervision'
+            element={
+              <PrivateRoute
+                element={<SupervisionPage />}
+                allowedGroups={[...groupLevels[4]]}
+              />
+            }
+          />
         </Routes>
       </main>
     </>

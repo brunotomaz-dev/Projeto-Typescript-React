@@ -12,13 +12,14 @@ import GaugeAverage from './components/gaugeAverage';
 import LineIndicators from './components/gauges';
 import LiveLinesHeader from './components/header';
 import LineControls from './components/lineControls';
-import LineCycle from './components/lineycle';
+import LineCycle from './components/linecycle';
 import ProductionPanel from './components/productionCard';
 import Timeline from './components/timeline';
 import { iEff, iIndicator, iPerf, iRep } from './interfaces/indicator.interfaces';
 import { iInfoIhmLive } from './interfaces/infoIhm';
 import { iMaquinaInfo } from './interfaces/maquinaInfo.interface';
 
+// cspell: words linecycle eficiencia recno
 /* --------------------------------------------- TIPOS LOCAIS --------------------------------------------- */
 type tShiftOptions = 'NOT' | 'MAT' | 'VES' | 'DEFAULT';
 type IndicatorKey = 'eficiencia' | 'performance' | 'reparo';
@@ -100,7 +101,9 @@ const LiveLines: React.FC = () => {
       if (selectedShift === 'TOT') {
         return data.filter((item) => item.linha === selectedLine);
       }
-      return data.filter((item) => item.linha === selectedLine && item.turno === selectedShift);
+      return data.filter(
+        (item) => item.linha === selectedLine && item.turno === selectedShift
+      );
     };
   }, [selectedLine, selectedShift]);
 
@@ -120,7 +123,8 @@ const LiveLines: React.FC = () => {
     }
 
     const average =
-      filteredData.reduce((acc, curr) => acc + (curr[indicator] ?? 0), 0) / filteredData.length;
+      filteredData.reduce((acc, curr) => acc + (curr[indicator] ?? 0), 0) /
+      filteredData.length;
     setState(average * 100);
   };
 
@@ -200,7 +204,9 @@ const LiveLines: React.FC = () => {
     calculateAverage(eficienciaFiltered, 'eficiencia', setEficiencia);
     calculateAverage(filterData(perfData), 'performance', setPerformance);
     calculateAverage(filterData(repData), 'reparo', setReparos);
-    setProductionTotal(eficienciaFiltered.reduce((acc, curr) => acc + curr.total_produzido, 0));
+    setProductionTotal(
+      eficienciaFiltered.reduce((acc, curr) => acc + curr.total_produzido, 0)
+    );
     setSelectedMachine(eficienciaFiltered[0]?.maquina_id ?? '');
   }, [effData, perfData, repData, filterData]);
 
@@ -237,15 +243,19 @@ const LiveLines: React.FC = () => {
       // Eficiência do turno
       const turnData = filteredData.filter((item) => item.turno === selectedShift);
       const turnAverage =
-        turnData.reduce((acc, curr): number => acc + (Math.round(curr.eficiencia * 100) ?? 0), 0) /
-        turnData.length;
+        turnData.reduce(
+          (acc, curr): number => acc + (Math.round(curr.eficiencia * 100) ?? 0),
+          0
+        ) / turnData.length;
       setTurnEff(turnAverage || 0);
 
       // Eficiência da linha
       const lineData = filteredData.filter((item) => item.linha === selectedLine);
       const lineAverage =
-        lineData.reduce((acc, curr): number => acc + (Math.round(curr.eficiencia * 100) ?? 0), 0) /
-        lineData.length;
+        lineData.reduce(
+          (acc, curr): number => acc + (Math.round(curr.eficiencia * 100) ?? 0),
+          0
+        ) / lineData.length;
       setLineEff(lineAverage || 0);
 
       // Eficiência da linha matutino
@@ -333,7 +343,11 @@ const LiveLines: React.FC = () => {
           xl={5}
           className='card bg-transparent shadow d-flex justify-content-center border-0 mb-lg-0 mb-2'
         >
-          <LineIndicators eficiencia={eficiencia} performance={performance} reparos={reparos} />
+          <LineIndicators
+            eficiencia={eficiencia}
+            performance={performance}
+            reparos={reparos}
+          />
         </Col>
         {/* -------------------------------------- COLUNA DA PRODUÇÃO -------------------------------------- */}
         <Col xs={3} xl={2} className='card bg-transparent shadow mb-lg-0 mb-2'>
@@ -379,7 +393,11 @@ const LiveLines: React.FC = () => {
           />
         </Col>
         {/* --------------------------- COLUNA DOS GRÁFICOS DE CICLOS E TIMELINE --------------------------- */}
-        <Col xs={12} xl className='card p-2 shadow border-0 bg-transparent justify-content-around'>
+        <Col
+          xs={12}
+          xl
+          className='card p-2 shadow border-0 bg-transparent justify-content-around'
+        >
           <LineCycle maqInfo={maquinaInfo} />
           <Timeline data={infoIHM} />
         </Col>

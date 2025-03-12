@@ -2,6 +2,8 @@
 type GroupLevel = string[];
 type GroupLevels = Record<number, GroupLevel>;
 
+export type TurnoID = "MAT" | "VES" | "NOT";
+
 export const CICLOS_ESPERADOS = 11.2
 export const CICLOS_ESPERADOS_BOL = 7
 
@@ -9,10 +11,22 @@ export const CICLOS_ESPERADOS_BOL = 7
 export const groupLevels: GroupLevels = {
   1: ['Dev'],
   2: ['Dev', 'Gerentes'],
-  3: ['Dev', 'Gerentes', 'Coordenadores'],
-  4: ['Dev', 'Gerentes', 'Coordenadores', 'Supervisores'],
-  5: ['Dev', 'Gerentes', 'Coordenadores', 'Supervisores', 'Líderes'],
+  3: ['Dev', 'Coordenadores'],
+  4: ['Dev', 'Supervisores'],
+  5: ['Dev', 'Líderes'],
+  6: ['Dev', 'Operadores'],
+  7: ['Dev', 'Gerentes', 'Coordenadores'],
+  8: ['Dev', 'Gerentes', 'Coordenadores', 'Supervisores'],
+  9: ['Dev', 'Gerentes', 'Coordenadores', 'Supervisores', 'Líderes'],
+  10: ['Dev', 'Gerentes', 'Coordenadores', 'Supervisores', 'Líderes', 'Operadores'],
 };
+
+export const superTurns: Record<string, TurnoID> = {
+  ["Cláudia Antunes"]: "MAT",
+  ["Rogério Inácio"]: "VES",
+  ["Renan Oliveira"]: "VES",
+  ["Leandro Moraes"]: "NOT",
+}
 
 export enum IndicatorType {
   PERFORMANCE = 'performance',

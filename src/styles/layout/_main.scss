@@ -1,4 +1,5 @@
 @use '../abstracts/variables' as v;
+@use 'sass:color';
 
 #root {
   margin: 0 auto;
@@ -31,4 +32,25 @@
   * > h5, & h5 { font-size: var(--fs-5); }
   * > h6, & h6 { font-size: var(--fs-6); }
   * > p, & p { font-size: var(--fs-7); }
+}
+
+// Estilos para o dropdown de turnos
+.turno-dropdown {
+  // Menu do dropdown
+  .dropdown-toggle {
+    background-color: color.adjust(v.$light-grey-sfm, $lightness: -12%) !important;
+    border: none;
+  }
+
+  // Estilos para os itens do dropdown
+  .dropdown-item {
+    &.active {
+      background-color: v.$light-grey-sfm;
+      color: #212529;
+    }
+    
+    &:hover {
+      background-color: color.adjust(v.$light-grey-sfm, $lightness: -5%) !important;
+    }
+  }
 }

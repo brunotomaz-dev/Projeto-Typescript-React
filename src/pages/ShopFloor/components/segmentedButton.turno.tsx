@@ -40,7 +40,11 @@ interface SegmentedButtonTurnoProps {
  * ```
  */
 
-const SegmentedButtonTurno: React.FC<SegmentedButtonTurnoProps> = ({ turnos, onTurnoChange, onByLineChange }) => {
+const SegmentedButtonTurno: React.FC<SegmentedButtonTurnoProps> = ({
+  turnos,
+  onTurnoChange,
+  onByLineChange,
+}) => {
   const [selectedTurno, setSelectedTurno] = useState('');
   const [showByLine, setShowByLine] = useState<boolean>(false);
 
@@ -64,16 +68,29 @@ const SegmentedButtonTurno: React.FC<SegmentedButtonTurnoProps> = ({ turnos, onT
   };
 
   return (
-    <ButtonGroup className="mb-2 w-50 shadow">
-      <Button variant={!showByLine ? 'light' : ''} onClick={() => handleShowByLine(false)}>
+    <ButtonGroup className='mb-2 w-50 shadow'>
+      <Button
+        variant='light'
+        onClick={() => handleShowByLine(false)}
+        active={!showByLine}
+      >
         Por Turno
       </Button>
-      <Button variant={showByLine ? 'light' : ''} onClick={() => handleShowByLine(true)}>
+      <Button variant='light' onClick={() => handleShowByLine(true)} active={showByLine}>
         Por Linha
       </Button>
       {showByLine && (
-        <DropdownButton as={ButtonGroup} title={getDisplayText()} id="bg-nested-dropdown" variant="light">
-          <Dropdown.Item onClick={() => handleTurnoChange('')} active={selectedTurno === ''}>
+        <DropdownButton
+          as={ButtonGroup}
+          title={getDisplayText()}
+          id='bg-nested-dropdown'
+          variant='light'
+          className='turno-dropdown'
+        >
+          <Dropdown.Item
+            onClick={() => handleTurnoChange('')}
+            active={selectedTurno === ''}
+          >
             Todos os turnos
           </Dropdown.Item>
           <Dropdown.Divider />

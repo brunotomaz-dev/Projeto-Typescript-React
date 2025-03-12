@@ -1,5 +1,22 @@
+// cSpell: disable
 import axios from 'axios';
 import { logout } from './auth';
+
+const HOME_APP_TOKEN = 'TWnokmMKOdasd92623kmszxxASDFMoeamde2342';
+
+// Lista de endpoints usados na página Home
+const homeEndpoints = [
+  'api/eficiencia/',
+  'api/performance/',
+  'api/repair/',
+  'api/absenteismo/',
+  'api/presence/',
+  'api/caixas_cf/',
+  'api/cart_count/',
+  'api/maquinainfo/',
+  'api/qual_prod/',
+  // Adicione outros endpoints usados pelo componente Home
+];
 
 const api = axios.create({
   baseURL: 'http://localhost:8000', // URL do backend
@@ -7,6 +24,10 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+const isHomeEndpoint = (url = '') => {
+  return homeEndpoints.some(endpoint => url.includes(endpoint));
+};
 
 
 /**
@@ -16,20 +37,35 @@ const api = axios.create({
  */
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  /**
-   * Interceptador de erros de requisição.
-   * @param error - O erro da requisição.
-   * @returns Uma Promise rejeitada com o erro.
-   */
-  (error) => {
-    return Promise.reject(error);
-  }
+   // Verifica se tem URL
+   if (!config.url) return config;
+    
+   // Se for um endpoint da Home
+   if (isHomeEndpoint(config.url)) {
+     
+     // Tenta usar o token do usuário se estiver disponível
+     const userToken = localStorage.getItem('access_token');
+     
+     if (userToken) {
+       // Se tem usuário autenticado, usa o token dele
+       config.headers.Authorization = `Bearer ${userToken}`;
+      } else {
+       // Se não tem usuário autenticado, usa o token específico para a Home
+       config.headers.Authorization = `Bearer ${HOME_APP_TOKEN}`;
+     }
+   } else {
+     // Para outros endpoints, exige token de usuário como antes
+     const token = localStorage.getItem('access_token');
+     if (token) {
+       config.headers.Authorization = `Bearer ${token}`;
+     }
+   }
+   
+   return config;
+ },
+ (error) => {
+   return Promise.reject(error);
+ }
 );
 
 
@@ -42,6 +78,11 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Não tenta refresh token para endpoints da Home quando usados com HOME_APP_TOKEN
+    if (error.config?.url && isHomeEndpoint(error.config.url) && !localStorage.getItem('access_token')) {
+      return Promise.reject(error);
+    }
+
     const originalRequest = error.config;
 
     // Se o erro for 401 e não for uma tentativa de refresh
@@ -66,8 +107,8 @@ api.interceptors.response.use(
         return Promise.reject(refreshError);
       }
     }
-
-    return Promise.reject(error);  
+    
+    return Promise.reject(error);
   }
 );
 
