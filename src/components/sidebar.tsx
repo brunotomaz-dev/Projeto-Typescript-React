@@ -76,7 +76,11 @@ const Sidebar: React.FC = () => {
       href: '/login',
     },
     { label: 'Home', icon: 'bi bi-house', href: '/' },
-    userLevels[4] && { label: 'Supervisão', icon: 'bi bi-eye', href: '/supervision' },
+    (userLevels[4] || userLevels[5]) && {
+      label: userLevels[4] ? 'Supervisão' : 'Liderança',
+      icon: 'bi bi-eye',
+      href: '/supervision',
+    },
     userLevels[10] && {
       label: 'Shop Floor Management',
       icon: 'bi bi-graph-up',
@@ -101,9 +105,11 @@ const Sidebar: React.FC = () => {
       <div
         className={`d-flex flex-column flex-shrink-0 p-3 text-bg-light sidebar ${isCollapsed ? 'collapsed' : ''}`}
       >
+        {/* Toggle Sidebar */}
         <button className='btn btn-link align-self-end' onClick={toggleSidebar}>
           <i className={`bi ${isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'}`}></i>
         </button>
+        {/* Logo Santa Massa */}
         <Link
           to='/init'
           className='d-flex align-items-center mb-3 mb-md-0 me-md-auto text-black text-decoration-none'
@@ -117,6 +123,7 @@ const Sidebar: React.FC = () => {
           {!isCollapsed && <span className='fs-5'>Shop Floor Management</span>}
         </Link>
         <hr></hr>
+        {/* Navigation */}
         <ul className='nav nav-pills flex-column mb-auto'>
           {navItems.map(
             (item) =>
@@ -133,6 +140,7 @@ const Sidebar: React.FC = () => {
           )}
         </ul>
         <hr></hr>
+        {/* User Dropdown */}
         <div className='dropdown'>
           <Link
             to='/'
@@ -188,6 +196,7 @@ const Sidebar: React.FC = () => {
           </ul>
         </div>
       </div>
+      {/* Modal de Password */}
       <ChangePasswordModal
         show={showChangePassword}
         onHide={() => setShowChangePassword(false)}

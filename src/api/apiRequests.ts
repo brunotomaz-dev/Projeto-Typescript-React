@@ -1,5 +1,6 @@
 //cSpell: words movimentacao absenteismo
 import { format, startOfDay } from 'date-fns';
+import { iPresence } from '../interfaces/Absence.interface';
 import { iCartCount } from '../interfaces/Carrinhos.interface';
 import { iAbsenceForm } from '../pages/Supervision/interface/AbsenceForm.interface';
 import api from './axiosConfig';
@@ -215,6 +216,16 @@ export const createAbsenceData = async (formData: iAbsenceForm) => {
   }
 }
 
+export const deleteAbsenceData = async (recno: number) => {
+  try {
+    const response = await api.delete(`/api/absenteismo/${recno}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao excluir registro de ausência:', error);
+    throw error;
+  }
+};
+
 export const getPresenceData = async (data: DateParam) => {
   const dateFilter = createDateFilter(data);
   const params = { ...dateFilter };
@@ -224,6 +235,27 @@ export const getPresenceData = async (data: DateParam) => {
     return response.data;
   } catch (error) {
     console.error('Erro ao buscar dados de presença', error);
+    throw error;
+  }
+};
+
+export const createPresenceData = async (data: iPresence) => {
+  try {
+    const response = await api.post('api/presence_log/', data);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao criar registro de presença', error);
+    throw error;
+  }
+}
+
+
+export const updatePresenceData = async (data: iPresence) => {
+  try {
+    const response = await api.put(`api/presence_log/${data.recno}/`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao atualizar registro de presença', error);
     throw error;
   }
 };

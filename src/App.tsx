@@ -69,7 +69,7 @@ function App() {
             element={
               <PrivateRoute
                 element={<SupervisionPage />}
-                allowedGroups={[...groupLevels[4]]}
+                allowedGroups={[...groupLevels[4], ...groupLevels[5]]}
               />
             }
           />

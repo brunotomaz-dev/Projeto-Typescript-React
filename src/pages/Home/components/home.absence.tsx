@@ -51,13 +51,16 @@ const HomeAbsence: React.FC = () => {
     ).length;
 
     if (presenceData.length > 0) {
-      const presencasCount =
-        presenceData[0].embalagem +
-        presenceData[0].forno +
-        presenceData[0].lideranca +
-        presenceData[0].panificacao +
-        presenceData[0].pasta +
-        presenceData[0].recheio;
+      const presencasCount = presenceData.reduce((acc, presence) => {
+        acc +=
+          presence.panificacao +
+          presence.lideranca +
+          presence.embalagem +
+          presence.forno +
+          presence.pasta +
+          presence.recheio;
+        return acc;
+      }, 0);
 
       setPresencas(presencasCount);
     }

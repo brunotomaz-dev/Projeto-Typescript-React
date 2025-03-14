@@ -13,16 +13,20 @@ export interface iAbsence {
   data_occ: string;
 }
 
-export interface iPresence {
-  recno: number;
+export interface iPresence extends iPresenceSectors {
+  recno?: number;
+  
+  data_registro: string;
+  hora_registro: string;
+  turno: string;
+  usuario: string;
+}
+
+export interface iPresenceSectors {
   panificacao: number;
   forno: number;
   pasta: number;
   recheio: number;
   embalagem: number;
   lideranca: number;
-  data_registro: string;
-  hora_registro: string;
-  turno: string;
-  usuario: string;
 }

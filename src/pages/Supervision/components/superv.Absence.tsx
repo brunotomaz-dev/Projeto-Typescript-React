@@ -1,29 +1,34 @@
 // cSpell: words superv recno usuario presencas lideranca panificacao saida autohide
 import React, { useEffect, useState } from 'react';
-import { Stack, Toast, ToastContainer } from 'react-bootstrap';
-import {
-  createAbsenceData,
-  getAbsenceData,
-  getPresenceData,
-} from '../../../api/apiRequests';
+import { Stack } from 'react-bootstrap';
+import { createAbsenceData, createPresenceData } from '../../../api/apiRequests';
+import { useToast } from '../../../hooks/useToast';
 import { iAbsence, iPresence } from '../../../interfaces/Absence.interface';
 import { useAppSelector } from '../../../redux/store/hooks';
 import { iAbsenceForm } from '../interface/AbsenceForm.interface';
 import SuperCardsAbsence from './superv.CardsAbsence';
 import AbsenceFormModal from './superv.ModalAbs';
+import PresenceAddModal from './superv.PresModal';
 
 interface iAbsenceProps {
   selectedDate: string;
   selectedTurno: string;
+  absenceData: iAbsence[];
+  presenceData: iPresence[];
+  onDataChange: () => void;
 }
 
-const SupervAbsence: React.FC<iAbsenceProps> = ({ selectedDate, selectedTurno }) => {
+const SupervAbsence: React.FC<iAbsenceProps> = ({
+  selectedDate,
+  selectedTurno,
+  absenceData,
+  presenceData,
+  onDataChange,
+}) => {
   /* -------------------------------------------- REDUX ------------------------------------------- */
   // Recuperar o nome do usuário
   const userName = useAppSelector((state) => state.user.fullName);
   /* ----------------------------------------- LOCAL STATE ---------------------------------------- */
-  const [absenceData, setAbsenceData] = useState<iAbsence[]>([]);
-  const [presenceData, setPresenceData] = useState<iPresence[]>([]);
   const [faltas, setFaltas] = useState<number>(0);
   const [atrasos, setAtrasos] = useState<number>(0);
   const [presencas, setPresencas] = useState<number>(0);
@@ -31,27 +36,11 @@ const SupervAbsence: React.FC<iAbsenceProps> = ({ selectedDate, selectedTurno })
   const [saidaAntecipada, setSaidaAntecipada] = useState<number>(0);
   const [remanejados, setRemanejados] = useState<number>(0);
   const [showModal, setShowModal] = useState<boolean>(false);
+  const [showPresenceModal, setShowPresenceModal] = useState<boolean>(false);
   const [modalType, setModalType] = useState<string>('');
-  const [toast, setToast] = useState({
-    show: false,
-    message: '',
-    type: 'success',
-  });
+  const { showToast, ToastDisplay } = useToast();
 
   /* ------------------------------------------- EFFECTS ------------------------------------------ */
-  useEffect(() => {
-    void getAbsenceData(selectedDate).then((data: iAbsence[]) => {
-      data = data.filter((absence) => absence.turno.trim() === selectedTurno);
-
-      setAbsenceData(data);
-    });
-
-    void getPresenceData(selectedDate).then((data: iPresence[]) => {
-      data = data.filter((presence) => presence.turno === selectedTurno);
-      setPresenceData(data);
-    });
-  }, [selectedDate, selectedTurno]);
-
   // Contagem de faltas, atrasos, presenças, afastamentos, saídas antecipadas e remanejados
   useEffect(() => {
     const faltasCount = absenceData.filter((absence) => absence.tipo === 'Falta').length;
@@ -96,30 +85,44 @@ const SupervAbsence: React.FC<iAbsenceProps> = ({ selectedDate, selectedTurno })
     setShowModal(true);
   };
 
+  const handlePresenceModalOpen = () => {
+    if (presenceData.length > 0) {
+      setShowPresenceModal(false);
+      return showToast('Já existe registro de presença para o dia!', 'warning');
+    }
+
+    setShowPresenceModal(true);
+  };
+
   // Envio do formulário
   const handleFormSubmit = async (formData: iAbsenceForm) => {
     try {
       await createAbsenceData({ ...formData, usuario: userName });
 
       // Atualiza os dados
-      const updatedData: iAbsence[] = await getAbsenceData(selectedDate);
-      setAbsenceData(
-        updatedData.filter((absence) => absence.turno.trim() === selectedTurno)
-      );
+      onDataChange();
 
       // Exibir mensagem de sucesso
-      setToast({
-        show: true,
-        message: 'Dados salvos com sucesso!',
-        type: 'success',
-      });
+      showToast('Dados salvos com sucesso!', 'success');
     } catch (error) {
       console.error('Erro ao salvar dados de ausência:', error);
-      setToast({
-        show: true,
-        message: 'Erro ao salvar dados de ausência!',
-        type: 'danger',
-      });
+      showToast('Erro ao salvar dados de ausência!', 'danger');
+    }
+  };
+
+  const handlePresenceSubmit = async (data: iPresence) => {
+    try {
+      // Salvar dados de presença
+      await createPresenceData(data);
+
+      // Atualizar dados
+      onDataChange();
+
+      // Exibir mensagem de sucesso
+      showToast('Dados salvos com sucesso!', 'success');
+    } catch (error) {
+      console.error('Erro ao salvar dados de presença:', error);
+      showToast('Erro ao salvar dados de presença!', 'danger');
     }
   };
 
@@ -154,7 +157,11 @@ const SupervAbsence: React.FC<iAbsenceProps> = ({ selectedDate, selectedTurno })
           value={remanejados}
           onClick={() => handleModalOpen('Remanejamento')}
         />
-        <SuperCardsAbsence title='Presenças' value={presencas} />
+        <SuperCardsAbsence
+          title='Presenças'
+          value={presencas}
+          onClick={handlePresenceModalOpen}
+        />
       </Stack>
 
       <AbsenceFormModal
@@ -166,25 +173,16 @@ const SupervAbsence: React.FC<iAbsenceProps> = ({ selectedDate, selectedTurno })
         inicialType={modalType}
       />
 
+      <PresenceAddModal
+        show={showPresenceModal}
+        onHide={() => setShowPresenceModal(false)}
+        inicialDate={selectedDate}
+        inicialTurno={selectedTurno}
+        onSubmit={handlePresenceSubmit}
+      />
+
       {/* Toast */}
-      <ToastContainer className='p-3' position='bottom-end' style={{ zIndex: 1070 }}>
-        <Toast
-          show={toast.show}
-          onClose={() => setToast({ ...toast, show: false })}
-          delay={3000}
-          autohide
-          bg={toast.type}
-        >
-          <Toast.Header closeButton>
-            <strong className='me-auto'>
-              {toast.type === 'success' ? '✓ Sucesso!' : '⚠ Atenção!'}
-            </strong>
-          </Toast.Header>
-          <Toast.Body className={toast.type === 'success' ? '' : 'text-white'}>
-            {toast.message}
-          </Toast.Body>
-        </Toast>
-      </ToastContainer>
+      {ToastDisplay && <ToastDisplay />}
     </>
   );
 };
