@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { logout } from './auth';
 
-const HOME_APP_TOKEN = 'TWnokmMKOdasd92623kmszxxASDFMoeamde2342';
+const HOME_APP_TOKEN = import.meta.env.VITE_HOME_APP_TOKEN
 
 // Lista de endpoints usados na página Home
 const homeEndpoints = [
@@ -19,7 +19,7 @@ const homeEndpoints = [
 ];
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000', // URL do backend
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000', // URL do backend
   headers: {
     'Content-Type': 'application/json',
   },
