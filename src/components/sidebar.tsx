@@ -103,7 +103,7 @@ const Sidebar: React.FC = () => {
   return (
     <>
       <div
-        className={`d-flex flex-column flex-shrink-0 p-3 text-bg-light sidebar ${isCollapsed ? 'collapsed' : ''}`}
+        className={`d-flex flex-column flex-shrink-0 p-3 text-bg-light sidebar ${isCollapsed ? 'collapsed' : ''} z-3`}
       >
         {/* Toggle Sidebar */}
         <button className='btn btn-link align-self-end' onClick={toggleSidebar}>

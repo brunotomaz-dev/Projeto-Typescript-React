@@ -3,7 +3,7 @@
 import { format, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import React, { useEffect, useState } from 'react';
-import { Col, Container, Row, Stack } from 'react-bootstrap';
+import { Card, Col, Container, Row, Stack } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 import { getAbsenceData, getPresenceData } from '../../api/apiRequests';
 import PageLayout from '../../components/pageLayout';
@@ -16,7 +16,10 @@ import { useAppSelector } from '../../redux/store/hooks';
 import { RootState } from '../../redux/store/store';
 import SupervAbsence from './components/superv.Absence';
 import AbsenceTable from './components/superv.AbsTable';
+import CardGauges from './components/Superv.CardGauges';
+import CaixasPessoa from './components/superv.CxsPessoa';
 import PresenceTable from './components/superv.PresenceTable';
+import ProductionTable from './components/superv.prodTable';
 
 const SupervisionPage: React.FC = () => {
   const now = new Date();
@@ -33,6 +36,8 @@ const SupervisionPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>(formatNow);
   const [absenceData, setAbsenceData] = useState<iAbsence[]>([]);
   const [presenceData, setPresenceData] = useState<iPresence[]>([]);
+  const [totalProduction, setTotalProduction] = useState<number>(0);
+  const [totalPresentes, setTotalPresentes] = useState<number>(0);
   const { showToast, ToastDisplay } = useToast();
 
   /* ------------------------------------------- HANDLES ------------------------------------------ */
@@ -88,6 +93,14 @@ const SupervisionPage: React.FC = () => {
     loadPresenceData();
   };
 
+  const handleProductionTotal = (total: number) => {
+    setTotalProduction(total);
+  };
+
+  const handlePresentesTotal = (total: number) => {
+    setTotalPresentes(total);
+  };
+
   /* ---------------------------------------------------------------------------------------------- */
   /*                                             Layout                                             */
   /* ---------------------------------------------------------------------------------------------- */
@@ -112,24 +125,40 @@ const SupervisionPage: React.FC = () => {
           />
           <SegmentedTurnBtn turn={superTurn} onTurnChange={handleTurnChange} />
         </Stack>
+        <Row className='my-3'>
+          <Col xs={12} xl={4}>
+            <ProductionTable
+              shift={superTurn}
+              todayString={selectedDate}
+              totalProduction={handleProductionTotal}
+            />
+          </Col>
+          <Col>
+            <CaixasPessoa totalProduction={totalProduction} presentes={totalPresentes} />
+          </Col>
+          <Col xs={12} xl={5}>
+            <Card className='border-0 h-100 bg-transparent'>
+              <CardGauges shift={superTurn} today={selectedDate} />
+            </Card>
+          </Col>
+        </Row>
         <SupervAbsence
           selectedDate={selectedDate}
           selectedTurno={superTurn}
           absenceData={absenceData}
           presenceData={presenceData}
           onDataChange={refreshData}
+          onPresenceChange={handlePresentesTotal}
         />
-        <Row className='p-2'>
+        <Row className='mb-3 g-1'>
           <Col xs={12} xl={9}>
-            <h5 className='fs-5 text-center'>Ocorrências de Absenteísmo</h5>
             <AbsenceTable
               absenceData={absenceData}
               onDataChange={refreshData}
               isSupervisor={isSupervisor}
             />
           </Col>
-          <Col xs={12} xl className='p-0'>
-            <h5 className='text-center fs-5'>Presenças por Setor</h5>
+          <Col xs={12} xl>
             <PresenceTable presenceData={presenceData} onDataChange={refreshData} />
           </Col>
         </Row>

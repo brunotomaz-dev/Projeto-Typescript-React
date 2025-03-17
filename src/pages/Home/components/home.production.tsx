@@ -24,21 +24,20 @@ const HomeProductionCard: React.FC = () => {
         },
         {} as { [key: string]: number }
       );
-
       setTotalByProduct(totals);
     });
   }, [nowDate]);
 
   return (
     <>
-      <Card className="shadow border-0 p-3 mb-2">
+      <Card className='shadow border-0 p-3 mb-2'>
         <h3>Caixas Produzidas</h3>
         <Row>
           <Table striped responsive>
             <thead>
               <tr>
                 <th>Produto</th>
-                <th className="text-end">Quantidade</th>
+                <th className='text-end'>Quantidade</th>
               </tr>
             </thead>
             <tbody>
@@ -47,14 +46,16 @@ const HomeProductionCard: React.FC = () => {
                 .map(([produto, total]) => (
                   <tr key={produto}>
                     <td>{produto}</td>
-                    <td className="text-end">{Math.floor(total / 10).toLocaleString('pt-BR')}</td>
+                    <td className='text-end'>
+                      {Math.floor(total / 10).toLocaleString('pt-BR')}
+                    </td>
                   </tr>
                 ))}
               <tr>
                 <td>
                   <strong>Total</strong>
                 </td>
-                <td className="text-end">
+                <td className='text-end'>
                   <strong>
                     {Object.values(totalByProduct)
                       .reduce((acc, curr) => acc + Math.floor(curr / 10), 0)

@@ -77,7 +77,7 @@ const HomeAbsence: React.FC = () => {
   return (
     <Card className='shadow bg-transparent border-0  h-100'>
       <Card.Body>
-        <Card.Title className='text-center'>Ausência / Presença</Card.Title>
+        <Card.Title className='text-center fs-4'>Ausência / Presença</Card.Title>
         <Row className='mt-3'>
           <HomeCardsAbsence title='Faltas' value={faltas} />
           <HomeCardsAbsence title='Atrasos' value={atrasos} />

@@ -74,13 +74,15 @@ const ShopFloor: React.FC = () => {
     });
 
     // Requisita o indicador de reparo
-    void getIndicator('repair', [lastMonthFirstDateString, lastMonthFinalDateString], ['data_registro', 'reparo']).then(
-      (data: iRep[]) => {
-        // Obter a média de reparo
-        const average = getAverage(data, 'reparo');
-        setLastRepairs(average);
-      }
-    );
+    void getIndicator(
+      'repair',
+      [lastMonthFirstDateString, lastMonthFinalDateString],
+      ['data_registro', 'reparo']
+    ).then((data: iRep[]) => {
+      // Obter a média de reparo
+      const average = getAverage(data, 'reparo');
+      setLastRepairs(average);
+    });
   }, [lastMonthFirstDateString, lastMonthFinalDateString]);
 
   // Requisitar os indicadores de eficiencia, performance e reparo do mês atual
@@ -110,7 +112,11 @@ const ShopFloor: React.FC = () => {
     });
 
     // Indicador de reparo
-    void getIndicator('repair', [currentMonthBeginningDateString], ['data_registro', 'reparo']).then((data: iRep[]) => {
+    void getIndicator(
+      'repair',
+      [currentMonthBeginningDateString],
+      ['data_registro', 'reparo']
+    ).then((data: iRep[]) => {
       // Obter a média de reparo
       const average = getAverage(data, 'reparo') || 0;
       setCurrentRepairs(average);
@@ -166,7 +172,10 @@ const ShopFloor: React.FC = () => {
           <Col className='col-2'>
             <Card className='bg-transparent border-0 p-3 mb-2'>
               <p className='text-center'>Mês Atual</p>
-              <GaugeChart indicator={IndicatorType.PERFORMANCE} data={currentPerformance} />
+              <GaugeChart
+                indicator={IndicatorType.PERFORMANCE}
+                data={currentPerformance}
+              />
             </Card>
           </Col>
         </Row>

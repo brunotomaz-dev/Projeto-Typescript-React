@@ -16,6 +16,7 @@ interface iAbsenceProps {
   absenceData: iAbsence[];
   presenceData: iPresence[];
   onDataChange: () => void;
+  onPresenceChange: (total: number) => void;
 }
 
 const SupervAbsence: React.FC<iAbsenceProps> = ({
@@ -24,6 +25,7 @@ const SupervAbsence: React.FC<iAbsenceProps> = ({
   absenceData,
   presenceData,
   onDataChange,
+  onPresenceChange,
 }) => {
   /* -------------------------------------------- REDUX ------------------------------------------- */
   // Recuperar o nome do usuário
@@ -78,6 +80,10 @@ const SupervAbsence: React.FC<iAbsenceProps> = ({
     setRemanejados(remanejadosCount);
   }, [absenceData, presenceData]);
 
+  useEffect(() => {
+    onPresenceChange(presencas);
+  }, [presencas]);
+
   /* ------------------------------------------- HANDLES ------------------------------------------ */
   // Abertura do modal
   const handleModalOpen = (type: string) => {
@@ -131,7 +137,7 @@ const SupervAbsence: React.FC<iAbsenceProps> = ({
   /* ---------------------------------------------------------------------------------------------- */
   return (
     <>
-      <Stack direction='horizontal' className='p-2'>
+      <Stack direction='horizontal' className='mb-3'>
         <SuperCardsAbsence
           title='Faltas'
           value={faltas}

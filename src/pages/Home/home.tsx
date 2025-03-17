@@ -1,14 +1,17 @@
 import { format, startOfDay } from 'date-fns';
 import React, { useEffect, useState } from 'react';
 import { Card, Col, Row } from 'react-bootstrap';
-import { useDispatch } from 'react-redux';
 import { getIndicator } from '../../api/apiRequests';
 import GaugeChart from '../../components/gauge';
 import PageLayout from '../../components/pageLayout';
 import { IndicatorType } from '../../helpers/constants';
-import { iEficiencia, iPerformance, iRepair } from '../../interfaces/Indicators.interfaces';
+import {
+  iEficiencia,
+  iPerformance,
+  iRepair,
+} from '../../interfaces/Indicators.interfaces';
 import { setLineMachine } from '../../redux/store/features/homeSlice';
-import { useAppSelector } from '../../redux/store/hooks';
+import { useAppDispatch, useAppSelector } from '../../redux/store/hooks';
 import { RootState } from '../../redux/store/store';
 import HomeAbsence from './components/home.absence';
 import HomeCartCountCart from './components/home.cartCount';
@@ -19,8 +22,11 @@ import HomeProductionCard from './components/home.production';
 //cSpell: words eficiencia
 
 const Home: React.FC = () => {
-  const dispatch = useDispatch();
   const fullName = useAppSelector((state: RootState) => state.user.fullName);
+  /* -------------------------------------------- REDUX ------------------------------------------- */
+  const dispatch = useAppDispatch();
+
+  /* ----------------------------------------- LOCAL STATE ---------------------------------------- */
   const [eficiencia, setEficiencia] = useState<iEficiencia[]>([]);
   const [performance, setPerformance] = useState<iPerformance[]>([]);
   const [repairs, setRepairs] = useState<iRepair[]>([]);
@@ -30,6 +36,8 @@ const Home: React.FC = () => {
 
   //Deixar a data no formato yyyy-mm-dd
   const nowDate = format(now, 'yyyy-MM-dd');
+
+  /* ------------------------------------------ CÁLCULOS ------------------------------------------ */
 
   // Conseguir a média de eficiencia
   const eficienciaMedia =
@@ -43,8 +51,11 @@ const Home: React.FC = () => {
       : 0;
 
   const repairsMedia =
-    repairs.length > 0 ? repairs.reduce((acc, curr) => acc + curr.reparo, 0) / repairs.length : 0;
+    repairs.length > 0
+      ? repairs.reduce((acc, curr) => acc + curr.reparo, 0) / repairs.length
+      : 0;
 
+  /* ------------------------------------------- EFFECT ------------------------------------------- */
   useEffect(() => {
     // Faz a requisição do indicador e salva no estado
     void getIndicator('eficiencia', nowDate).then((data: iEficiencia[]) => {
@@ -58,10 +69,15 @@ const Home: React.FC = () => {
       );
       setEficiencia(data.filter((item) => item.eficiencia > 0));
     });
-    void getIndicator('performance', nowDate).then((data: iPerformance[]) => setPerformance(data));
+    void getIndicator('performance', nowDate).then((data: iPerformance[]) =>
+      setPerformance(data)
+    );
     void getIndicator('repair', nowDate).then((data: iRepair[]) => setRepairs(data));
   }, [nowDate, dispatch]);
 
+  /* ---------------------------------------------------------------------------------------------- */
+  /*                                             Layout                                             */
+  /* ---------------------------------------------------------------------------------------------- */
   return (
     <PageLayout>
       <h3>Olá, {fullName}</h3>

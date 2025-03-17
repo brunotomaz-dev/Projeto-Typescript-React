@@ -68,82 +68,85 @@ const AbsenceTable: React.FC<iAbsenceTableProps> = ({
   /*                                             Layout                                             */
   /* ---------------------------------------------------------------------------------------------- */
   return (
-    <Card className='p-2 shadow border-0 h-100'>
-      <table className='table table-hover table-striped table-responsive'>
-        <thead>
-          <tr>
-            <th>Setor</th>
-            <th>Nome</th>
-            <th>Turno</th>
-            <th>Ocorrência</th>
-            <th>Justificativa</th>
-            {isSupervisor && <th className='text-center'>Ações</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {absenceData.map((absence) => (
-            <tr key={absence.recno}>
-              <td>{absence.setor}</td>
-              <td>{absence.nome}</td>
-              <td>{absence.turno}</td>
-              <td>{absence.tipo}</td>
-              <td>{absence.motivo}</td>
-              {isSupervisor && (
-                <td className='text-center'>
-                  <Button
-                    variant='link'
-                    className='text-danger p-0'
-                    size='lg'
-                    onClick={() => handleDeleteClick(absence)}
-                  >
-                    <i className='bi bi-trash-fill'></i> {/* Bootstrap icon */}
-                  </Button>
-                </td>
-              )}
-            </tr>
-          ))}
-          {absenceData.length === 0 && (
+    <Card className='border-0 bg-transparent py-2 h-100'>
+      <h5 className='text-center fs-5'>Ocorrências de Absenteísmo</h5>
+      <Card className='p-2 shadow border-0 h-100'>
+        <table className='table table-hover table-striped table-responsive'>
+          <thead>
             <tr>
-              <td colSpan={6} className='text-center py-3 text-muted'>
-                Nenhum registro encontrado para este turno.
-              </td>
+              <th>Setor</th>
+              <th>Nome</th>
+              <th>Turno</th>
+              <th>Ocorrência</th>
+              <th>Justificativa</th>
+              {isSupervisor && <th className='text-center'>Ações</th>}
             </tr>
-          )}
-        </tbody>
-      </table>
-      {/* Modal de Confirmação de Exclusão */}
-      <Modal show={showConfirmModal} onHide={handleCloseModal} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirmar Exclusão</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>
-            Você tem certeza que deseja excluir o registro de ausência de{' '}
-            <strong>{selectedAbsence?.nome}</strong>?
-          </p>
-          <p className='text-muted'>Esta ação não pode ser desfeita.</p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant='secondary' onClick={handleCloseModal} disabled={isDeleting}>
-            Cancelar
-          </Button>
-          <Button variant='danger' onClick={handleConfirmDelete} disabled={isDeleting}>
-            {isDeleting ? (
-              <>
-                <span
-                  className='spinner-border spinner-border-sm me-2'
-                  role='status'
-                  aria-hidden='true'
-                ></span>
-                Excluindo...
-              </>
-            ) : (
-              'Confirmar Exclusão'
+          </thead>
+          <tbody>
+            {absenceData.map((absence) => (
+              <tr key={absence.recno}>
+                <td>{absence.setor}</td>
+                <td>{absence.nome}</td>
+                <td>{absence.turno}</td>
+                <td>{absence.tipo}</td>
+                <td>{absence.motivo}</td>
+                {isSupervisor && (
+                  <td className='text-center'>
+                    <Button
+                      variant='link'
+                      className='text-danger p-0'
+                      size='lg'
+                      onClick={() => handleDeleteClick(absence)}
+                    >
+                      <i className='bi bi-trash-fill'></i> {/* Bootstrap icon */}
+                    </Button>
+                  </td>
+                )}
+              </tr>
+            ))}
+            {absenceData.length === 0 && (
+              <tr>
+                <td colSpan={6} className='text-center py-3 text-muted'>
+                  Nenhum registro encontrado para este turno.
+                </td>
+              </tr>
             )}
-          </Button>
-        </Modal.Footer>
-      </Modal>
-      {ToastDisplay && <ToastDisplay />}
+          </tbody>
+        </table>
+        {/* Modal de Confirmação de Exclusão */}
+        <Modal show={showConfirmModal} onHide={handleCloseModal} centered>
+          <Modal.Header closeButton>
+            <Modal.Title>Confirmar Exclusão</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <p>
+              Você tem certeza que deseja excluir o registro de ausência de{' '}
+              <strong>{selectedAbsence?.nome}</strong>?
+            </p>
+            <p className='text-muted'>Esta ação não pode ser desfeita.</p>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant='secondary' onClick={handleCloseModal} disabled={isDeleting}>
+              Cancelar
+            </Button>
+            <Button variant='danger' onClick={handleConfirmDelete} disabled={isDeleting}>
+              {isDeleting ? (
+                <>
+                  <span
+                    className='spinner-border spinner-border-sm me-2'
+                    role='status'
+                    aria-hidden='true'
+                  ></span>
+                  Excluindo...
+                </>
+              ) : (
+                'Confirmar Exclusão'
+              )}
+            </Button>
+          </Modal.Footer>
+        </Modal>
+        {ToastDisplay && <ToastDisplay />}
+      </Card>
     </Card>
   );
 };
