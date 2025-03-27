@@ -1,31 +1,47 @@
-// Definindo tipos
-type GroupLevel = string[];
-type GroupLevels = Record<number, GroupLevel>;
-
-export type TurnoID = "MAT" | "VES" | "NOT";
-
+// Definindo tipos e constantes globais
 export const CICLOS_ESPERADOS = 11.2
 export const CICLOS_ESPERADOS_BOL = 7
 
-// Aplicando os tipos
-export const groupLevels: GroupLevels = {
-  1: ['Dev'],
-  2: ['Dev', 'Gerentes'],
-  3: ['Dev', 'Coordenadores'],
-  4: ['Dev', 'Supervisores'],
-  5: ['Dev', 'Líderes'],
-  6: ['Dev', 'Operadores'],
-  7: ['Dev', 'Gerentes', 'Coordenadores'],
-  8: ['Dev', 'Gerentes', 'Coordenadores', 'Supervisores'],
-  9: ['Dev', 'Gerentes', 'Coordenadores', 'Supervisores', 'Líderes'],
-  10: ['Dev', 'Gerentes', 'Coordenadores', 'Supervisores', 'Líderes', 'Operadores'],
-};
+export type TurnoID = "MAT" | "VES" | "NOT";
+
+export const TurnosObj = [
+  { id: 1, name: 'Matutino', turno: 'MAT' },
+  { id: 2, name: 'Vespertino', turno: 'VES' },
+  { id: 3, name: 'Noturno', turno: 'NOT' },
+]
+
+export const getTurnoName = (turno: TurnoID) => {
+  const turnoObj = TurnosObj.find((t) => t.turno === turno);
+  return turnoObj ? turnoObj.name : turno;
+}
+
 
 export const superTurns: Record<string, TurnoID> = {
   ["Cláudia Antunes"]: "MAT",
   ["Rogério Inácio"]: "VES",
   ["Renan Oliveira"]: "VES",
   ["Leandro Moraes"]: "NOT",
+  ["Teste - Supervisor"]: "MAT",
+  ["Teste - Líder"]: "NOT",
+  ["Rogério Pereira"]: "MAT",
+  ["Marcos Gomes"]: "MAT",
+  ["Eduardo Silva"]: "MAT",
+  ["Gabriel França"]: "MAT",
+  ["Kelven Silva"]: "MAT",
+  ["Silvio Jr"]: "MAT",
+  ["Tatiani Tinto"]: "MAT",
+  ["Wellington Augusto"]: "NOT",
+  ["Everton Oliveira"]: "NOT",
+  ["Elton Martins"]: "NOT",
+  ["Bruno Rego"]: "VES",
+  ["Bruno Rosa"]: "VES",
+  ["João Batista"]: "VES",
+}
+
+export enum ActionPlanStatus {
+  Aberto = 0,
+  Concluído = 1,
+  Cancelado = 2,
 }
 
 export enum IndicatorType {
@@ -46,12 +62,6 @@ export enum ColorsSTM {
   YELLOW = "#FFDD00",
   GREEN = "#00A13A"
 }
-
-export const TurnosObj = [
-  { id: 1, name: 'Matutino', turno: 'MAT' },
-  { id: 2, name: 'Vespertino', turno: 'VES' },
-  { id: 3, name: 'Noturno', turno: 'NOT' },
-] 
 
 export enum BSColors {
   PRIMARY_COLOR = "#0d6efd",

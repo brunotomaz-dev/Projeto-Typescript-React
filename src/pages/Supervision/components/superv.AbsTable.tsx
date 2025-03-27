@@ -1,21 +1,18 @@
 import React, { useState } from 'react';
 import { Button, Card, Modal } from 'react-bootstrap';
 import { deleteAbsenceData } from '../../../api/apiRequests';
+import { usePermissions } from '../../../hooks/usePermissions';
 import { useToast } from '../../../hooks/useToast';
 import { iAbsence } from '../../../interfaces/Absence.interface';
 
 interface iAbsenceTableProps {
   absenceData: iAbsence[];
   onDataChange: () => void;
-  isSupervisor: boolean;
 }
 
-const AbsenceTable: React.FC<iAbsenceTableProps> = ({
-  absenceData,
-  onDataChange,
-  isSupervisor,
-}) => {
-  /* -------------------------------------------- REDUX ------------------------------------------- */
+const AbsenceTable: React.FC<iAbsenceTableProps> = ({ absenceData, onDataChange }) => {
+  /* -------------------------------------------- ROOK -------------------------------------------- */
+  const { hasResourcePermission } = usePermissions();
 
   /* ---------------------------------------- ESTADO LOCAL ---------------------------------------- */
   const [selectedAbsence, setSelectedAbsence] = useState<iAbsence | null>(null);
@@ -79,7 +76,9 @@ const AbsenceTable: React.FC<iAbsenceTableProps> = ({
               <th>Turno</th>
               <th>Ocorrência</th>
               <th>Justificativa</th>
-              {isSupervisor && <th className='text-center'>Ações</th>}
+              {hasResourcePermission('absence', 'delete') && (
+                <th className='text-center'>Ações</th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -90,7 +89,7 @@ const AbsenceTable: React.FC<iAbsenceTableProps> = ({
                 <td>{absence.turno}</td>
                 <td>{absence.tipo}</td>
                 <td>{absence.motivo}</td>
-                {isSupervisor && (
+                {hasResourcePermission('absence', 'delete') && (
                   <td className='text-center'>
                     <Button
                       variant='link'

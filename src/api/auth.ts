@@ -8,6 +8,7 @@ import { AxiosError, isAxiosError } from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { clearUser, setUser } from '../redux/store/features/userSlice';
 // import { useAppDispatch } from '../redux/store/hooks';
+import { levelMap } from '../hooks/usePermissions';
 import { store } from '../redux/store/store';
 import axios from './axiosConfig';
 
@@ -96,7 +97,8 @@ export const login = async (username: string, password: string): Promise<Decoded
     dispatch(setUser({
       fullName: `${first_name} ${last_name}`,
       groups: groups,
-      user_id: decoded.user_id
+      user_id: decoded.user_id,
+      level: Math.max(0, ...groups.map(group => levelMap[group] || 0))
     }))
 
     // Retorna o token decodificado
@@ -137,6 +139,7 @@ export const initAuth = (): boolean => {
       fullName: username,
       groups,
       user_id: decoded.user_id,
+      level: Math.max(0, ...groups.map(group => levelMap[group] || 0))
     }));
     return true;
   } else {

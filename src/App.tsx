@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { initAuth } from './api/auth';
 import PrivateRoute from './api/PrivateRoute';
 import Sidebar from './components/sidebar';
-import { groupLevels } from './helpers/constants';
+import { levelMap } from './hooks/usePermissions';
 import HomeFake from './pages/example';
 import Home from './pages/Home/home';
 import LiveLines from './pages/LiveLines/liveLines';
@@ -25,51 +25,33 @@ function App() {
       <main className='w-100 d-flex'>
         <Sidebar />
         <Routes>
+          <Route path='init' element={<HomeFake />} />
           <Route path='/' element={<Home />} />
           <Route path='login' element={<LoginPage />} />
           <Route
             path='sfm'
-            element={
-              <PrivateRoute
-                element={<ShopFloor />}
-                allowedGroups={[...groupLevels[10]]}
-              />
-            }
+            element={<PrivateRoute element={<ShopFloor />} requiredPage='shop_floor' />}
           />
           <Route
             path='p-live'
             element={
-              <PrivateRoute
-                element={<ProductionLive />}
-                allowedGroups={[...groupLevels[9]]}
-              />
+              <PrivateRoute element={<ProductionLive />} requiredPage='hour_production' />
             }
           />
           <Route
             path='live'
-            element={
-              <PrivateRoute
-                element={<LiveLines />}
-                allowedGroups={[...groupLevels[10]]}
-              />
-            }
+            element={<PrivateRoute element={<LiveLines />} requiredPage='live_lines' />}
           />
           <Route
             path='management'
-            element={
-              <PrivateRoute
-                element={<Management />}
-                allowedGroups={[...groupLevels[9]]}
-              />
-            }
+            element={<PrivateRoute element={<Management />} requiredPage='management' />}
           />
-          <Route path='init' element={<HomeFake />} />
           <Route
             path='supervision'
             element={
               <PrivateRoute
                 element={<SupervisionPage />}
-                allowedGroups={[...groupLevels[4], ...groupLevels[5]]}
+                requiredMinLevel={levelMap['Líderes']}
               />
             }
           />

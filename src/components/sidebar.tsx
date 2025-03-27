@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { logout } from '../api/auth';
 import STMLogoPxB from '../assets/Login_pxb.png';
 import STMLogo from '../assets/Logo Santa Massa.png';
-import { groupLevels } from '../helpers/constants';
+import { usePermissions } from '../hooks/usePermissions';
 import { SidebarState, toggleCollapsed } from '../redux/store/features/sidebarSlice';
 import { UserState } from '../redux/store/features/userSlice';
 import { useAppDispatch, useAppSelector } from '../redux/store/hooks';
@@ -14,9 +14,7 @@ const Sidebar: React.FC = () => {
   const location = useLocation();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  // const [isLoggedIn, setIsLoggedIn] = useState(false);
-  // const [userName, setUserName] = useState('');
-  // const [userGroups, setUserGroups] = useState<string[]>([]);
+
   const { isCollapsed } = useAppSelector(
     (state: { sidebar: SidebarState }) => state.sidebar
   );
@@ -36,6 +34,9 @@ const Sidebar: React.FC = () => {
     navigate('/');
   };
 
+  /* -------------------------------------------- HOOK -------------------------------------------- */
+  const { hasPageAccess, hasLevel, hasMinLevel } = usePermissions();
+
   /* ------------------------------------- Gerenciamento de ciclo do app ------------------------------------ */
   useEffect(() => {
     const pills = document.querySelectorAll('.nav-link');
@@ -50,25 +51,6 @@ const Sidebar: React.FC = () => {
     }
   }, [location.pathname, userGroups]);
 
-  // useEffect(() => {
-  //   setIsLoggedIn(!!localStorage.getItem('access_token'));
-  //   setUserName(localStorage.getItem('username') || '');
-  //   setUserGroups(localStorage.getItem('groups')?.split(',') || []);
-  // }, []);
-
-  const userLevels = {
-    1: userGroups.some((group) => groupLevels[1].includes(group)),
-    2: userGroups.some((group) => groupLevels[2].includes(group)),
-    3: userGroups.some((group) => groupLevels[3].includes(group)),
-    4: userGroups.some((group) => groupLevels[4].includes(group)),
-    5: userGroups.some((group) => groupLevels[5].includes(group)),
-    6: userGroups.some((group) => groupLevels[6].includes(group)),
-    7: userGroups.some((group) => groupLevels[7].includes(group)),
-    8: userGroups.some((group) => groupLevels[8].includes(group)),
-    9: userGroups.some((group) => groupLevels[9].includes(group)),
-    10: userGroups.some((group) => groupLevels[10].includes(group)),
-  };
-
   const navItems = [
     location.pathname === '/login' && {
       label: 'Login',
@@ -76,27 +58,31 @@ const Sidebar: React.FC = () => {
       href: '/login',
     },
     { label: 'Home', icon: 'bi bi-house', href: '/' },
-    (userLevels[4] || userLevels[5]) && {
-      label: userLevels[4] ? 'Supervisão' : 'Liderança',
+    hasMinLevel(1) && {
+      label: hasLevel(1) ? 'Liderança' : 'Supervisão',
       icon: 'bi bi-eye',
       href: '/supervision',
     },
-    userLevels[10] && {
+    hasPageAccess('shop_floor') && {
       label: 'Shop Floor Management',
       icon: 'bi bi-graph-up',
       href: '/sfm',
     },
-    userLevels[9] && {
+    hasPageAccess('hour_production') && {
       label: 'Produção por hora',
       icon: 'bi bi-box-seam',
       href: '/p-live',
     },
-    userLevels[10] && {
+    hasPageAccess('live_lines') && {
       label: 'Linhas do Recheio',
       icon: 'bi bi-speedometer2',
       href: '/live',
     },
-    userLevels[9] && { label: 'Gestão', icon: 'bi bi-gear', href: '/management' },
+    hasPageAccess('management') && {
+      label: 'Gestão',
+      icon: 'bi bi-gear',
+      href: '/management',
+    },
   ];
 
   /* ------------------------------------------------ Layout ------------------------------------------------ */

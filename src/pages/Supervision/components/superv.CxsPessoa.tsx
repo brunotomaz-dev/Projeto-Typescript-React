@@ -23,8 +23,8 @@ const CaixasPessoa: React.FC<iCaixasPessoaProps> = ({ totalProduction, presentes
     <Card className='bg-transparent border-0 h-100'>
       <h5 className='text-center fs-5'>Caixas por Pessoa</h5>
       {presentes > 0 ? (
-        <Card className='border-0 p-2 mb-3 h-100 d-flex justify-content-around bg-transparent'>
-          <Card className='shadow border-0 p-2 mb-3'>
+        <Card className='d-flex bg-transparent border-0 h-100 justify-content-around p-2 mb-3'>
+          <Card className='border-0 p-2 shadow mb-3'>
             <Card.Title className='fs-6 fw-light'>Meta de Caixas por pessoa</Card.Title>
             <Card.Body>
               <Card.Text className='text-center' style={{ fontSize: '3vw' }}>
@@ -32,7 +32,7 @@ const CaixasPessoa: React.FC<iCaixasPessoaProps> = ({ totalProduction, presentes
               </Card.Text>
             </Card.Body>
           </Card>
-          <Card className='shadow border-0 p-2'>
+          <Card className='border-0 p-2 shadow'>
             <Card.Title className='fs-6 fw-light'>Caixas por pessoa</Card.Title>
             <Card.Body>
               <Card.Text className='text-center' style={{ fontSize: '3vw' }}>
@@ -42,8 +42,8 @@ const CaixasPessoa: React.FC<iCaixasPessoaProps> = ({ totalProduction, presentes
           </Card>
         </Card>
       ) : (
-        <Card className='border-0 p-2 h-100 f-flex justify-content-center align-items-center'>
-          <h5 className='fs-5 text-center'>
+        <Card className='align-items-center border-0 h-100 justify-content-center p-2 shadow f-flex'>
+          <h5 className='text-center fs-5'>
             Não há pessoas presentes para calcular a produção por pessoa.
           </h5>
         </Card>

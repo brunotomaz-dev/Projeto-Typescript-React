@@ -1,6 +1,7 @@
-//cSpell: words movimentacao absenteismo
+//cSpell: words movimentacao absenteismo conclusao
 import { format, startOfDay } from 'date-fns';
 import { iPresence } from '../interfaces/Absence.interface';
+import { iActionPlan } from '../interfaces/ActionPlan.interface';
 import { iCartCount } from '../interfaces/Carrinhos.interface';
 import { iAbsenceForm } from '../pages/Supervision/interface/AbsenceForm.interface';
 import api from './axiosConfig';
@@ -256,6 +257,54 @@ export const updatePresenceData = async (data: iPresence) => {
     return response.data;
   } catch (error) {
     console.error('Erro ao atualizar registro de presença', error);
+    throw error;
+  }
+};
+
+export const getActionPlan = async (data: DateParam, conclusao?: number) => {
+  const dateFilter = createDateFilter(data);
+  const params = { ...dateFilter, ...(conclusao && { conclusao }) };
+
+  try {
+    const response = await api.get('api/action_plan/', { params: params });
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao buscar dados de plano de ação', error);
+    throw error;
+  }
+};
+
+
+// Criar plano de ação
+export const createActionPlan = async (actionPlanData: Omit<iActionPlan, 'recno'>) => {
+  console.log(actionPlanData)
+  try {
+    const response = await api.post('/api/action_plan/', actionPlanData);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao criar plano de ação:', error);
+    throw error;
+  }
+};
+
+// Atualizar plano de ação
+export const updateActionPlan = async (actionPlanData: iActionPlan) => {
+  try {
+    const response = await api.put(`/api/action_plan/${actionPlanData.recno}/`, actionPlanData);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao atualizar plano de ação:', error);
+    throw error;
+  }
+};
+
+// Excluir plano de ação
+export const deleteActionPlan = async (recno: number) => {
+  try {
+    const response = await api.delete(`/api/action_plan/${recno}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao excluir plano de ação:', error);
     throw error;
   }
 };
