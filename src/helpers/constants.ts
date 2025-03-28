@@ -36,6 +36,7 @@ export const superTurns: Record<string, TurnoID> = {
   ["Bruno Rego"]: "VES",
   ["Bruno Rosa"]: "VES",
   ["João Batista"]: "VES",
+  ["Lizete Maia"]: "MAT"
 }
 
 export enum ActionPlanStatus {
