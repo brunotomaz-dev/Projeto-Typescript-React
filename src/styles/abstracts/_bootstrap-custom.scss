@@ -6,14 +6,19 @@ $danger: v.$danger-color;
 $warning: v.$warning-color;
 $light-grey: v.$light-grey-sfm;
 
-// Importe o Bootstrap após definir as variáveis
-// @use "../node_modules/bootstrap/scss/bootstrap;
-
-// Required
-// Importe o Bootstrap usando @use
-@use "bootstrap" with (
-  $success: $success,
-  $danger: $danger,
-  $warning: $warning,
-  $gray-200: $light-grey
+// Sobrescrever variáveis do Bootstrap antes de importar
+$theme-colors: (
+  "primary": #0D6EFD,
+  "secondary": #6C757D,
+  "success": v.$success-color,
+  "danger": v.$danger-color,
+  "warning": v.$warning-color,
+  "info": #17a2b8,
+  "light": #f8f9fa,
+  "dark": #343a40,
+  "light-grey": v.$light-grey-sfm,
 );
+
+
+// Importar Bootstrap
+@import "bootstrap/scss/bootstrap";

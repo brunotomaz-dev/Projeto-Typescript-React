@@ -2,16 +2,11 @@ import React, { useState } from 'react';
 import PageLayout from '../../components/pageLayout';
 import MNGMainSegmentedBtn from './components/management.MainSegmentedBtn';
 import ManagementProduction from './components/management.Production';
+import ManagementDashboards from './components/management.dashboards';
 
 const Management: React.FC = () => {
-  /* -------------------------------------------- DATAS ------------------------------------------- */
-  // Hoje
-  const today = new Date();
-  // Primeiro dia do mês
-  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-
   /* --------------------------------- INICIALIZAR ESTADOS LOCAIS --------------------------------- */
-  const [btnChoice, setBtnChoice] = useState('production');
+  const [btnChoice, setBtnChoice] = useState('dashboards');
 
   /* ---------------------------------------------------------------------------------------------- */
   /*                                             Layout                                             */
@@ -22,6 +17,7 @@ const Management: React.FC = () => {
       <MNGMainSegmentedBtn setBtnChoice={setBtnChoice} />
       <hr />
       {btnChoice === 'production' && <ManagementProduction />}
+      {btnChoice === 'dashboards' && <ManagementDashboards />}
     </PageLayout>
   );
 };

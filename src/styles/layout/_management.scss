@@ -1,0 +1,75 @@
+.line-picker-card {
+  .line-button {
+    &.selected {
+      position: relative;
+      
+      &::after {
+        content: '✓';
+        position: absolute;
+        top: -8px;
+        right: -5px;
+        font-size: 12px;
+        background-color: #198754;
+        color: white;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+  }
+}
+
+// Para a opção de Drawer
+.line-picker-drawer {
+  .offcanvas-body {
+    padding: 1rem;
+  }
+  
+  .line-button {
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    
+    &.selected {
+      position: relative;
+      
+      &::after {
+        content: '✓';
+        position: absolute;
+        top: -8px;
+        right: -5px;
+        font-size: 14px;
+        background-color: #198754;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+    
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+  
+  .factory-label {
+    font-weight: 600;
+    color: #6c757d;
+    background-color: #f8f9fa;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    display: inline-block;
+  }
+  
+  .factory-section {
+    padding-bottom: 0.5rem;
+  }
+}
