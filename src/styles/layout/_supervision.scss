@@ -1,0 +1,160 @@
+@use '../abstracts/variables' as v;
+@use 'sass:color';
+
+// Container dos cards - adicione essa classe à Row que contém os cards
+.cards-container {
+  perspective: 1000px;
+  padding: 20px 0;
+  
+  // Quando um item na linha tem hover, afeta outros cards
+  &:hover .card:not(:hover) {
+    filter: blur(2px);
+    transform: scale(0.95);
+    opacity: 0.70;
+  }
+}
+
+// Estilo base para todos os cartões
+.action-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease, opacity 0.3s ease;
+  transform-origin: center center;
+  
+  &:hover {
+    transform: scale(1.05) translateY(-8px) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+    z-index: 10;
+    position: relative;
+    filter: brightness(1.05);
+  }
+}
+
+// Efeito de cartão 3D
+.card-3d {
+  transform-style: preserve-3d;
+  
+  &:hover {
+    transform: scale(1.05) translateY(-8px) rotateY(10deg) rotateX(5deg) !important;
+  }
+  
+  .card-header, .card-body {
+    transform-style: preserve-3d;
+  }
+  
+  .card-header {
+    transform: translateZ(10px);
+  }
+  
+  .card-body {
+    transform: translateZ(5px);
+  }
+}
+
+
+// Estilo para o card pinado
+.card-pinned {
+  box-shadow: 0 0 0 2px #fbff00, 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  transform: translateY(-4px);
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+
+  &:hover {
+    box-shadow: 0 0 0 3px #fbff00, 0 15px 30px rgba(251, 255, 0, 0.25) !important;
+  }
+}
+
+// Indicador de pin base
+.pin-indicator {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #0d6efd;
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  
+  // Animação sutil por padrão
+  animation: pulse-subtle 2s infinite;
+  
+  // Variante com pulse mais forte
+  &.pin-indicator-pulse {
+    animation: pulse-strong 2s infinite;
+  }
+  
+  // Variante sem animação
+  &.pin-indicator-static {
+    animation: none;
+  }
+  
+  // Variantes de tamanho
+  &.pin-indicator-sm {
+    width: 20px;
+    height: 20px;
+    top: -6px;
+    right: -6px;
+  }
+  
+  &.pin-indicator-lg {
+    width: 28px;
+    height: 28px;
+    top: -10px;
+    right: -10px;
+  }
+  
+  // Variantes de cor
+  &.pin-indicator-warning {
+    background: #ffc107;
+    color: #212529;
+  }
+  
+  &.pin-indicator-danger {
+    background: #dc3545;
+  }
+
+  &.pin-indicator-spin {
+    animation: spin 4s linear infinite;
+  }
+ 
+}
+
+// Animação sutil para o indicador padrão
+@keyframes pulse-subtle {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 2px 6px rgba(13, 110, 253, 0.3);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+}
+
+// Animação forte para o indicador com pulse
+@keyframes pulse-strong {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    transform: scale(1.5) rotate(75deg);
+    box-shadow: 0 2px 10px rgba(13, 110, 253, 0.5);
+  }
+  100% {
+    transform: scale(1) rotate(145deg);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+}
+
+// Animação de rotação para estrela em indicador forte
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

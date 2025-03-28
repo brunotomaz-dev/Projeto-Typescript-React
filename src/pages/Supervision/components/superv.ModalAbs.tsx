@@ -134,6 +134,7 @@ const AbsenceFormModal: React.FC<iModalAbsProps> = ({
   });
   const [nomesSuggestions, setNomesSuggestions] = useState<string[]>([]);
   const [showSuggestion, setShowSuggestion] = useState<boolean>(true);
+  const [validated, setValidated] = useState<boolean>(false);
 
   /* ------------------------------------------- EFFECTS ------------------------------------------ */
   // Valores iniciais conforme card selecionado
@@ -218,8 +219,17 @@ const AbsenceFormModal: React.FC<iModalAbsProps> = ({
   };
 
   // Lidar com Submit
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    const form = e.currentTarget;
+
+    if (!form.checkValidity()) {
+      e.stopPropagation();
+      setValidated(true);
+      return;
+    }
+
     onSubmit(formData);
     resetModalState();
     onHide();
@@ -228,6 +238,7 @@ const AbsenceFormModal: React.FC<iModalAbsProps> = ({
   // Lidar com fechamento do modal
   const handleClose = () => {
     resetModalState();
+    setValidated(false);
     onHide();
   };
 
@@ -239,8 +250,8 @@ const AbsenceFormModal: React.FC<iModalAbsProps> = ({
       <Modal.Header closeButton>
         <Modal.Title>Registro de {inicialType}</Modal.Title>
       </Modal.Header>
-      <ModalBody>
-        <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit} validated={validated} noValidate>
+        <ModalBody>
           <Stack direction='horizontal' className='p-2' gap={3}>
             <FormGroup className='mb-3 w-25'>
               <Form.Label>Data</Form.Label>
@@ -323,7 +334,11 @@ const AbsenceFormModal: React.FC<iModalAbsProps> = ({
                   }, 200);
                 }}
                 required
+                isInvalid={validated && !formData.nome}
               />
+              <Form.Control.Feedback type='invalid'>
+                O nome é obrigatório.
+              </Form.Control.Feedback>
               {nomesSuggestions.length > 0 && (
                 <div className='suggestion-container border rounded mt-1 shadow p-2'>
                   <div className='small text-muted mb-2'>
@@ -390,18 +405,22 @@ const AbsenceFormModal: React.FC<iModalAbsProps> = ({
               value={formData.motivo}
               onChange={handleInputChange}
               required
+              isInvalid={validated && !formData.motivo}
             />
+            <Form.Control.Feedback type='invalid'>
+              O motivo é obrigatório.
+            </Form.Control.Feedback>
           </FormGroup>
-        </Form>
-      </ModalBody>
-      <Modal.Footer>
-        <Button variant='secondary' onClick={handleClose}>
-          Cancelar
-        </Button>
-        <Button variant='primary' type='submit' onClick={handleSubmit}>
-          Salvar Registro
-        </Button>
-      </Modal.Footer>
+        </ModalBody>
+        <Modal.Footer>
+          <Button variant='secondary' onClick={handleClose}>
+            Cancelar
+          </Button>
+          <Button variant='primary' type='submit'>
+            Salvar Registro
+          </Button>
+        </Modal.Footer>
+      </Form>
     </Modal>
   );
 };

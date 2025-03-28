@@ -30,7 +30,7 @@ const GaugeChart: React.FC<GaugeProps> = ({
       [1, ColorsSTM.RED],
     ],
     [IndicatorType.EFFICIENCY]: [
-      [0.899, ColorsSTM.RED],
+      [0.89, ColorsSTM.RED],
       [1, ColorsSTM.GREEN],
     ],
   };

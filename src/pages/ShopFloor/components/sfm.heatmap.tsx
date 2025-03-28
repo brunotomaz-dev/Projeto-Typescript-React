@@ -36,11 +36,13 @@ const Heatmap: React.FC<iHeatmapProps> = ({ indicator }) => {
     // Se o indicador for reparo, o nome da tabela do db é repair
 
     const indicatorDB = indicator === IndicatorType.REPAIR ? 'repair' : indicator;
-    void getIndicator(indicatorDB, [firstDayString], ['data_registro', 'linha', 'turno', `${indicator}`]).then(
-      (data: iInd[]) => {
-        setData(data);
-      }
-    );
+    void getIndicator(
+      indicatorDB,
+      [firstDayString],
+      ['data_registro', 'linha', 'turno', `${indicator}`]
+    ).then((data: iInd[]) => {
+      setData(data);
+    });
   }, [firstDayString, indicator]);
 
   /* ------------------------------------------------ Filtra ------------------------------------------------ */

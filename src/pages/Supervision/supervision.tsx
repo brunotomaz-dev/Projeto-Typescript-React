@@ -1,4 +1,4 @@
-// cspell:words superv
+// cspell:words superv nivel exibicao
 
 import { format, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -6,20 +6,30 @@ import React, { useEffect, useState } from 'react';
 import { Card, Col, Container, Row, Stack } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 import { getAbsenceData, getPresenceData } from '../../api/apiRequests';
+import ActionPlanCards from '../../components/actionPlanCards';
 import PageLayout from '../../components/pageLayout';
 import SegmentedTurnBtn from '../../components/SegmentedTurnBtn';
-import { groupLevels, superTurns, TurnoID } from '../../helpers/constants';
+import { ActionPlanStatus, superTurns, TurnoID } from '../../helpers/constants';
 import { getShift } from '../../helpers/turn';
+import { usePermissions } from '../../hooks/usePermissions';
+import { usePinnedCards } from '../../hooks/usePinnedCards';
 import { useToast } from '../../hooks/useToast';
 import { iAbsence, iPresence } from '../../interfaces/Absence.interface';
+import { iActionPlanCards } from '../../interfaces/ActionPlan.interface';
 import { useAppSelector } from '../../redux/store/hooks';
 import { RootState } from '../../redux/store/store';
+import SupervActionCards from './components/super.ActionCards';
 import SupervAbsence from './components/superv.Absence';
 import AbsenceTable from './components/superv.AbsTable';
 import CardGauges from './components/Superv.CardGauges';
 import CaixasPessoa from './components/superv.CxsPessoa';
 import PresenceTable from './components/superv.PresenceTable';
 import ProductionTable from './components/superv.prodTable';
+
+interface iActionToShow extends iActionPlanCards {
+  nivelExibicao: number;
+  isPinned: boolean;
+}
 
 const SupervisionPage: React.FC = () => {
   const now = new Date();
@@ -28,8 +38,12 @@ const SupervisionPage: React.FC = () => {
   // User
   const userName = useAppSelector((state: RootState) => state.user.fullName);
   const userGroup = useAppSelector((state) => state.user.groups);
-  const isSupervisor = userGroup.some((group) => groupLevels[4].includes(group));
-  // const isLeadership = userGroup.some((group) => groupLevels[5].includes(group));
+  const isSupervisor = userGroup.some((group) => group.includes('Supervisores'));
+  const isLeadership = userGroup.some((group) => group.includes('Liderança'));
+
+  /* -------------------------------------------- HOOK -------------------------------------------- */
+  const { isSuperUser } = usePermissions();
+  const { pinnedCards } = usePinnedCards();
 
   /* ----------------------------------------- LOCAL STATE ---------------------------------------- */
   const [superTurn, setSuperTurn] = useState<TurnoID>(getShift());
@@ -39,6 +53,8 @@ const SupervisionPage: React.FC = () => {
   const [totalProduction, setTotalProduction] = useState<number>(0);
   const [totalPresentes, setTotalPresentes] = useState<number>(0);
   const { showToast, ToastDisplay } = useToast();
+  const [actionPlanData, setActionPlanData] = useState<iActionPlanCards[]>([]);
+  const [actionPlanToShow, setActionPlanToShow] = useState<iActionToShow[]>([]);
 
   /* ------------------------------------------- HANDLES ------------------------------------------ */
   const handleTurnChange = (turn: TurnoID) => {
@@ -64,7 +80,60 @@ const SupervisionPage: React.FC = () => {
     loadPresenceData();
   }, [selectedDate, superTurn]);
 
+  useEffect(() => {
+    // Primeiro passo: aplicar o ajuste de nível aos dados
+    const adjustedData = levelAdjust(actionPlanData);
+
+    // Segundo passo: filtrar por critérios de nível mínimo e pinados
+    const filteredByRules = adjustedData.filter(
+      (plan) =>
+        plan.isPinned ||
+        ((isSupervisor || isSuperUser) && plan.nivelExibicao >= 2) ||
+        (isLeadership && plan.nivelExibicao >= 1)
+    );
+
+    // Terceiro passo: filtrar por turno se necessário
+    if (isLeadership || isSupervisor) {
+      setActionPlanToShow(
+        filteredByRules.filter((plan) => plan.turno === superTurns[userName])
+      );
+    } else {
+      setActionPlanToShow(filteredByRules);
+    }
+  }, [actionPlanData, pinnedCards]);
+
   /* ------------------------------------------ FUNCTIONS ----------------------------------------- */
+  const levelAdjust = (data: iActionPlanCards[]): iActionToShow[] => {
+    return data.map((plan) => {
+      const diasAberto = plan.dias_aberto;
+      const isPinned = pinnedCards.includes(plan.recno);
+
+      const nivelBaseadoEmDias =
+        diasAberto >= 15
+          ? 5
+          : diasAberto >= 12
+            ? 4
+            : diasAberto >= 9
+              ? 3
+              : diasAberto >= 6
+                ? 2
+                : diasAberto >= 3
+                  ? 1
+                  : 0;
+
+      // Cartões pinados sempre têm nível de exibição 5 para garantir que sejam mostrados
+      const nivelFinal = isPinned
+        ? Math.max(5, plan.lvl + nivelBaseadoEmDias)
+        : plan.lvl + nivelBaseadoEmDias;
+
+      return {
+        ...plan,
+        nivelExibicao: nivelFinal,
+        isPinned, // Adicionada a informação para possível uso futuro
+      };
+    });
+  };
+
   // Função para carregar dados de ausência
   const loadAbsenceData = async () => {
     try {
@@ -106,14 +175,16 @@ const SupervisionPage: React.FC = () => {
   /* ---------------------------------------------------------------------------------------------- */
   return (
     <PageLayout>
-      <h4 className='text-center fs-4'>Supervisão - {userName}</h4>
+      <h4 className='text-center fs-4'>
+        {isSupervisor || isSuperUser ? 'Supervisão' : 'Liderança'} - {userName}
+      </h4>
       <Container fluid>
-        <Stack direction='horizontal' className='p-2 gap-5'>
+        <Stack direction='horizontal' className='p-2 gap-5 mb-3'>
           <DatePicker
             selected={parseISO(selectedDate)}
             onChange={(date: Date | null) => handleDateChange(date)}
             dateFormat='dd/MM/yyyy'
-            className='form-control text-center '
+            className='form-control text-center'
             calendarIconClassName='mr-2'
             icon={'bi bi-calendar'}
             showIcon={true}
@@ -125,6 +196,9 @@ const SupervisionPage: React.FC = () => {
           />
           <SegmentedTurnBtn turn={superTurn} onTurnChange={handleTurnChange} />
         </Stack>
+
+        <SupervActionCards actionPlanData={actionPlanToShow} />
+
         <Row className='my-3'>
           <Col xs={12} xl={4}>
             <ProductionTable
@@ -137,11 +211,12 @@ const SupervisionPage: React.FC = () => {
             <CaixasPessoa totalProduction={totalProduction} presentes={totalPresentes} />
           </Col>
           <Col xs={12} xl={5}>
-            <Card className='border-0 h-100 bg-transparent'>
+            <Card className='bg-transparent border-0 h-100'>
               <CardGauges shift={superTurn} today={selectedDate} />
             </Card>
           </Col>
         </Row>
+
         <SupervAbsence
           selectedDate={selectedDate}
           selectedTurno={superTurn}
@@ -150,17 +225,22 @@ const SupervisionPage: React.FC = () => {
           onDataChange={refreshData}
           onPresenceChange={handlePresentesTotal}
         />
-        <Row className='mb-3 g-1'>
+
+        <Row className='g-1 mb-3'>
           <Col xs={12} xl={9}>
-            <AbsenceTable
-              absenceData={absenceData}
-              onDataChange={refreshData}
-              isSupervisor={isSupervisor}
-            />
+            <AbsenceTable absenceData={absenceData} onDataChange={refreshData} />
           </Col>
           <Col xs={12} xl>
             <PresenceTable presenceData={presenceData} onDataChange={refreshData} />
           </Col>
+        </Row>
+
+        <Row>
+          <ActionPlanCards
+            status={ActionPlanStatus.Aberto}
+            shift={superTurn}
+            onDataChange={setActionPlanData}
+          />
         </Row>
       </Container>
       {ToastDisplay && <ToastDisplay />}
