@@ -2,12 +2,12 @@
 export const CICLOS_ESPERADOS = 11.2
 export const CICLOS_ESPERADOS_BOL = 7
 
-export type TurnoID = "MAT" | "VES" | "NOT";
+export type TurnoID = "MAT" | "VES" | "NOT" | "ALL";
 
 export const TurnosObj = [
-  { id: 1, name: 'Matutino', turno: 'MAT' },
+  { id: 1, name: 'Noturno', turno: 'NOT' },
+  { id: 3, name: 'Matutino', turno: 'MAT' },
   { id: 2, name: 'Vespertino', turno: 'VES' },
-  { id: 3, name: 'Noturno', turno: 'NOT' },
 ]
 
 export const getTurnoName = (turno: TurnoID) => {

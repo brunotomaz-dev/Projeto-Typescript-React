@@ -151,7 +151,7 @@ const ManagementLinePicker: React.FC<ManagementLinePickerProps> = ({
       <Button
         variant='light'
         onClick={handleOpenDrawer}
-        className='d-flex align-items-center'
+        className='d-flex align-items-center text-dark'
       >
         <i className='bi bi-grid-3x3 me-2'></i>
         <span>{buttonLabel}</span>

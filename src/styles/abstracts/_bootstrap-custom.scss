@@ -19,6 +19,6 @@ $theme-colors: (
   "light-grey": v.$light-grey-sfm,
 );
 
-
-// Importar Bootstrap
-@import "bootstrap/scss/bootstrap";
+@use "bootstrap/scss/bootstrap" with (
+  $theme-colors: $theme-colors
+);

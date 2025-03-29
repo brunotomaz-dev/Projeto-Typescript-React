@@ -1,48 +1,39 @@
-import React, { useState } from 'react';
-import { Button, ButtonGroup } from 'react-bootstrap';
+import React from 'react';
 import { TurnoID } from '../helpers/constants';
+import SegmentedButton from './SegmentedButton';
 
 interface iSegmentedTurnBtnProps {
   turn: TurnoID;
   onTurnChange?: (turn: TurnoID) => void;
+  variant?: 'default' | 'pills' | 'modern' | 'subtle';
+  all?: boolean;
+  size?: 'sm' | 'md' | 'lg';
 }
 
-const SegmentedTurnBtn: React.FC<iSegmentedTurnBtnProps> = ({ turn, onTurnChange }) => {
-  const [selectedTurn, setSelectedTurn] = useState<TurnoID>(turn);
+const SegmentedTurnBtn: React.FC<iSegmentedTurnBtnProps> = ({
+  turn,
+  onTurnChange,
+  variant = 'modern',
+  all = false,
+}) => {
+  const turnOptions = [
+    { value: 'NOT' as TurnoID, label: 'Noturno' },
+    { value: 'MAT' as TurnoID, label: 'Matutino' },
+    { value: 'VES' as TurnoID, label: 'Vespertino' },
+  ];
 
-  const handleBtnClick = (turno: TurnoID) => {
-    setSelectedTurn(turno);
-    if (onTurnChange) {
-      onTurnChange(turno);
-    }
-  };
+  // Adiciona a opção "Total" se a prop all for verdadeira
+  if (turnOptions.length < 4 && all) {
+    turnOptions.push({ value: 'ALL' as TurnoID, label: 'Total' });
+  }
+
   return (
-    <ButtonGroup className='shadow'>
-      <Button
-        variant='light'
-        // variant={selectedTurn === 'MAT' ? 'primary' : 'light'}
-        onClick={() => handleBtnClick('MAT')}
-        active={selectedTurn === 'MAT'}
-      >
-        Matutino
-      </Button>
-      <Button
-        variant='light'
-        // variant={selectedTurn === 'VES' ? 'primary' : 'light'}
-        onClick={() => handleBtnClick('VES')}
-        active={selectedTurn === 'VES'}
-      >
-        Vespertino
-      </Button>
-      <Button
-        variant='light'
-        // variant={selectedTurn === 'NOT' ? 'primary' : 'light'}
-        onClick={() => handleBtnClick('NOT')}
-        active={selectedTurn === 'NOT'}
-      >
-        Noturno
-      </Button>
-    </ButtonGroup>
+    <SegmentedButton
+      options={turnOptions}
+      value={turn}
+      onChange={onTurnChange}
+      variant={variant}
+    />
   );
 };
 
