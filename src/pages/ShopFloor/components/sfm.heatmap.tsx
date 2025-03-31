@@ -161,6 +161,11 @@ const Heatmap: React.FC<iHeatmapProps> = ({ indicator }) => {
           radius: '100%',
         },
       ],
+      toolbox: {
+        feature: {
+          saveAsImage: { title: 'Salvar' },
+        },
+      },
     };
     setOptions(options);
   }, [heatmapData, indicator, showByLine]);
