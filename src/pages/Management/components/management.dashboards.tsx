@@ -1,11 +1,13 @@
 //cSpell: words linepicker
 import { format, startOfDay } from 'date-fns';
 import React, { useEffect, useState } from 'react';
-import { Container, Stack } from 'react-bootstrap';
+import { Card, Col, Container, Row, Stack } from 'react-bootstrap';
 import { getInfoIHM } from '../../../api/apiRequests';
 import SegmentedTurnBtn from '../../../components/SegmentedTurnBtn';
 import { TurnoID } from '../../../helpers/constants';
 import { iInfoIHM } from '../../../interfaces/InfoIHM.interface';
+import DashBar from './Dash.Bar';
+import DashTimeline from './Dash.Timeline';
 import DashYamazumi from './Dash.Yamazumi';
 import DashboardDatePicker from './management.d.datepicker';
 import ManagementLinePicker from './management.d.linepicker';
@@ -76,7 +78,74 @@ const ManagementDashboards: React.FC = () => {
         <SegmentedTurnBtn onTurnChange={(turno) => setTurn(turno)} turn={turn} all />
         <ManagementLinePicker onChange={setSelectedLines} />
       </Stack>
-      <DashYamazumi data={infoIhmData} />
+      <Row className='mb-3'>
+        <Col>
+          <Card className='p-2 bg-transparent border-0 shadow-sm'>
+            <DashYamazumi data={infoIhmData} />
+          </Card>
+        </Col>
+      </Row>
+      <Row className='mb-3'>
+        <Col xs={12} xl={6} className='mb-3'>
+          <Card className='p-2 bg-transparent border-0 shadow-sm'>
+            <DashBar
+              data={infoIhmData}
+              selectedLines={selectedLines}
+              selectedShift={turn}
+              selectedDate={selectedDate}
+              dataType={'ALL'}
+            />
+          </Card>
+        </Col>
+        <Col xs={12} xl={6}>
+          <Card className='p-2 bg-transparent border-0 shadow-sm'>
+            <DashBar
+              data={infoIhmData}
+              selectedLines={selectedLines}
+              selectedShift={turn}
+              selectedDate={selectedDate}
+              dataType={'Primeiro'}
+            />
+          </Card>
+        </Col>
+      </Row>
+      <Row className='mb-3'>
+        <Col xs={12} xl={6} className='mb-3'>
+          <Card className='p-2 bg-transparent border-0 shadow-sm'>
+            <DashBar
+              data={infoIhmData}
+              selectedLines={selectedLines}
+              selectedShift={turn}
+              selectedDate={selectedDate}
+              dataType={'Segundo'}
+            />
+          </Card>
+        </Col>
+        <Col xs={12} xl={6}>
+          <Card className='p-2 bg-transparent border-0 shadow-sm'>
+            <DashBar
+              data={infoIhmData}
+              selectedLines={selectedLines}
+              selectedShift={turn}
+              selectedDate={selectedDate}
+              dataType={'Terceiro'}
+            />
+          </Card>
+        </Col>
+      </Row>
+      {dateMode === 'single' && (
+        <Row>
+          <Col xs={12}>
+            <Card className='p-2 bg-transparent border-0 shadow-sm'>
+              <DashTimeline
+                data={infoIhmData}
+                selectedLines={selectedLines}
+                selectedShift={turn}
+              />
+            </Card>
+          </Col>
+        </Row>
+      )}
     </Container>
   );
 };

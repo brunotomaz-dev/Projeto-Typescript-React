@@ -85,6 +85,7 @@ export enum BSColors {
   PURPLE_COLOR = "#6f42c1",
   SPACE_CADET_COLOR = "#282f44",
   BLUE_DELFT_COLOR = "#353e5a",
+  CAT_POLY_GREEN_COLOR = "#1E441E",
 }
 
 export const colorObj = {
@@ -100,6 +101,7 @@ export const colorObj = {
   ["Limpeza"]: BSColors.ORANGE_COLOR,
   ["Parada Programada"]: BSColors.DANGER_COLOR,
   ["Não apontado"]: BSColors.WARNING_COLOR,
+  ["Perda de Ciclo"]: BSColors.CAT_POLY_GREEN_COLOR,
 }
 
 export const DESC_EFF = {

@@ -1,7 +1,8 @@
 // cSpell: words yamazumi
 
 import ReactECharts from 'echarts-for-react';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import { Alert, Row, Spinner } from 'react-bootstrap';
 import { colorObj } from '../../../helpers/constants';
 import { iInfoIHM } from '../../../interfaces/InfoIHM.interface';
 
@@ -10,12 +11,17 @@ interface iYamazumiProps {
 }
 
 const DashYamazumi: React.FC<iYamazumiProps> = ({ data }) => {
+  /* --------------------------------------- Estados Locais --------------------------------------- */
+  const [isLoading, setIsLoading] = useState(true);
+
+  /* ------------------------------------------- Funções ------------------------------------------ */
   // Processar os dados para o formato ECharts
   const chartData = useMemo(() => {
     // Se não houver dados, retornar objeto vazio
     if (!data || data.length === 0) {
       return { xAxis: [], series: [] };
     }
+    setIsLoading(true); // Iniciar o carregamento
 
     // Processar os dados conforme as regras
     const processedData = data.map((item) => {
@@ -83,12 +89,14 @@ const DashYamazumi: React.FC<iYamazumiProps> = ({ data }) => {
     // Formatar os rótulos do eixo X (Linha 1, Linha 2, etc.)
     const linhasLabels = linhas.map((linha) => `Linha ${linha}`);
 
+    setIsLoading(false); // Finalizar o carregamento
     return {
       xAxis: linhasLabels,
       series,
     };
   }, [data]);
 
+  /* ------------------------------------------- Option ------------------------------------------- */
   // Opções do gráfico
   const options = {
     title: {
@@ -160,19 +168,37 @@ const DashYamazumi: React.FC<iYamazumiProps> = ({ data }) => {
     },
   };
 
+  /* ---------------------------------------------------------------------------------------------- */
+  /*                                             LAYOUT                                             */
+  /* ---------------------------------------------------------------------------------------------- */
   return (
     <>
-      {data && data.length > 0 ? (
-        <ReactECharts
-          option={options}
-          style={{ height: '400px', width: '100%' }}
-          className='react-echarts'
-          notMerge={true}
-        />
+      {!isLoading ? (
+        data && data.length > 0 ? (
+          <ReactECharts
+            option={options}
+            style={{ height: '400px', width: '100%' }}
+            className='react-echarts'
+            notMerge={true}
+          />
+        ) : (
+          <Row
+            style={{ height: '400px' }}
+            className='d-flex justify-content-center align-items-center p-2'
+          >
+            <Alert variant='info' className='text-center'>
+              Sem dados disponíveis para exibição. Por favor, selecione outra data ou
+              período.
+            </Alert>
+          </Row>
+        )
       ) : (
-        <div className='alert alert-info'>
-          Sem dados disponíveis para exibição. Por favor, selecione outra data ou período.
-        </div>
+        <Row
+          className='d-flex justify-content-center align-items-center p-3'
+          style={{ height: '400px' }}
+        >
+          <Spinner animation='border' style={{ width: '3rem', height: '3rem' }} />
+        </Row>
       )}
     </>
   );
