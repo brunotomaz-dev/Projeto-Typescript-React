@@ -10,7 +10,8 @@ type DateParam = string | string[];
 interface iParams {
   data: DateParam;
   turno?: string;
-  maquina_id?: string;
+  maquina_id?: string | string[];
+  status?: string;
 }
 
 interface iBaseParams {
@@ -93,7 +94,7 @@ export const getInfoIHM = async <
 };
 
 export const getMaquinaInfo = async (
-  { data, turno, maquina_id }: iParams,
+  { data, turno, maquina_id, status }: iParams,
   fields?: string[]
 ) => {
   // Cria o filtro de data
@@ -103,6 +104,7 @@ export const getMaquinaInfo = async (
     ...dateFilter,
     ...(maquina_id && { maquina_id }),
     ...(turno && { turno }),
+    ...(status && { status }),
     ...(fields && { fields: fields.join(',') }),
   };
 

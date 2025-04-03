@@ -176,7 +176,8 @@ const SupervisionPage: React.FC = () => {
   return (
     <PageLayout>
       <h4 className='text-center fs-4'>
-        {isSupervisor || isSuperUser ? 'Supervisão' : 'Liderança'} - {userName}
+        {isSupervisor ? 'Supervisão - ' : isLeadership ? 'Liderança - ' : ''}
+        {userName}
       </h4>
       <Container fluid>
         <Stack direction='horizontal' className='p-2 gap-5 mb-3'>

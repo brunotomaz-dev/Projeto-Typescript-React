@@ -1,17 +1,23 @@
 import React, { useState } from 'react';
+import { BsBox } from 'react-icons/bs';
+import { IoBarChart } from 'react-icons/io5';
+import SegmentedButton from '../../components/SegmentedButton';
 import PageLayout from '../../components/pageLayout';
-import MNGMainSegmentedBtn from './components/management.MainSegmentedBtn';
 import ManagementProduction from './components/management.Production';
+import ManagementDashboards from './components/management.dashboards';
 
 const Management: React.FC = () => {
-  /* -------------------------------------------- DATAS ------------------------------------------- */
-  // Hoje
-  const today = new Date();
-  // Primeiro dia do mês
-  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+  const buttonOptions = [
+    {
+      value: 'dashboards',
+      label: 'Dashboards',
+      icon: <IoBarChart className='mb-1 me-1' />,
+    },
+    { value: 'production', label: 'Produção', icon: <BsBox className='mb-1 me-1' /> },
+  ];
 
   /* --------------------------------- INICIALIZAR ESTADOS LOCAIS --------------------------------- */
-  const [btnChoice, setBtnChoice] = useState('production');
+  const [btnChoice, setBtnChoice] = useState('dashboards');
 
   /* ---------------------------------------------------------------------------------------------- */
   /*                                             Layout                                             */
@@ -19,9 +25,14 @@ const Management: React.FC = () => {
   return (
     <PageLayout>
       <h1 className='text-center p-2'>Gestão de Produção</h1>
-      <MNGMainSegmentedBtn setBtnChoice={setBtnChoice} />
+      <SegmentedButton
+        options={buttonOptions}
+        value={btnChoice}
+        onChange={setBtnChoice}
+      />
       <hr />
       {btnChoice === 'production' && <ManagementProduction />}
+      {btnChoice === 'dashboards' && <ManagementDashboards />}
     </PageLayout>
   );
 };

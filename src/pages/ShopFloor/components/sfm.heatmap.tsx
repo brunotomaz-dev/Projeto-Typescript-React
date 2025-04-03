@@ -5,7 +5,7 @@ import { getIndicator } from '../../../api/apiRequests';
 import { ColorsSTM, IndicatorType, TurnosObj } from '../../../helpers/constants';
 import { heatmapAdjust } from '../../../helpers/heatmapAdjust';
 import { iHeatmapData } from '../../../interfaces/Heatmap.interface';
-import SegmentedButtonTurno from './segmentedButton.turno';
+import SegmentedButtonTurno from './Sfm.SegmentedButton';
 
 interface iHeatmapProps {
   indicator: IndicatorType;
@@ -161,6 +161,11 @@ const Heatmap: React.FC<iHeatmapProps> = ({ indicator }) => {
           radius: '100%',
         },
       ],
+      toolbox: {
+        feature: {
+          saveAsImage: { title: 'Salvar' },
+        },
+      },
     };
     setOptions(options);
   }, [heatmapData, indicator, showByLine]);
@@ -170,11 +175,13 @@ const Heatmap: React.FC<iHeatmapProps> = ({ indicator }) => {
   /* -------------------------------------------------------------------------------------------------------- */
   return (
     <>
-      <SegmentedButtonTurno
-        turnos={TurnosObj}
-        onTurnoChange={handleTurnoChange}
-        onByLineChange={handleLineTurnChange}
-      />
+      <div className='w-75 mx-auto'>
+        <SegmentedButtonTurno
+          turnos={TurnosObj}
+          onTurnoChange={handleTurnoChange}
+          onByLineChange={handleLineTurnChange}
+        />
+      </div>
       <EChartsReact option={options} opts={{ renderer: 'canvas' }} />
     </>
   );
