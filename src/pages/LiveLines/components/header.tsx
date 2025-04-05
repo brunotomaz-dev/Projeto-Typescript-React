@@ -1,7 +1,7 @@
 import { parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
 import React from 'react';
-import { Col, Row } from 'react-bootstrap';
+import { Button, Row, Stack } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 
 interface HeaderProps {
@@ -9,14 +9,25 @@ interface HeaderProps {
   nowDate: string;
   selectedMachine: string;
   onDateChange: (date: Date | null) => void;
+  isOpenedUpdateStops: boolean;
+  setIsOpenedUpdateStops: (isOpened: boolean) => void;
 }
 
-const LiveLinesHeader: React.FC<HeaderProps> = ({ selectedDate, nowDate, selectedMachine, onDateChange }) => {
+const LiveLinesHeader: React.FC<HeaderProps> = ({
+  selectedDate,
+  nowDate,
+  selectedMachine,
+  onDateChange,
+  isOpenedUpdateStops,
+  setIsOpenedUpdateStops,
+}) => {
   return (
     <Row className='m-2'>
-      <h1 className='text-center p-2'>{selectedDate === nowDate ? 'Linhas em Tempo Real' : 'Linhas Histórico'}</h1>
+      <h1 className='text-center p-2'>
+        {selectedDate === nowDate ? 'Linhas em Tempo Real' : 'Linhas Histórico'}
+      </h1>
       <h5 className='text-center'>{`(${selectedMachine || '-'})`}</h5>
-      <Col>
+      <Stack direction='horizontal' gap={2}>
         <DatePicker
           selected={parseISO(selectedDate)}
           className='form-control text-center'
@@ -30,7 +41,13 @@ const LiveLinesHeader: React.FC<HeaderProps> = ({ selectedDate, nowDate, selecte
           minDate={parseISO('2024-11-01')}
           maxDate={startOfDay(new Date())}
         />
-      </Col>
+        <Button
+          variant='outline-secondary'
+          onClick={() => setIsOpenedUpdateStops(!isOpenedUpdateStops)}
+        >
+          {isOpenedUpdateStops ? 'Fechar Apontamentos' : 'Ver Apontamentos'}
+        </Button>
+      </Stack>
     </Row>
   );
 };

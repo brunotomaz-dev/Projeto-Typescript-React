@@ -233,6 +233,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
     } finally {
       setFormData(emptyForm);
       setIsSaving(false);
+      setValidated(false);
     }
   };
 

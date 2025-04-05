@@ -73,7 +73,8 @@ const DashBar: React.FC<iDashBarProps> = ({
           (notEff) =>
             originalItem.motivo?.includes(notEff) ||
             originalItem.causa?.includes(notEff) ||
-            originalItem.problema?.includes(notEff)
+            originalItem.problema?.includes(notEff) ||
+            originalItem.afeta_eff === 1
         );
 
         if (isNotEff) return false;

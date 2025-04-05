@@ -1,8 +1,9 @@
-//cSpell: words movimentacao absenteismo conclusao
+//cSpell: words movimentacao absenteismo conclusao maquinaihm
 import { format, startOfDay } from 'date-fns';
 import { iPresence } from '../interfaces/Absence.interface';
 import { iActionPlan } from '../interfaces/ActionPlan.interface';
 import { iCartCount } from '../interfaces/Carrinhos.interface';
+import { iMaquinaIHM } from '../pages/LiveLines/interfaces/maquinaIhm.interface';
 import { iAbsenceForm } from '../pages/Supervision/interface/AbsenceForm.interface';
 import api from './axiosConfig';
 type DateParam = string | string[];
@@ -310,3 +311,56 @@ export const deleteActionPlan = async (recno: number) => {
     throw error;
   }
 };
+
+
+export const getMaquinaIHM = async <
+  T extends DateParam | (iBaseParams & { data: DateParam }),
+>(
+  baseParams: T,
+  fields?: string[]
+) => {
+  // Verifica se é apenas a data ou se possui outros parâmetros
+  const isDateOnly =
+    typeof baseParams === 'string' || Array.isArray(baseParams);
+
+  // Cria os parâmetros
+  const params = {
+    ...(isDateOnly
+      ? createDateFilter(baseParams as DateParam)
+      : {
+          ...createDateFilter((baseParams as iBaseParams).data),
+          ...Object.entries(baseParams as iBaseParams)
+            .filter(([key]) => key !== 'data')
+            .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {}),
+        }),
+    ...(fields && { fields: fields.join(',') }),
+  };
+
+  try {
+    const response = await api.get('api/maquinaihm/', { params: params });
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao buscar dados de máquina IHM', error);
+    throw error;
+  }
+}
+
+export const updateMaquinaIHM = async (data: iMaquinaIHM) => {
+  try {
+    const response = await api.put(`api/maquinaihm/${data.recno}/`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao atualizar registro de máquina IHM', error);
+    throw error;
+  }
+}
+
+export const insertMaquinaIHM = async (data: iMaquinaIHM) => {
+  try {
+    const response = await api.post('api/maquinaihm/', data);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao inserir registro de máquina IHM', error);
+    throw error;
+  }
+}

@@ -231,7 +231,8 @@ const DashTimeline: React.FC<DashTimelineProps> = ({
               ${data.problema ? `Problema: ${data.problema}<br/>` : ''}
               ${data.causa ? `Causa: ${data.causa}<br/>` : ''}
               Horário: ${format(new Date(data.data_hora), 'HH:mm')} - ${format(new Date(data.data_hora_final), 'HH:mm')}<br/>
-              Duração: ${data.tempo} min
+              Duração: ${data.tempo} min<br/>
+              <b>${data.afeta_eff ? 'Não impacta' : ''}</b>
             </div>
           `;
         },

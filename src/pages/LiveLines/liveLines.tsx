@@ -15,6 +15,7 @@ import LineControls from './components/lineControls';
 import LineCycle from './components/linecycle';
 import ProductionPanel from './components/productionCard';
 import Timeline from './components/timeline';
+import UpdateStops from './components/UpdateStops';
 import { iEff, iIndicator, iPerf, iRep } from './interfaces/indicator.interfaces';
 import { iInfoIhmLive } from './interfaces/infoIhm';
 import { iMaquinaInfo } from './interfaces/maquinaInfo.interface';
@@ -69,6 +70,7 @@ const LiveLines: React.FC = () => {
   const [lineMatEff, setLineMatEff] = useState<number>(0);
   const [lineVesEff, setLineVesEff] = useState<number>(0);
   const [lineNotEff, setLineNotEff] = useState<number>(0);
+  const [isOpenedUpdateStops, setIsOpenedUpdateStops] = useState<boolean>(false);
   // const [containerHeight, setContainerHeight] = useState<string>('100%');
 
   /* ------------------------------------------------ HANDLES ----------------------------------------------- */
@@ -188,6 +190,7 @@ const LiveLines: React.FC = () => {
       'problema',
       'causa',
       'tempo',
+      'afeta_eff',
     ]);
     setInfoIHM(data);
   };
@@ -335,7 +338,21 @@ const LiveLines: React.FC = () => {
         nowDate={nowDate}
         selectedMachine={selectedMachine}
         onDateChange={handleDateChange}
+        isOpenedUpdateStops={isOpenedUpdateStops}
+        setIsOpenedUpdateStops={setIsOpenedUpdateStops}
       />
+      {isOpenedUpdateStops && (
+        <Row className='p-2 mb-2'>
+          <Col>
+            <UpdateStops
+              selectedDate={selectedDate}
+              nowDate={nowDate}
+              selectedLine={selectedLine}
+              selectedShift={selectedShift}
+            />
+          </Col>
+        </Row>
+      )}
       <Row className='m-2 gap-1'>
         {/* --------------------------------------- COLUNA DOS GAUGES -------------------------------------- */}
         <Col

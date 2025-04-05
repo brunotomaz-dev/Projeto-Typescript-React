@@ -1,7 +1,13 @@
 import EChartsReact from 'echarts-for-react';
 import React, { useMemo } from 'react';
 import { Row } from 'react-bootstrap';
-import { BSColors, CICLOS_ESPERADOS, CICLOS_ESPERADOS_BOL, DESC_EFF, NOT_EFF } from '../../../helpers/constants';
+import {
+  BSColors,
+  CICLOS_ESPERADOS,
+  CICLOS_ESPERADOS_BOL,
+  DESC_EFF,
+  NOT_EFF,
+} from '../../../helpers/constants';
 import { iInfoIhmLive } from '../interfaces/infoIhm';
 import { iMaquinaInfo } from '../interfaces/maquinaInfo.interface';
 
@@ -28,7 +34,8 @@ const BarStops: React.FC<BarStopsProps> = ({ data, cycleData }) => {
           (notEff) =>
             originalItem.motivo?.includes(notEff) ||
             originalItem.causa?.includes(notEff) ||
-            originalItem.problema?.includes(notEff)
+            originalItem.problema?.includes(notEff) ||
+            originalItem.afeta_eff === 1
         );
 
         if (isNotEff) return false;
@@ -43,7 +50,8 @@ const BarStops: React.FC<BarStopsProps> = ({ data, cycleData }) => {
           );
 
           if (descEffKey) {
-            const tempoRestante = originalItem.tempo - DESC_EFF[descEffKey as keyof typeof DESC_EFF];
+            const tempoRestante =
+              originalItem.tempo - DESC_EFF[descEffKey as keyof typeof DESC_EFF];
 
             // Se tempo restante for <= 0, remove o item
             if (tempoRestante <= 0) return false;
@@ -60,11 +68,15 @@ const BarStops: React.FC<BarStopsProps> = ({ data, cycleData }) => {
         // Se for parada, aplica o desconto no tempo
         if (item.status === 'parada') {
           const descEffKey = Object.keys(DESC_EFF).find(
-            (key) => item.motivo?.includes(key) || item.causa?.includes(key) || item.problema?.includes(key)
+            (key) =>
+              item.motivo?.includes(key) ||
+              item.causa?.includes(key) ||
+              item.problema?.includes(key)
           );
 
           if (descEffKey) {
-            const tempoRestante = item.tempo - DESC_EFF[descEffKey as keyof typeof DESC_EFF];
+            const tempoRestante =
+              item.tempo - DESC_EFF[descEffKey as keyof typeof DESC_EFF];
             return {
               ...item,
               tempo: tempoRestante,
@@ -78,7 +90,10 @@ const BarStops: React.FC<BarStopsProps> = ({ data, cycleData }) => {
 
   // Calcula o tempo total de parada
   const totalStopTime = useMemo(
-    () => filteredData.filter((item) => item.status === 'parada').reduce((acc, item) => acc + item.tempo || 0, 0),
+    () =>
+      filteredData
+        .filter((item) => item.status === 'parada')
+        .reduce((acc, item) => acc + item.tempo || 0, 0),
     [filteredData]
   );
 
@@ -93,10 +108,13 @@ const BarStops: React.FC<BarStopsProps> = ({ data, cycleData }) => {
     // Produto único
     const product = cycleData.length > 0 ? cycleData[0].produto : '';
     // Verifica se o produto contém a palavra ' BOL', se tiver usa CICLOS_ESPERADOS, se não CICLOS_ESPERADOS_BOL
-    const ciclosIdeais = product.includes(' BOL') ? CICLOS_ESPERADOS_BOL : CICLOS_ESPERADOS;
+    const ciclosIdeais = product.includes(' BOL')
+      ? CICLOS_ESPERADOS_BOL
+      : CICLOS_ESPERADOS;
 
     // Média de ciclos por minuto
-    const cycleAverage = cycleData.reduce((acc, item) => acc + item.ciclo_1_min, 0) / cycleData.length;
+    const cycleAverage =
+      cycleData.reduce((acc, item) => acc + item.ciclo_1_min, 0) / cycleData.length;
     // Diferença entre a média e o esperado
     const cycleDiff = ciclosIdeais > cycleAverage ? ciclosIdeais - cycleAverage : 0;
 
@@ -195,7 +213,9 @@ const BarStops: React.FC<BarStopsProps> = ({ data, cycleData }) => {
     },
     yAxis: {
       type: 'category',
-      data: stopSummary.map((item) => `${item.motivo} - ${item.problema} - ${item.causa}`),
+      data: stopSummary.map(
+        (item) => `${item.motivo} - ${item.problema} - ${item.causa}`
+      ),
       axisLabel: {
         show: false,
       },

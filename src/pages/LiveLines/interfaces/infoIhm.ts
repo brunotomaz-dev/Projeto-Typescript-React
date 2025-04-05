@@ -6,4 +6,5 @@ export interface iInfoIhmLive {
   motivo: string;
   problema: string;
   causa: string;
+  afeta_eff: number;
 }
