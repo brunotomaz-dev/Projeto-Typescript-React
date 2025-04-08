@@ -1,45 +1,36 @@
-// cSpell: words desnormalizar
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import React, { useEffect, useState } from 'react';
 import { Button, Col, Form, Modal, Row, Stack } from 'react-bootstrap';
-import {
-  updateHistoricalAppointmentRecord,
-  updateMaquinaIHM,
-} from '../../../api/apiRequests';
+import { insertMaquinaIHM } from '../../../api/apiRequests';
 import { apontamentosHierarquia } from '../../../helpers/apontamentosHierarquia';
-import { usePermissions } from '../../../hooks/usePermissions';
 import { useToast } from '../../../hooks/useToast';
+import { useAppSelector } from '../../../redux/store/hooks';
 import { iMaquinaIHM } from '../interfaces/maquinaIhm.interface';
 
-// Extended interface to include the _isHistorical property
-interface iExtendedMaquinaIHM extends iMaquinaIHM {
-  _isHistorical?: boolean;
-}
-
-interface EditStopModalProps {
+interface CreateStopModalProps {
   show: boolean;
   onHide: () => void;
-  stopData: iMaquinaIHM | null;
+  selectedLine: number;
+  selectedMachine: string;
+  selectedDate: string;
   onSave: () => void;
 }
 
-const EditStopModal: React.FC<EditStopModalProps> = ({
+const CreateStopModal: React.FC<CreateStopModalProps> = ({
   show,
   onHide,
-  stopData,
+  selectedLine,
+  selectedMachine,
+  selectedDate,
   onSave,
 }) => {
   /* ------------------------------------------- HOOK's ------------------------------------------- */
-  const { hasResourcePermission } = usePermissions();
   const { showToast, ToastDisplay } = useToast();
-
-  /* --------------------------------------- Estados Locais --------------------------------------- */
-  const canFlag = hasResourcePermission('ihm_appointments', 'flag');
+  const userName = useAppSelector((state) => state.user.fullName);
 
   /* --------------------------------------- Estados Locais --------------------------------------- */
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState<Partial<iExtendedMaquinaIHM>>({});
+  const [formData, setFormData] = useState<Partial<iMaquinaIHM>>({});
+
   // Estados para controlar as opções dependentes
   const [motivos, setMotivos] = useState<string[]>([]);
   const [availableEquipment, setAvailableEquipment] = useState<string[]>([]);
@@ -47,13 +38,7 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
   const [availableCauses, setAvailableCauses] = useState<string[]>([]);
 
   /* ----------------------------------------- AUXILIARES ----------------------------------------- */
-  // Função para normalizar o equipamento entre exibição e armazenamento
-  const normalizeEquipamento = (equip: string | undefined): string => {
-    if (equip === ' ' || equip === '' || equip === '-') return 'Linha';
-    return equip || ' ';
-  };
-
-  // Função para desnormalizar o equipamento para envio ao backend
+  // Função para ajustar o equipamento para envio ao backend
   const denormalizeEquipamento = (equip: string | undefined): string => {
     if (equip === 'Linha') return '-';
     return equip || '-';
@@ -61,53 +46,26 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
 
   /* ------------------------------------------- Effect ------------------------------------------- */
   useEffect(() => {
-    if (stopData) {
-      // Normalizar equipamento para exibição: ' ' ou '' -> 'Linha'
-      const formattedStopData = {
-        ...stopData,
-        equipamento: normalizeEquipamento(stopData.equipamento),
-      };
+    if (show) {
+      // Inicializar os dados do formulário
+      const currentTime = new Date();
+      const currentHour = currentTime.getHours().toString().padStart(2, '0');
+      const currentMinute = currentTime.getMinutes().toString().padStart(2, '0');
 
-      setFormData(formattedStopData);
+      setFormData({
+        linha: selectedLine,
+        maquina_id: selectedMachine,
+        data_registro: selectedDate,
+        hora_registro: `${currentHour}:${currentMinute}`,
+        afeta_eff: 0, // Valor padrão
+        os_numero: '0', // Valor padrão
+        operador_id: '', // Inicializa vazio para ser preenchido pelo usuário
+      });
 
       // Inicializar os motivos disponíveis
       setMotivos(Object.keys(apontamentosHierarquia));
-
-      // Se já tiver um motivo selecionado, carregar os equipamentos correspondentes
-      if (stopData.motivo) {
-        const motivoData =
-          apontamentosHierarquia[stopData.motivo as keyof typeof apontamentosHierarquia];
-
-        if (motivoData) {
-          // Carregar lista de equipamentos para este motivo
-          const equipmentList = Object.keys(motivoData);
-          setAvailableEquipment(equipmentList);
-
-          // Se já tiver um equipamento selecionado, carregar os problemas correspondentes
-          const displayEquipamento = normalizeEquipamento(stopData.equipamento);
-
-          // Se o equipamento existe na hierarquia, carregar seus problemas
-          if (displayEquipamento in motivoData) {
-            setAvailableProblems(
-              Object.keys(motivoData[displayEquipamento as keyof typeof motivoData])
-            );
-
-            // Se já tiver um problema selecionado, carregar as causas correspondentes
-            if (stopData.problema) {
-              const equipObj = motivoData[displayEquipamento as keyof typeof motivoData];
-              // Verificar se o equipamento e o problema existem na hierarquia
-              if (equipObj && stopData.problema in equipObj) {
-                // Acessar as causas de forma segura
-                setAvailableCauses(
-                  equipObj[stopData.problema as keyof typeof equipObj] || []
-                );
-              }
-            }
-          }
-        }
-      }
     }
-  }, [stopData]);
+  }, [show, selectedLine, selectedMachine, selectedDate, userName]);
 
   /* ------------------------------------------- Handles ------------------------------------------ */
   // Manipular mudanças nos campos do formulário
@@ -115,6 +73,23 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
     e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+
+    // Validação especial para o campo operador_id
+    if (name === 'operador_id') {
+      // Permitir apenas números
+      const numericValue = value.replace(/\D/g, '');
+
+      // Limitar a 9 caracteres
+      const truncatedValue = numericValue.slice(0, 9);
+
+      // Atualizar o formulário
+      setFormData((prev) => ({
+        ...prev,
+        [name]: truncatedValue,
+      }));
+
+      return;
+    }
 
     if (name === 'equipamento') {
       // Atualizar o campo e limpar os campos dependentes
@@ -158,7 +133,7 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
         equipamento: '',
         problema: '',
         causa: '',
-        os_numero: value === 'Manutenção' ? prev.os_numero : '',
+        os_numero: value === 'Manutenção' ? prev.os_numero : '0',
         [name]: value,
       }));
 
@@ -205,7 +180,8 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
       !formData.motivo ||
       !formData.equipamento ||
       !formData.problema ||
-      !formData.causa
+      !formData.causa ||
+      !formData.operador_id // Adicionar validação para o operador_id
     ) {
       showToast('Preencha todos os campos obrigatórios', 'warning');
       return;
@@ -219,43 +195,27 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
 
     setIsLoading(true);
     try {
-      // Criar uma cópia do formData para não modificar o estado diretamente
+      // Preparar os dados para envio
       const dataToSend = { ...formData };
-
-      // Remover o campo s_backup antes de enviar para a API
-      if ('s_backup' in dataToSend) {
-        delete dataToSend.s_backup;
-      }
 
       // Garantir que o campo equipamento seja um espaço em branco quando for "Linha"
       dataToSend.equipamento = denormalizeEquipamento(dataToSend.equipamento);
 
-      // Tratar o campo os_numero para evitar nulo quando não for Manutenção
+      // Garantir que o campo os_numero esteja preenchido
       if (dataToSend.motivo !== 'Manutenção') {
         dataToSend.os_numero = '0';
       } else if (!dataToSend.os_numero) {
         dataToSend.os_numero = '0';
       }
 
-      // Verificar se é um registro histórico ou atual
-      if ('_isHistorical' in dataToSend) {
-        // Remover propriedades auxiliares antes de enviar
-        delete dataToSend._isHistorical;
-
-        // Usar a API específica para registros históricos
-        await updateHistoricalAppointmentRecord(dataToSend as iMaquinaIHM);
-        showToast('Registro histórico atualizado com sucesso!', 'success');
-      } else {
-        // Usar a API normal para registros do dia atual
-        await updateMaquinaIHM(dataToSend as iMaquinaIHM);
-        showToast('Parada atualizada com sucesso!', 'success');
-      }
-
+      console.log('Dados a serem enviados:', dataToSend);
+      await insertMaquinaIHM(dataToSend as iMaquinaIHM);
+      showToast('Apontamento registrado com sucesso!', 'success');
       onSave();
       onHide();
     } catch (error) {
-      console.error('Erro ao atualizar parada:', error);
-      showToast('Erro ao atualizar parada', 'danger');
+      console.error('Erro ao registrar apontamento:', error);
+      showToast('Erro ao registrar apontamento', 'danger');
     } finally {
       setIsLoading(false);
     }
@@ -266,19 +226,8 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
   /* ---------------------------------------------------------------------------------------------- */
   return (
     <Modal show={show} onHide={onHide} size='lg' centered>
-      <Modal.Header
-        closeButton
-        className={formData._isHistorical ? 'bg-info text-white' : ''}
-      >
-        <Modal.Title>
-          {formData._isHistorical ? 'Editar Registro Histórico' : 'Editar Parada'}
-          {formData._isHistorical && (
-            <div className='small mt-1'>
-              <i className='bi bi-info-circle me-1'></i>
-              Editando registro de data anterior
-            </div>
-          )}
-        </Modal.Title>
+      <Modal.Header closeButton>
+        <Modal.Title>Adicionar Apontamento</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form>
@@ -298,23 +247,18 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
             <Col md={3}>
               <Form.Group>
                 <Form.Label>Data</Form.Label>
-                <Form.Control
-                  type='text'
-                  value={
-                    formData.data_registro
-                      ? format(parseISO(formData.data_registro), 'dd/MM/yyyy', {
-                          locale: ptBR,
-                        })
-                      : ''
-                  }
-                  disabled
-                />
+                <Form.Control type='text' value={formData.data_registro || ''} disabled />
               </Form.Group>
             </Col>
             <Col md={3}>
               <Form.Group>
                 <Form.Label>Hora</Form.Label>
-                <Form.Control type='text' value={formData.hora_registro || ''} disabled />
+                <Form.Control
+                  type='time'
+                  name='hora_registro'
+                  value={formData.hora_registro || ''}
+                  onChange={handleChange}
+                />
               </Form.Group>
             </Col>
           </Row>
@@ -379,7 +323,7 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
           </Row>
 
           <Row className='mb-3'>
-            <Col md={6}>
+            <Col md={formData.motivo === 'Manutenção' ? 4 : 6}>
               <Form.Group>
                 <Form.Label className='required-field'>Causa</Form.Label>
                 <Form.Select
@@ -398,8 +342,9 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
                 </Form.Select>
               </Form.Group>
             </Col>
+            {/* Campo OS_Numero apenas quando motivo for Manutenção */}
             {formData.motivo === 'Manutenção' && (
-              <Col md={3}>
+              <Col md={4}>
                 <Form.Group>
                   <Form.Label className='required-field'>Número da OS</Form.Label>
                   <Form.Control
@@ -407,27 +352,28 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
                     name='os_numero'
                     value={formData.os_numero || ''}
                     onChange={handleChange}
-                    placeholder='Número da OS'
+                    placeholder='Informe o número da OS'
                     required
                   />
                 </Form.Group>
               </Col>
             )}
-            {canFlag && (
-              <Col md={formData.motivo === 'Manutenção' ? 3 : 6}>
-                <Form.Group>
-                  <Form.Label>Afeta Eficiência?</Form.Label>
-                  <Form.Select
-                    name='afeta_eff'
-                    value={formData.afeta_eff === undefined ? 0 : formData.afeta_eff}
-                    onChange={handleChange}
-                  >
-                    <option value={0}>Sim</option>
-                    <option value={1}>Não</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-            )}
+            <Col md={formData.motivo === 'Manutenção' ? 4 : 6}>
+              <Form.Group>
+                <Form.Label className='required-field'>Operador ID</Form.Label>
+                <Form.Control
+                  type='text'
+                  name='operador_id'
+                  value={formData.operador_id || ''}
+                  onChange={handleChange}
+                  placeholder='Digite o ID do operador (apenas números)'
+                  required
+                  maxLength={9}
+                  inputMode='numeric'
+                  pattern='[0-9]*'
+                />
+              </Form.Group>
+            </Col>
           </Row>
         </Form>
       </Modal.Body>
@@ -437,7 +383,7 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
             Cancelar
           </Button>
           <Button variant='primary' onClick={handleSubmit} disabled={isLoading}>
-            {isLoading ? 'Salvando...' : 'Salvar Alterações'}
+            {isLoading ? 'Salvando...' : 'Salvar'}
           </Button>
         </Stack>
       </Modal.Footer>
@@ -446,4 +392,4 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
   );
 };
 
-export default EditStopModal;
+export default CreateStopModal;

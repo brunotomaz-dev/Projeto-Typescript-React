@@ -3,6 +3,7 @@ import { ptBR } from 'date-fns/locale/pt-BR';
 import React from 'react';
 import { Button, Row, Stack } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
+import { usePermissions } from '../../../hooks/usePermissions';
 
 interface HeaderProps {
   selectedDate: string;
@@ -21,6 +22,12 @@ const LiveLinesHeader: React.FC<HeaderProps> = ({
   isOpenedUpdateStops,
   setIsOpenedUpdateStops,
 }) => {
+  const { hasResourcePermission } = usePermissions();
+  const canView = hasResourcePermission('ihm_appointments', 'view');
+
+  /* ---------------------------------------------------------------------------------------------- */
+  /*                                             LAYOUT                                             */
+  /* ---------------------------------------------------------------------------------------------- */
   return (
     <Row className='m-2'>
       <h1 className='text-center p-2'>
@@ -41,12 +48,14 @@ const LiveLinesHeader: React.FC<HeaderProps> = ({
           minDate={parseISO('2024-11-01')}
           maxDate={startOfDay(new Date())}
         />
-        <Button
-          variant='outline-secondary'
-          onClick={() => setIsOpenedUpdateStops(!isOpenedUpdateStops)}
-        >
-          {isOpenedUpdateStops ? 'Fechar Apontamentos' : 'Ver Apontamentos'}
-        </Button>
+        {canView && (
+          <Button
+            variant='outline-secondary'
+            onClick={() => setIsOpenedUpdateStops(!isOpenedUpdateStops)}
+          >
+            {isOpenedUpdateStops ? 'Fechar Apontamentos' : 'Ver Apontamentos'}
+          </Button>
+        )}
       </Stack>
     </Row>
   );

@@ -232,6 +232,11 @@ export const apontamentosHierarquia = {
     },
     "Parada Programada": {
         "Linha": {
+            "Revezamento":[
+                "Revezamento de Refeição",
+                "Revezamento de Café e Ginástica Laboral",
+                "Revezamento de Reunião",
+            ],
             "Parada Planejada": [
                 "Refeição",
                 "Café e Ginástica Laboral",

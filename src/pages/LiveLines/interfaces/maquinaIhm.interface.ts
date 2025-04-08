@@ -2,7 +2,7 @@ export interface iMaquinaIHM {
   recno: number;
   data_registro: string;
   hora_registro: string;
-  fabrica: number;
+  fabrica?: number;
   linha: number;
   maquina_id: string;
   equipamento: string;

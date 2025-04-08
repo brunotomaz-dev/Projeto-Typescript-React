@@ -71,9 +71,14 @@ const LiveLines: React.FC = () => {
   const [lineVesEff, setLineVesEff] = useState<number>(0);
   const [lineNotEff, setLineNotEff] = useState<number>(0);
   const [isOpenedUpdateStops, setIsOpenedUpdateStops] = useState<boolean>(false);
+  const [isUpdated, setIsUpdated] = useState<boolean>(false);
   // const [containerHeight, setContainerHeight] = useState<string>('100%');
 
   /* ------------------------------------------------ HANDLES ----------------------------------------------- */
+  const handleUpdate = () => {
+    setIsUpdated((prev) => !prev);
+  };
+
   // Mudança de data
   const handleDateChange = (date: Date | null) => {
     if (date) {
@@ -221,7 +226,7 @@ const LiveLines: React.FC = () => {
   // Requisição de info + ihm
   useEffect(() => {
     void fetchInfoIHM();
-  }, [selectedDate, selectedShift, selectedLine]);
+  }, [selectedDate, selectedShift, selectedLine, isUpdated]);
 
   useEffect(() => {
     // Data inicial
@@ -341,18 +346,6 @@ const LiveLines: React.FC = () => {
         isOpenedUpdateStops={isOpenedUpdateStops}
         setIsOpenedUpdateStops={setIsOpenedUpdateStops}
       />
-      {isOpenedUpdateStops && (
-        <Row className='p-2 mb-2'>
-          <Col>
-            <UpdateStops
-              selectedDate={selectedDate}
-              nowDate={nowDate}
-              selectedLine={selectedLine}
-              selectedShift={selectedShift}
-            />
-          </Col>
-        </Row>
-      )}
       <Row className='m-2 gap-1'>
         {/* --------------------------------------- COLUNA DOS GAUGES -------------------------------------- */}
         <Col
@@ -438,6 +431,19 @@ const LiveLines: React.FC = () => {
           </Col>
         )}
       </Row>
+      {/* ----------------------------------- Tabela De Apontamentos ----------------------------------- */}
+      {isOpenedUpdateStops && (
+        <Col className='p-2'>
+          <UpdateStops
+            selectedDate={selectedDate}
+            nowDate={nowDate}
+            selectedLine={selectedLine}
+            selectedShift={selectedShift}
+            selectedMachine={selectedMachine}
+            onUpdate={handleUpdate}
+          />
+        </Col>
+      )}
     </PageLayout>
   );
 };

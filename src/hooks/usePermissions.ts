@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useAppSelector } from '../redux/store/hooks';
 
-export type PermissionAction = 'view' | 'create' | 'update' | 'delete';
+export type PermissionAction = 'view' | 'create' | 'update' | 'delete' | 'flag';
 export type PermissionResource =
   | 'absence'
   | 'presence'
@@ -14,8 +14,9 @@ export type PermissionPage =
   | 'live_lines'
   | 'management';
 
-type roleTypes = 'Líderes' | 'Supervisores' | 'Analistas' | 'Especialistas' | 'Coordenadores' | 'Gerentes' | 'Dev';
+type roleTypes = 'Líderes' | 'Supervisores' | 'Analistas' | 'Especialistas' | 'Coordenadores' | 'Gerentes' | 'Dev' | 'Basic';
 export const levelMap: Record<roleTypes, number> = {
+  Basic: 0.5,
   Líderes: 1,
   Analistas: 2,
   Supervisores: 2,
@@ -25,15 +26,67 @@ export const levelMap: Record<roleTypes, number> = {
   Dev: 99,
 };
 
+// Tipo para exceções de usuário
+type UserException = {
+  resources: {
+    [key in PermissionResource]?: PermissionAction[];
+  };
+  pages?: PermissionPage[];
+};
+
+// Mapa de exceções de usuário
+// Usuários específicos que possuem permissões especiais independentemente do nível
+const userExceptions: Record<string, UserException> = {
+  "Cláudia Antunes": {
+    resources: {
+      ihm_appointments: ["delete", "flag"],
+    },
+  },
+  'Rogério Inácio': {
+    resources: {
+      ihm_appointments: ["flag"],
+    },
+  },
+  'Renan Oliveira': {
+    resources: {
+      ihm_appointments: ["flag"],
+    },
+  },
+  'Tatiani Tinto': {
+    resources: {
+      ihm_appointments: ['view', 'update', 'create', "flag"],
+    },
+  },
+  "Leandro Moraes": {
+    resources: {
+      ihm_appointments: ["flag"],
+    },
+  },
+  "João Batista": {
+    resources: {
+      ihm_appointments: ['view', 'update', 'create', "flag"],
+    },
+  },
+  // Exemplo: Maria Oliveira tem acesso à página de supervisão e pode gerenciar ausências
+  'Maria Oliveira': {
+    resources: {
+      absence: ['view', 'create', 'update'],
+    },
+    pages: ['supervision'],
+  },
+  // Adicione outros usuários com exceções aqui
+};
+
 export function usePermissions() {
   /* -------------------------------------------- REDUX ------------------------------------------- */
   // Recebe o nível do usuário logado
   const userLvl = useAppSelector((state) => state.user.level);
   // Recebe os grupos do usuário logado
   const userGroups = useAppSelector((state) => state.user.groups);
+  // Recebe o nome completo do usuário
+  const userName = useAppSelector((state) => state.user.fullName);
 
   /* --------------------------------- MAPA DE NÍVEIS POR RECURSO --------------------------------- */
-
   const permissionsLevels = useMemo(
     () => ({
       absence: {
@@ -41,24 +94,28 @@ export function usePermissions() {
         create: 1, // líderes e acima podem criar
         update: 1, // líderes e acima podem atualizar
         delete: 2, // somente supervisores e acima podem deletar
+        flag: 3,
       },
       presence: {
         view: 0,
         create: 1,
         update: 1,
         delete: 2,
+        flag: 3,
       },
       action_plan: {
-        view: 0,
-        create: 0,
-        update: 0,
-        delete: 2,
-      },
-      ihm_appointments: {
         view: 1,
-        create: 2,
+        create: 1,
         update: 1,
         delete: 2,
+        flag: 3,
+      },
+      ihm_appointments: {
+        view: 2,
+        create: 2,
+        update: 2,
+        delete: 3,
+        flag: 3
       },
     }),
     []
@@ -68,10 +125,10 @@ export function usePermissions() {
   const pageAccessLevels = useMemo(
     () => ({
       home: 0,
-      supervision: 2,
-      shop_floor: 0,
+      supervision: 1,
+      shop_floor: 0.5,
       hour_production: 1,
-      live_lines: 0,
+      live_lines: 0.5,
       management: 2,
     }),
     []
@@ -80,6 +137,10 @@ export function usePermissions() {
   /* -------------------------------- VERIFICAÇÃO DE SUPER USUÁRIO -------------------------------- */
   const isSuperUser = useMemo(() => userGroups.includes('Dev'), [userGroups]);
 
+  /* ----------------------------- VERIFICAÇÃO DE EXCEÇÕES DE USUÁRIO ---------------------------- */
+  // Verifica se o usuário atual tem exceções
+  const userException = useMemo(() => userName ? userExceptions[userName] : undefined, [userName]);
+
   /* ------------------------------------ FUNÇÕES DE PERMISSÃO ------------------------------------ */
   // Verifica se o usuário tem permissão para acessar um recurso específico
   const hasResourcePermission = useCallback(
@@ -87,11 +148,16 @@ export function usePermissions() {
       // Super usuários tem acesso a tudo
       if (isSuperUser) return true;
 
+      // Verificar se o usuário tem uma exceção para esse recurso e ação
+      if (userException?.resources?.[resource]?.includes(action)) {
+        return true;
+      }
+
       // Verificar o nível de permissão para a ação no recurso
       const requiredLevel = permissionsLevels[resource]?.[action] ?? Infinity;
       return userLvl >= requiredLevel;
     },
-    [isSuperUser, userLvl, permissionsLevels]
+    [isSuperUser, userLvl, permissionsLevels, userException]
   );
 
   // Verifica se o usuário tem permissão para acessar uma página específica
@@ -100,11 +166,16 @@ export function usePermissions() {
       // Super usuários tem acesso a tudo
       if (isSuperUser) return true;
 
+      // Verificar se o usuário tem uma exceção para essa página
+      if (userException?.pages?.includes(page)) {
+        return true;
+      }
+
       // Verificar o nível de acesso necessário para a página
       const requiredLevel = pageAccessLevels[page] ?? Infinity;
       return userLvl >= requiredLevel;
     },
-    [isSuperUser, userLvl, pageAccessLevels]
+    [isSuperUser, userLvl, pageAccessLevels, userException]
   );
 
   // Verificação de nível mínimo
@@ -120,11 +191,10 @@ export function usePermissions() {
     (level: number): boolean => {
       return isSuperUser || userLvl === level;
     },
-    [userLvl]
+    [userLvl, isSuperUser]
   );
 
   /* --------------------------------------- MAIS REPETIDOS --------------------------------------- */
-
   const hasActionPlanPermission = useCallback(
     (action: PermissionAction): boolean =>
       hasResourcePermission('action_plan', action),
@@ -134,7 +204,6 @@ export function usePermissions() {
   /* ---------------------------------------------------------------------------------------------- */
   /*                                         RETORNO DO HOOK                                        */
   /* ---------------------------------------------------------------------------------------------- */
-
   return {
     hasResourcePermission,
     hasPageAccess,
@@ -143,5 +212,6 @@ export function usePermissions() {
     hasLevel,
     isSuperUser,
     userLvl,
+    userName,  // Adicionando o nome do usuário ao retorno para facilitar depuração
   };
 }

@@ -98,7 +98,7 @@ export const login = async (username: string, password: string): Promise<Decoded
       fullName: `${first_name} ${last_name}`,
       groups: groups,
       user_id: decoded.user_id,
-      level: Math.max(0, ...groups.map(group => levelMap[group] || 0))
+      level: Math.max(0, ...groups.map(group => levelMap[group as keyof typeof levelMap] || 0))
     }))
 
     // Retorna o token decodificado
@@ -139,7 +139,7 @@ export const initAuth = (): boolean => {
       fullName: username,
       groups,
       user_id: decoded.user_id,
-      level: Math.max(0, ...groups.map(group => levelMap[group] || 0))
+      level: Math.max(0, ...groups.map(group => levelMap[group as keyof typeof levelMap] || 0))
     }));
     return true;
   } else {
