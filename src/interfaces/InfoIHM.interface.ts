@@ -19,4 +19,5 @@ export interface iInfoIHM {
   data_hora: string;
   data_hora_final: string;
   tempo: number;
+  afeta_eff: number;
 }

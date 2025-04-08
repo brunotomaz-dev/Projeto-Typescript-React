@@ -35,7 +35,7 @@ const Sidebar: React.FC = () => {
   };
 
   /* -------------------------------------------- HOOK -------------------------------------------- */
-  const { hasPageAccess, hasLevel, hasMinLevel } = usePermissions();
+  const { hasPageAccess, hasMinLevel } = usePermissions();
 
   /* ------------------------------------- Gerenciamento de ciclo do app ------------------------------------ */
   useEffect(() => {
@@ -58,8 +58,8 @@ const Sidebar: React.FC = () => {
       href: '/login',
     },
     { label: 'Home', icon: 'bi bi-house', href: '/' },
-    hasMinLevel(1) && {
-      label: hasLevel(1) ? 'Liderança' : 'Supervisão',
+    hasPageAccess('supervision') && {
+      label: hasMinLevel(2) ? 'Supervisão' : 'Liderança',
       icon: 'bi bi-eye',
       href: '/supervision',
     },

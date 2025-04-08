@@ -1,8 +1,9 @@
-//cSpell: words movimentacao absenteismo conclusao
+//cSpell: words movimentacao absenteismo conclusao maquinaihm
 import { format, startOfDay } from 'date-fns';
 import { iPresence } from '../interfaces/Absence.interface';
 import { iActionPlan } from '../interfaces/ActionPlan.interface';
 import { iCartCount } from '../interfaces/Carrinhos.interface';
+import { iMaquinaIHM } from '../pages/LiveLines/interfaces/maquinaIhm.interface';
 import { iAbsenceForm } from '../pages/Supervision/interface/AbsenceForm.interface';
 import api from './axiosConfig';
 type DateParam = string | string[];
@@ -135,7 +136,7 @@ export const getEstoqueMovimentacao = async () => {
     console.error('Erro ao buscar dados de movimentação de estoque', error);
     throw error;
   }
-}
+};
 
 export const getCarrinhosCount = async (
   data_inicial: string,
@@ -180,7 +181,6 @@ export const getHourProduction = async (data: string) => {
   }
 };
 
-
 export const getAbsenceData = async (data: DateParam) => {
   const params = { data_occ: data };
 
@@ -217,7 +217,7 @@ export const createAbsenceData = async (formData: iAbsenceForm) => {
     console.error('Erro ao criar registro de ausência', error);
     throw error;
   }
-}
+};
 
 export const deleteAbsenceData = async (recno: number) => {
   try {
@@ -250,8 +250,7 @@ export const createPresenceData = async (data: iPresence) => {
     console.error('Erro ao criar registro de presença', error);
     throw error;
   }
-}
-
+};
 
 export const updatePresenceData = async (data: iPresence) => {
   try {
@@ -276,10 +275,11 @@ export const getActionPlan = async (data: DateParam, conclusao?: number) => {
   }
 };
 
-
 // Criar plano de ação
-export const createActionPlan = async (actionPlanData: Omit<iActionPlan, 'recno'>) => {
-  console.log(actionPlanData)
+export const createActionPlan = async (
+  actionPlanData: Omit<iActionPlan, 'recno'>
+) => {
+  console.log(actionPlanData);
   try {
     const response = await api.post('/api/action_plan/', actionPlanData);
     return response.data;
@@ -292,7 +292,10 @@ export const createActionPlan = async (actionPlanData: Omit<iActionPlan, 'recno'
 // Atualizar plano de ação
 export const updateActionPlan = async (actionPlanData: iActionPlan) => {
   try {
-    const response = await api.put(`/api/action_plan/${actionPlanData.recno}/`, actionPlanData);
+    const response = await api.put(
+      `/api/action_plan/${actionPlanData.recno}/`,
+      actionPlanData
+    );
     return response.data;
   } catch (error) {
     console.error('Erro ao atualizar plano de ação:', error);
@@ -307,6 +310,98 @@ export const deleteActionPlan = async (recno: number) => {
     return response.data;
   } catch (error) {
     console.error('Erro ao excluir plano de ação:', error);
+    throw error;
+  }
+};
+
+export const getMaquinaIHM = async <
+  T extends DateParam | (iBaseParams & { data: DateParam }),
+>(
+  baseParams: T,
+  fields?: string[]
+) => {
+  // Verifica se é apenas a data ou se possui outros parâmetros
+  const isDateOnly =
+    typeof baseParams === 'string' || Array.isArray(baseParams);
+
+  // Cria os parâmetros
+  const params = {
+    ...(isDateOnly
+      ? createDateFilter(baseParams as DateParam)
+      : {
+          ...createDateFilter((baseParams as iBaseParams).data),
+          ...Object.entries(baseParams as iBaseParams)
+            .filter(([key]) => key !== 'data')
+            .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {}),
+        }),
+    ...(fields && { fields: fields.join(',') }),
+  };
+
+  try {
+    const response = await api.get('api/maquinaihm/', { params: params });
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao buscar dados de máquina IHM', error);
+    throw error;
+  }
+};
+
+export const updateMaquinaIHM = async (data: iMaquinaIHM) => {
+  try {
+    const response = await api.put(`api/maquinaihm/${data.recno}/`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao atualizar registro de máquina IHM', error);
+    throw error;
+  }
+};
+
+export const insertMaquinaIHM = async (data: iMaquinaIHM) => {
+  try {
+    const response = await api.post('api/maquinaihm/', data);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao inserir registro de máquina IHM', error);
+    throw error;
+  }
+};
+
+export const deleteMaquinaIHM = async (recno: number) => {
+  try {
+    const response = await api.delete(`api/maquinaihm/${recno}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao excluir registro de máquina IHM', error);
+    throw error;
+  }
+};
+
+export const updateHistoricalAppointmentRecord = async (data: iMaquinaIHM) => {
+  try {
+    // Apenas os campos editáveis são enviados para a API
+    const editableFields = {
+      recno: data.recno,
+      motivo: data.motivo,
+      equipamento: data.equipamento,
+      problema: data.problema,
+      causa: data.causa,
+      os_numero: data.os_numero,
+      afeta_eff: data.afeta_eff,
+    };
+
+    // Enviar apenas os campos editáveis
+    const response = await api.patch(
+      `api/info_ihm/${data.recno}/`,
+      editableFields
+    );
+
+    // Atualiza os indicadores
+    await api.post('/api/reprocess_indicators/', {
+      data_registro: data.data_registro,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao atualizar registro histórico:', error);
     throw error;
   }
 };
