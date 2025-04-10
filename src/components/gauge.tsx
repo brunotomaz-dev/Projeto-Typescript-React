@@ -30,7 +30,7 @@ const GaugeChart: React.FC<GaugeProps> = ({
       [1, ColorsSTM.RED],
     ],
     [IndicatorType.EFFICIENCY]: [
-      [0.899, ColorsSTM.RED],
+      [0.89, ColorsSTM.RED],
       [1, ColorsSTM.GREEN],
     ],
   };
@@ -45,7 +45,7 @@ const GaugeChart: React.FC<GaugeProps> = ({
   };
 
   // Arredondar o valor de data para 2 casas decimais
-  data = Math.round(data * 100) / 100;
+  data = Math.round(data);
 
   // Configurações do gauge
   const option = {
