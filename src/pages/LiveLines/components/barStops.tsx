@@ -5,10 +5,9 @@ import {
   BSColors,
   CICLOS_ESPERADOS,
   CICLOS_ESPERADOS_BOL,
-  DESC_EFF,
-  NOT_EFF,
 } from '../../../helpers/constants';
-import { iInfoIhmLive } from '../interfaces/infoIhm';
+import { impactFilter } from '../../../helpers/ImpactFilter';
+import { iInfoIhmLive } from '../interfaces/infoIhm.interface';
 import { iMaquinaInfo } from '../interfaces/maquinaInfo.interface';
 
 interface BarStopsProps {
@@ -27,65 +26,7 @@ interface StopSummary {
 const BarStops: React.FC<BarStopsProps> = ({ data, cycleData }) => {
   //  Filtro dos itens que não afetam a eficiência
   const filteredData = useMemo(() => {
-    return data
-      .filter((originalItem) => {
-        // Primeiro verifica se não é um item que não afeta eficiência
-        const isNotEff = NOT_EFF.some(
-          (notEff) =>
-            originalItem.motivo?.includes(notEff) ||
-            originalItem.causa?.includes(notEff) ||
-            originalItem.problema?.includes(notEff) ||
-            originalItem.afeta_eff === 1
-        );
-
-        if (isNotEff) return false;
-
-        // Se for parada, verifica DESC_EFF
-        if (originalItem.status === 'parada') {
-          const descEffKey = Object.keys(DESC_EFF).find(
-            (key) =>
-              originalItem.motivo?.includes(key) ||
-              originalItem.causa?.includes(key) ||
-              originalItem.problema?.includes(key)
-          );
-
-          if (descEffKey) {
-            const tempoRestante =
-              originalItem.tempo - DESC_EFF[descEffKey as keyof typeof DESC_EFF];
-
-            // Se tempo restante for <= 0, remove o item
-            if (tempoRestante <= 0) return false;
-
-            // Se houver tempo restante, retorna true para manter o item
-            return true;
-          }
-        }
-
-        // Mantém o item se não foi filtrado anteriormente
-        return true;
-      })
-      .map((item) => {
-        // Se for parada, aplica o desconto no tempo
-        if (item.status === 'parada') {
-          const descEffKey = Object.keys(DESC_EFF).find(
-            (key) =>
-              item.motivo?.includes(key) ||
-              item.causa?.includes(key) ||
-              item.problema?.includes(key)
-          );
-
-          if (descEffKey) {
-            const tempoRestante =
-              item.tempo - DESC_EFF[descEffKey as keyof typeof DESC_EFF];
-            return {
-              ...item,
-              tempo: tempoRestante,
-            };
-          }
-        }
-
-        return { ...item };
-      });
+    return impactFilter(data);
   }, [data]);
 
   // Calcula o tempo total de parada
@@ -236,7 +177,13 @@ const BarStops: React.FC<BarStopsProps> = ({ data, cycleData }) => {
           distance: 5,
           formatter: (params: any) => {
             const item = stopSummary[params.dataIndex];
-            return item.causa;
+            const label =
+              item.causa === 'Realizar análise de falha' ||
+              item.causa === 'Necessidade de análise'
+                ? item.problema
+                : item.causa;
+
+            return label;
           },
           align: 'left',
           verticalAlign: 'middle',

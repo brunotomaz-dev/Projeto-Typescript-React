@@ -5,11 +5,10 @@ import { getMaquinaInfo } from '../../../api/apiRequests';
 import {
   CICLOS_ESPERADOS,
   CICLOS_ESPERADOS_BOL,
-  DESC_EFF,
-  NOT_EFF,
   TurnoID,
   colorObj,
 } from '../../../helpers/constants';
+import { impactFilter, notImpactFilter } from '../../../helpers/ImpactFilter';
 import { iInfoIHM } from '../../../interfaces/InfoIHM.interface';
 import { useAppSelector } from '../../../redux/store/hooks';
 
@@ -20,6 +19,7 @@ interface iDashBarProps {
   selectedDate: string | string[];
   selectedShift: TurnoID;
   dataType: 'ALL' | 'Primeiro' | 'Segundo' | 'Terceiro';
+  notAffBar: boolean;
 }
 
 interface iStopSummary {
@@ -50,6 +50,7 @@ const DashBar: React.FC<iDashBarProps> = ({
   selectedDate,
   selectedShift,
   dataType = 'ALL',
+  notAffBar,
 }) => {
   /* -------------------------------------------- REDUX ------------------------------------------- */
   const lineMachine = useAppSelector((state) => state.home.lineMachine);
@@ -63,68 +64,13 @@ const DashBar: React.FC<iDashBarProps> = ({
   /* ---------------------------------------------------------------------- Filtro De Info-ihm ---- */
   const filteredData = useMemo(() => {
     setIsLoading(true); // Iniciar o carregamento
-    const filterData = data
-      .filter((originalItem) => {
-        // Se o status for 'rodando' não manter o item
-        if (originalItem.status === 'rodando') return false;
 
-        // Primeiro verifica se não é um item que não afeta eficiência
-        const isNotEff = NOT_EFF.some(
-          (notEff) =>
-            originalItem.motivo?.includes(notEff) ||
-            originalItem.causa?.includes(notEff) ||
-            originalItem.problema?.includes(notEff) ||
-            originalItem.afeta_eff === 1
-        );
+    const filterData = notAffBar ? notImpactFilter(data) : impactFilter(data);
 
-        if (isNotEff) return false;
-
-        // Se for parada, verifica DESC_EFF
-        if (originalItem.status === 'parada') {
-          const descEffKey = Object.keys(DESC_EFF).find(
-            (key) =>
-              originalItem.motivo?.includes(key) ||
-              originalItem.causa?.includes(key) ||
-              originalItem.problema?.includes(key)
-          );
-
-          if (descEffKey) {
-            const tempoRestante =
-              originalItem.tempo - DESC_EFF[descEffKey as keyof typeof DESC_EFF];
-
-            // Se tempo restante for <= 0, remove o item
-            if (tempoRestante <= 0) return false;
-
-            // Se houver tempo restante, retorna true para manter o item
-            return true;
-          }
-        }
-
-        // Mantém o item se não foi filtrado anteriormente
-        return true;
-      })
-      .map((item) => {
-        // Se for parada, aplica o desconto no tempo
-        if (item.status === 'parada') {
-          const descEffKey = Object.keys(DESC_EFF).find(
-            (key) =>
-              item.motivo?.includes(key) ||
-              item.causa?.includes(key) ||
-              item.problema?.includes(key)
-          );
-
-          if (descEffKey) {
-            const tempoRestante =
-              item.tempo - DESC_EFF[descEffKey as keyof typeof DESC_EFF];
-            return { ...item, tempo: tempoRestante };
-          }
-        }
-
-        return item;
-      });
     setIsLoading(false); // Finalizar o carregamento
+
     return filterData;
-  }, [data]);
+  }, [data, notAffBar]);
 
   /* ------------------------------------------------------------------ Tempo Total De Parada ---- */
   // Tempo total de parada
@@ -284,6 +230,7 @@ const DashBar: React.FC<iDashBarProps> = ({
     };
   }, [cycleLostByLine, maqInfoData]);
 
+  /* ----------------------------------------------------------------------- Resumo De Paradas ---- */
   const stopSummary = useMemo(() => {
     setIsLoading(true); // Iniciar o carregamento
     // Filtra e agrupa os dados por causa
@@ -328,6 +275,7 @@ const DashBar: React.FC<iDashBarProps> = ({
     return summary;
   }, [filteredData, cycleLost, totalStopTime]);
 
+  /* ----------------------------------------------------------------------------- Top Motivos ---- */
   // Novo: Obter o primeiro, segundo e terceiro motivos
   const topMotivos = useMemo(() => {
     if (!stopSummary || stopSummary.length === 0) return [];
@@ -532,6 +480,7 @@ const DashBar: React.FC<iDashBarProps> = ({
     return `Principais Causas: ${targetMotivo}`;
   }, [dataType, topMotivos]);
 
+  /* ---------------------------------------------------------------------------------- Option ---- */
   // Configurações do gráfico
   const option = {
     title: {
@@ -622,7 +571,12 @@ const DashBar: React.FC<iDashBarProps> = ({
             return `Linha ${item.linha}`;
           }
 
-          return dataType === 'ALL' ? item.motivo : item.causa;
+          return dataType === 'ALL'
+            ? item.motivo
+            : item.causa === 'Realizar análise de falha' ||
+                item.causa === 'Necessidade de análise'
+              ? item.problema
+              : item.causa;
         }
       ),
       axisLabel: {
@@ -630,7 +584,7 @@ const DashBar: React.FC<iDashBarProps> = ({
         show: true,
         width: 100,
         overflow: 'break',
-        fontSize: 12,
+        fontSize: 11,
       },
     },
     series: series,
