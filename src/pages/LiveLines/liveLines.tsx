@@ -17,7 +17,7 @@ import ProductionPanel from './components/productionCard';
 import Timeline from './components/timeline';
 import UpdateStops from './components/UpdateStops';
 import { iEff, iIndicator, iPerf, iRep } from './interfaces/indicator.interfaces';
-import { iInfoIhmLive } from './interfaces/infoIhm';
+import { iInfoIhmLive } from './interfaces/infoIhm.interface';
 import { iMaquinaInfo } from './interfaces/maquinaInfo.interface';
 
 // cspell: words linecycle eficiencia recno

@@ -1,7 +1,7 @@
 import React from 'react';
 import { FormSelect, Row } from 'react-bootstrap';
 import { colorObj } from '../../../helpers/constants';
-import { iInfoIhmLive } from '../interfaces/infoIhm';
+import { iInfoIhmLive } from '../interfaces/infoIhm.interface';
 import MachineStatus from './lineStatus';
 
 interface ControlsProps {
@@ -34,7 +34,8 @@ const LineControls: React.FC<ControlsProps> = ({
   // Definir o problema e motivo da parada
   let problema = infoParada?.problema || 'Não Apontado';
   const motivo = infoParada?.motivo || 'Não apontado';
-  problema = motivo === 'Parada Programada' ? infoParada?.causa || 'Não Apontado' : problema;
+  problema =
+    motivo === 'Parada Programada' ? infoParada?.causa || 'Não Apontado' : problema;
 
   const bgColor = colorObj[motivo as keyof typeof colorObj] || colorObj['Não apontado'];
 
@@ -70,12 +71,17 @@ const LineControls: React.FC<ControlsProps> = ({
       </Row>
       {statusRender && <MachineStatus status={status} />}
       {status !== 'true' && statusRender && (
-        <Row className='card text-center text-white px-1 py-3 fs-5 mb-3' style={{ backgroundColor: bgColor }}>
+        <Row
+          className='card text-center text-white px-1 py-3 fs-5 mb-3'
+          style={{ backgroundColor: bgColor }}
+        >
           {problema}
         </Row>
       )}
       {status !== 'true' && statusRender && (
-        <Row className='card text-center fs-4 bg-light p-3'>{infoParada?.tempo} minutos</Row>
+        <Row className='card text-center fs-4 bg-light p-3'>
+          {infoParada?.tempo} minutos
+        </Row>
       )}
     </>
   );

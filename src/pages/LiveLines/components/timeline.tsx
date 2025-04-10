@@ -3,7 +3,7 @@ import EChartsReact from 'echarts-for-react';
 import React, { useMemo } from 'react';
 import { Row } from 'react-bootstrap';
 import { BSColors, colorObj } from '../../../helpers/constants';
-import { iInfoIhmLive } from '../interfaces/infoIhm';
+import { iInfoIhmLive } from '../interfaces/infoIhm.interface';
 
 interface TimelineProps {
   data: iInfoIhmLive[];
