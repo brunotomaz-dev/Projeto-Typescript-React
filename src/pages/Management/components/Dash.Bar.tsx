@@ -256,7 +256,9 @@ const DashBar: React.FC<iDashBarProps> = ({
         {} as Record<string, iStopSummary>
       );
 
-    const lostCycleTime = cycleLost['Perda de Ciclo-Ciclo Baixo-Ciclo Perdido Min'].tempo;
+    const lostCycleTime = notAffBar
+      ? 0
+      : cycleLost['Perda de Ciclo-Ciclo Baixo-Ciclo Perdido Min'].tempo;
 
     // Une os dados de parada com os dados de ciclo baixo se houver dados de ciclos baixos
     const allStops = lostCycleTime > 0 ? { ...stops, ...cycleLost } : stops;
@@ -273,7 +275,7 @@ const DashBar: React.FC<iDashBarProps> = ({
 
     setIsLoading(false); // Finalizar o carregamento
     return summary;
-  }, [filteredData, cycleLost, totalStopTime]);
+  }, [filteredData, cycleLost, totalStopTime, notAffBar]);
 
   /* ----------------------------------------------------------------------------- Top Motivos ---- */
   // Novo: Obter o primeiro, segundo e terceiro motivos
