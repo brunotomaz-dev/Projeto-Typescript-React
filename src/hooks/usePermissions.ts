@@ -52,10 +52,11 @@ const userExceptions: Record<string, UserException> = {
       ihm_appointments: ["flag"],
     },
   },
-  'Tatiani Tinto': {
+  'Tatiani Domingues': {
     resources: {
       ihm_appointments: ['view', 'update', 'create', "flag"],
     },
+    pages: ['supervision'],
   },
   "Leandro Moraes": {
     resources: {
@@ -63,6 +64,11 @@ const userExceptions: Record<string, UserException> = {
     },
   },
   "João Batista": {
+    resources: {
+      ihm_appointments: ['view', 'update', 'create', "flag"],
+    },
+  },
+  "Gabriel França": {
     resources: {
       ihm_appointments: ['view', 'update', 'create', "flag"],
     },

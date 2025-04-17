@@ -3,7 +3,8 @@ import { Card, Table } from 'react-bootstrap';
 import { getProduction } from '../../../api/apiRequests';
 import { TurnoID } from '../../../helpers/constants';
 import { iProduction } from '../../ProductionLive/interfaces/production.interface';
-
+import { iDescartes } from '../interface/Descartes.interface';
+//cSpell: words paes
 interface iProductionTotal {
   [key: string]: number;
 }
@@ -12,12 +13,16 @@ interface iProductionTableProps {
   shift: TurnoID;
   todayString: string;
   totalProduction: (total: number) => void;
+  descartes: (data: iDescartes[]) => void;
 }
+
+type iProductionProduct = 'Bolinha' | 'Baguete';
 
 const ProductionTable: React.FC<iProductionTableProps> = ({
   shift,
   todayString,
   totalProduction,
+  descartes,
 }) => {
   /* ----------------------------------------- LOCAL STATE ---------------------------------------- */
   const [allBagProduction, setAllBagProduction] = useState<iProductionTotal>({});
@@ -26,53 +31,69 @@ const ProductionTable: React.FC<iProductionTableProps> = ({
   const [totalByProductBol, setTotalByProductBol] = useState<number>(0);
   const [totalByProductBag, setTotalByProductBag] = useState<number>(0);
 
+  /* --------------------------------------------------------------------------------- Funções ---- */
+  const calcAndSetProduction = (
+    data: iProductionTotal,
+    productType: iProductionProduct
+  ) => {
+    const isBolinha = productType === 'Bolinha';
+
+    const setProduct = isBolinha ? setAllBolProduction : setAllBagProduction;
+    const setTotalByProduct = isBolinha ? setTotalByProductBol : setTotalByProductBag;
+
+    // Filtra removendo os produtos com descrição ' BOL'
+    const selectedProductionItems = Object.entries(data).reduce((acc, [key, value]) => {
+      const isKey = isBolinha ? key.includes(' BOL') : !key.includes(' BOL');
+      if (isKey) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as iProductionTotal);
+
+    if (selectedProductionItems && Object.keys(selectedProductionItems).length > 0) {
+      setProduct(selectedProductionItems);
+      setTotalByProduct(
+        Object.values(selectedProductionItems).reduce((acc, curr) => acc + curr, 0)
+      );
+    } else {
+      setProduct({});
+      setTotalByProduct(0);
+    }
+  };
   /* ------------------------------------------- EFFECTS ------------------------------------------ */
   useEffect(() => {
     void getProduction(todayString).then((data: iProduction[]) => {
-      // Filtra os produtos de acordo com o turno e soma os totais
-      const shiftProducts = data
-        .filter((prod) => prod.turno === shift)
-        .reduce((acc, curr) => {
-          const produto = curr.produto.trim();
-          acc[produto] = (acc[produto] || 0) + curr.total_produzido / 10;
-          return acc;
-        }, {} as iProductionTotal);
+      // Filtra os produtos de acordo com o turno
+      const filteredData = data.filter((prod) => prod.turno === shift);
 
-      // Filtra removendo os produtos com descrição ' BOL'
-      const bagProducts = Object.entries(shiftProducts).reduce((acc, [key, value]) => {
-        if (!key.includes(' BOL')) {
-          acc[key] = value;
-        }
+      /* ------------------------------------------------------------------------------- Descartes ---- */
+      // Mantém apenas as colunas relevantes
+      const discardsData = filteredData.map((item: iProduction): iDescartes => {
+        return {
+          linha: item.linha,
+          produto: item.produto.trim(),
+          descartePaesPasta: item.descarte_paes_pasta,
+          descartePaes: item.descarte_paes,
+          descartePasta: item.descarte_pasta,
+          descarteBdj: item.bdj_vazias,
+          reprocessoBdj: item.bdj_retrabalho,
+        };
+      });
+
+      descartes(discardsData);
+
+      /* -------------------------------------------------------------------------------- Produção ---- */
+      // Calcula a produção total por produto e transforma em caixas
+      const calculateShiftProduction = filteredData.reduce((acc, curr) => {
+        const produto = curr.produto.trim();
+        acc[produto] = (acc[produto] || 0) + curr.total_produzido / 10;
         return acc;
       }, {} as iProductionTotal);
 
-      if (bagProducts && Object.keys(bagProducts).length > 0) {
-        setAllBagProduction(bagProducts);
-        setTotalByProductBag(
-          Object.values(bagProducts).reduce((acc, curr) => acc + curr, 0)
-        );
-      } else {
-        setAllBagProduction({});
-        setTotalByProductBag(0);
-      }
-
-      // Filtra para ter os produtos com descrição ' BOL'
-      const bolProducts = Object.entries(shiftProducts).reduce((acc, [key, value]) => {
-        if (key.includes(' BOL')) {
-          acc[key] = value;
-        }
-        return acc;
-      }, {} as iProductionTotal);
-
-      if (bolProducts && Object.keys(bolProducts).length > 0) {
-        setAllBolProduction(bolProducts);
-        setTotalByProductBol(
-          Object.values(bolProducts).reduce((acc, curr) => acc + curr, 0)
-        );
-      } else {
-        setAllBolProduction({});
-        setTotalByProductBol(0);
-      }
+      // Produção de Baguete
+      calcAndSetProduction(calculateShiftProduction, 'Baguete');
+      // Produção de Bolinha
+      calcAndSetProduction(calculateShiftProduction, 'Bolinha');
     });
   }, [todayString, shift]);
 

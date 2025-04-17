@@ -6,7 +6,7 @@ export interface iProduction {
   turno: string;
   produto: string;
   bdj_retrabalho: number;
-  bdj_vazia: number;
+  bdj_vazias: number;
   descarte_paes: number;
   descarte_pasta: number;
   descarte_paes_pasta: number;
