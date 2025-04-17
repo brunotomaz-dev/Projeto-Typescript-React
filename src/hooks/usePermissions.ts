@@ -56,7 +56,7 @@ const userExceptions: Record<string, UserException> = {
     resources: {
       ihm_appointments: ['view', 'update', 'create', "flag"],
     },
-    pages: ['supervision'],
+    pages: ['management'],
   },
   "Leandro Moraes": {
     resources: {
