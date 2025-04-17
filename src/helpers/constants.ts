@@ -29,7 +29,7 @@ export const superTurns: Record<string, TurnoID> = {
   ["Gabriel França"]: "MAT",
   ["Kelven Silva"]: "MAT",
   ["Silvio Jr"]: "MAT",
-  ["Tatiani Tinto"]: "MAT",
+  ["Tatiani Domingues"]: "NOT",
   ["Wellington Augusto"]: "NOT",
   ["Everton Oliveira"]: "NOT",
   ["Elton Martins"]: "NOT",

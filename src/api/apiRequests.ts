@@ -266,8 +266,6 @@ export const getActionPlan = async (data: DateParam, conclusao?: number) => {
   const dateFilter = createDateFilter(data);
   const params = { ...dateFilter, ...(conclusao !== undefined && { conclusao }) };
 
-  console.log('params', params, conclusao);
-
   try {
     const response = await api.get('api/action_plan/', { params: params });
     return response.data;
