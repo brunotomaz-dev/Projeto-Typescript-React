@@ -92,6 +92,7 @@ export const apontamentosHierarquia = {
                 "Ajuste ou troca da faca transversal",
                 "Ajuste ou troca da faca longitudinal",
             ],
+            "CLP com erro": ['CLP desarmou', 'CLP com erro de comunicação', 'CLP não está respondendo'],
             "Abrindo Bandejas": ["Realizar análise de falha"],
             "Bandeja Murcha ou Cheia": ["Realizar análise de falha"],
             "Bandeja deformada ou manchada": ["Realizar análise de falha"],
@@ -182,15 +183,6 @@ export const apontamentosHierarquia = {
     },
     "Qualidade": {
         "Termoformadora": {
-            "Risco de Contaminação": [
-                "Elemento Mecânico",
-                "Odor Diferente",
-                "Pasta com Tempo ALto",
-                "Limpeza da Esteira de Lamecação",
-                "Limpeza de Placa",
-            ]
-        },
-        "Recheadora": {
             "Parâmetros de Qualidade": [
                 "Bandeja com formação não conforme",
                 "Solda não conforme",
@@ -200,6 +192,16 @@ export const apontamentosHierarquia = {
                 "Esquadro da bandeja inadequado",
                 "Corte inadequado",
                 "Rebarba no corte da bandeja",
+                "Limpeza de Placa",
+            ] 
+        },
+        "Recheadora": {
+            "Risco de Contaminação": [
+                "Elemento Mecânico",
+                "Odor Diferente",
+                "Pasta com Tempo ALto",
+                "Limpeza da Esteira de Lamecação",
+                "Limpeza do Filtro"
             ]
         },
     },

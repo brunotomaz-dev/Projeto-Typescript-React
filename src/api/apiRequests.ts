@@ -1,5 +1,5 @@
 //cSpell: words movimentacao absenteismo conclusao maquinaihm
-import { format, startOfDay } from 'date-fns';
+import { addHours, format, startOfDay } from 'date-fns';
 import { iPresence } from '../interfaces/Absence.interface';
 import { iActionPlan } from '../interfaces/ActionPlan.interface';
 import { iCartCount } from '../interfaces/Carrinhos.interface';
@@ -28,6 +28,19 @@ const createDateFilter = (data: DateParam) => {
   return { data_registro: data };
 };
 
+const createDateFilterManusis = (data: DateParam) => {
+  if (Array.isArray(data)) {
+    return data.length > 1
+      ? { data_criacao__gt: data[0], data_criacao__lt: data[1] }
+      : { data_criacao__gt: data[0] };
+  }
+  return { data_criacao: data };
+}
+
+
+/* ---------------------------------------------------------------------------------------------- */
+/*                                           INDICADORES                                          */
+/* ---------------------------------------------------------------------------------------------- */
 export const getIndicator = async (
   indicator: string,
   data: DateParam,
@@ -47,6 +60,9 @@ export const getIndicator = async (
   }
 };
 
+/* ---------------------------------------------------------------------------------------------- */
+/*                                            PRODUÇÃO                                            */
+/* ---------------------------------------------------------------------------------------------- */
 export const getProduction = async (data: DateParam, fields?: string[]) => {
   // Cria o filtro de data
   const dateFilter = createDateFilter(data);
@@ -62,6 +78,34 @@ export const getProduction = async (data: DateParam, fields?: string[]) => {
   }
 };
 
+
+export const getHourProduction = async (data: string) => {
+  try {
+    const response = await api.get('api/maq_info_hour_prod/', {
+      params: { data_registro: data },
+    });
+
+    // Verifica se a resposta foi bem sucedida e tem dados
+    if (response.status === 200 && response.data) {
+      return response.data;
+    }
+
+    throw new Error('Não há dados para a data selecionada');
+  } catch (error: any) {
+    // Verifica se é um erro de API com status 500
+    if (error.response?.status === 500) {
+      throw new Error('Não há dados para a data selecionada');
+    }
+
+    // Para outros erros, mantém a mensagem original
+    console.error('Erro ao buscar produção por hora:', error);
+    throw new Error('Erro ao buscar dados de produção');
+  }
+};
+
+/* ---------------------------------------------------------------------------------------------- */
+/*                                        DADOS DE MÁQUINA                                        */
+/* ---------------------------------------------------------------------------------------------- */
 export const getInfoIHM = async <
   T extends DateParam | (iBaseParams & { data: DateParam }),
 >(
@@ -118,6 +162,9 @@ export const getMaquinaInfo = async (
   }
 };
 
+/* ---------------------------------------------------------------------------------------------- */
+/*                                       ESTOQUE CÂMARA FRIA                                      */
+/* ---------------------------------------------------------------------------------------------- */
 export const getEstoqueAtual = async () => {
   try {
     const response = await api.get('api/caixas_cf/');
@@ -138,6 +185,9 @@ export const getEstoqueMovimentacao = async () => {
   }
 };
 
+/* ---------------------------------------------------------------------------------------------- */
+/*                                      CARRINHOS - PROTHEUS                                      */
+/* ---------------------------------------------------------------------------------------------- */
 export const getCarrinhosCount = async (
   data_inicial: string,
   data_final: string
@@ -157,30 +207,9 @@ export const getCarrinhosCount = async (
   }
 };
 
-export const getHourProduction = async (data: string) => {
-  try {
-    const response = await api.get('api/maq_info_hour_prod/', {
-      params: { data_registro: data },
-    });
-
-    // Verifica se a resposta foi bem sucedida e tem dados
-    if (response.status === 200 && response.data) {
-      return response.data;
-    }
-
-    throw new Error('Não há dados para a data selecionada');
-  } catch (error: any) {
-    // Verifica se é um erro de API com status 500
-    if (error.response?.status === 500) {
-      throw new Error('Não há dados para a data selecionada');
-    }
-
-    // Para outros erros, mantém a mensagem original
-    console.error('Erro ao buscar produção por hora:', error);
-    throw new Error('Erro ao buscar dados de produção');
-  }
-};
-
+/* ---------------------------------------------------------------------------------------------- */
+/*                                           ABSENTEÍSMO                                          */
+/* ---------------------------------------------------------------------------------------------- */
 export const getAbsenceData = async (data: DateParam) => {
   const params = { data_occ: data };
 
@@ -262,6 +291,9 @@ export const updatePresenceData = async (data: iPresence) => {
   }
 };
 
+/* ---------------------------------------------------------------------------------------------- */
+/*                                          PLANO DE AÇÃO                                         */
+/* ---------------------------------------------------------------------------------------------- */
 export const getActionPlan = async (data: DateParam, conclusao?: number) => {
   const dateFilter = createDateFilter(data);
   const params = { ...dateFilter, ...(conclusao !== undefined && { conclusao }) };
@@ -314,6 +346,9 @@ export const deleteActionPlan = async (recno: number) => {
   }
 };
 
+/* ---------------------------------------------------------------------------------------------- */
+/*                                         IHM DA MÁQUINA                                         */
+/* ---------------------------------------------------------------------------------------------- */
 export const getMaquinaIHM = async <
   T extends DateParam | (iBaseParams & { data: DateParam }),
 >(
@@ -405,3 +440,41 @@ export const updateHistoricalAppointmentRecord = async (data: iMaquinaIHM) => {
     throw error;
   }
 };
+
+/* ---------------------------------------------------------------------------------------------- */
+/*                                     SOLICITAÇÕES DE SERVIÇO                                    */
+/* ---------------------------------------------------------------------------------------------- */
+// cSpell: words solicitacao servico criacao manusis
+interface iSolicitacaoServico {
+  data_criacao?: DateParam;
+  status_id?: number;
+  numero_ss?: string;
+}
+export const getSolicitacaoServico = async (data: iSolicitacaoServico ) => {
+  let params = {};
+  if (data.data_criacao) {
+    const { data_criacao, ...rest } = data;
+    const dateFilter = createDateFilterManusis(data_criacao);
+    params = { ...dateFilter, ...rest };
+  } else {
+    params = { ...data };
+  }
+
+  try {
+    const response = await api.get('api/service_request/', { params });
+    // Corrigir o tipo de retorno, separando data e hora e mudando a hora para localização brasileira (está em utc 0)
+    const data_adjusted = response.data.map((item: any) => {
+      const dataCriacao = new Date(item.data_criacao);
+      const dataCriacaoBR = addHours(dataCriacao, -3); // Ajustar para o horário de Brasília
+      const dataFormatada = format(dataCriacaoBR, 'dd/MM/yyyy');
+      const horaFormatada = format(dataCriacaoBR, 'HH:mm:ss');
+
+      return { ...item, data_criacao: dataFormatada, hora_criacao: horaFormatada };
+    });
+
+    return data_adjusted;
+  } catch (error) {
+    console.error('Erro ao buscar solicitações de serviço', error);
+    throw error;
+  }
+}
