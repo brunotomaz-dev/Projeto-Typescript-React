@@ -2,11 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { useAppSelector } from '../redux/store/hooks';
 
 export type PermissionAction = 'view' | 'create' | 'update' | 'delete' | 'flag';
-export type PermissionResource =
-  | 'absence'
-  | 'presence'
-  | 'action_plan'
-  | 'ihm_appointments';
+export type PermissionResource = 'absence' | 'presence' | 'action_plan' | 'ihm_appointments';
 export type PermissionPage =
   | 'supervision'
   | 'shop_floor'
@@ -15,7 +11,16 @@ export type PermissionPage =
   | 'management'
   | 'manusis';
 
-type roleTypes = 'Líderes' | 'Supervisores' | 'Analistas' | 'Especialistas' | 'Coordenadores' | 'Gerentes' | 'Dev' | 'Basic' | 'Manutenção';
+type roleTypes =
+  | 'Líderes'
+  | 'Supervisores'
+  | 'Analistas'
+  | 'Especialistas'
+  | 'Coordenadores'
+  | 'Gerentes'
+  | 'Dev'
+  | 'Basic'
+  | 'Manutenção';
 export const levelMap: Record<roleTypes, number> = {
   Basic: 0.5,
   Líderes: 1,
@@ -39,45 +44,40 @@ type UserException = {
 // Mapa de exceções de usuário
 // Usuários específicos que possuem permissões especiais independentemente do nível
 const userExceptions: Record<string, UserException> = {
-  "Cláudia Antunes": {
+  'Cláudia Antunes': {
     resources: {
-      ihm_appointments: ["delete", "flag"],
+      ihm_appointments: ['delete', 'flag'],
     },
   },
   'Rogério Inácio': {
     resources: {
-      ihm_appointments: ["flag"],
+      ihm_appointments: ['flag'],
     },
   },
   'Renan Oliveira': {
     resources: {
-      ihm_appointments: ["flag"],
+      ihm_appointments: ['flag'],
     },
   },
   'Tatiani Domingues': {
     resources: {
-      ihm_appointments: ['view', 'update', 'create', "flag"],
+      ihm_appointments: ['view', 'update', 'create', 'flag'],
     },
     pages: ['management'],
   },
-  "Leandro Moraes": {
+  'Leandro Moraes': {
     resources: {
-      ihm_appointments: ["flag"],
+      ihm_appointments: ['flag'],
     },
   },
-  "Gabriel França": {
+  'Gabriel França': {
     resources: {
-      ihm_appointments: ['view', 'update', 'create', "flag"],
+      ihm_appointments: ['view', 'update', 'create', 'flag'],
     },
   },
-  "João Batista": {
+  'João Batista': {
     resources: {
-      ihm_appointments: ['view', 'update', 'create', "flag"],
-    },
-  },
-  "Gabriel França": {
-    resources: {
-      ihm_appointments: ['view', 'update', 'create', "flag"],
+      ihm_appointments: ['view', 'update', 'create', 'flag'],
     },
   },
   // Exemplo: Maria Oliveira tem acesso à página de supervisão e pode gerenciar ausências
@@ -128,7 +128,7 @@ export function usePermissions() {
         create: 2,
         update: 2,
         delete: 3,
-        flag: 3
+        flag: 3,
       },
     }),
     []
@@ -153,7 +153,10 @@ export function usePermissions() {
 
   /* ----------------------------- VERIFICAÇÃO DE EXCEÇÕES DE USUÁRIO ---------------------------- */
   // Verifica se o usuário atual tem exceções
-  const userException = useMemo(() => userName ? userExceptions[userName] : undefined, [userName]);
+  const userException = useMemo(
+    () => (userName ? userExceptions[userName] : undefined),
+    [userName]
+  );
 
   /* ------------------------------------ FUNÇÕES DE PERMISSÃO ------------------------------------ */
   // Verifica se o usuário tem permissão para acessar um recurso específico
@@ -215,8 +218,7 @@ export function usePermissions() {
 
   /* --------------------------------------- MAIS REPETIDOS --------------------------------------- */
   const hasActionPlanPermission = useCallback(
-    (action: PermissionAction): boolean =>
-      hasResourcePermission('action_plan', action),
+    (action: PermissionAction): boolean => hasResourcePermission('action_plan', action),
     [hasResourcePermission]
   );
 
@@ -231,6 +233,6 @@ export function usePermissions() {
     hasLevel,
     isSuperUser,
     userLvl,
-    userName,  // Adicionando o nome do usuário ao retorno para facilitar depuração
+    userName, // Adicionando o nome do usuário ao retorno para facilitar depuração
   };
 }
