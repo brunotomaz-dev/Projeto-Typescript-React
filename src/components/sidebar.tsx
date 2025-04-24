@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { FaTools } from 'react-icons/fa';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { logout } from '../api/auth';
 import STMLogoPxB from '../assets/Login_pxb.png';
@@ -15,9 +16,7 @@ const Sidebar: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const { isCollapsed } = useAppSelector(
-    (state: { sidebar: SidebarState }) => state.sidebar
-  );
+  const { isCollapsed } = useAppSelector((state: { sidebar: SidebarState }) => state.sidebar);
   const {
     isLoggedIn,
     fullName: userName,
@@ -83,6 +82,11 @@ const Sidebar: React.FC = () => {
       icon: 'bi bi-gear',
       href: '/management',
     },
+    hasPageAccess('manusis') && {
+      label: 'Manusis',
+      icon: <FaTools />,
+      href: '/manusis',
+    },
   ];
 
   /* ------------------------------------------------ Layout ------------------------------------------------ */
@@ -116,9 +120,15 @@ const Sidebar: React.FC = () => {
               item && (
                 <li key={item.label} className='nav-item side-pill-h mb-1'>
                   <Link to={item.href} className='nav-link text-black'>
-                    <i
-                      className={`bi ${item.icon} ${isCollapsed ? 'me-0 fs-3' : 'me-2 fs-5'}`}
-                    ></i>
+                    {typeof item.icon === 'string' ? (
+                      <i
+                        className={`bi ${item.icon} ${isCollapsed ? 'me-0 fs-3' : 'me-2 fs-5'}`}
+                      ></i>
+                    ) : (
+                      <span className={`${isCollapsed ? 'me-0 fs-3' : 'me-2 fs-5'}`}>
+                        {item.icon}
+                      </span>
+                    )}
                     {!isCollapsed && <span>{item.label}</span>}
                   </Link>
                 </li>

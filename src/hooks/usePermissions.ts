@@ -12,9 +12,10 @@ export type PermissionPage =
   | 'shop_floor'
   | 'hour_production'
   | 'live_lines'
-  | 'management';
+  | 'management'
+  | 'manusis';
 
-type roleTypes = 'Líderes' | 'Supervisores' | 'Analistas' | 'Especialistas' | 'Coordenadores' | 'Gerentes' | 'Dev' | 'Basic';
+type roleTypes = 'Líderes' | 'Supervisores' | 'Analistas' | 'Especialistas' | 'Coordenadores' | 'Gerentes' | 'Dev' | 'Basic' | 'Manutenção';
 export const levelMap: Record<roleTypes, number> = {
   Basic: 0.5,
   Líderes: 1,
@@ -23,6 +24,7 @@ export const levelMap: Record<roleTypes, number> = {
   Especialistas: 3,
   Coordenadores: 3,
   Gerentes: 4,
+  Manutenção: 10,
   Dev: 99,
 };
 
@@ -136,6 +138,7 @@ export function usePermissions() {
       hour_production: 1,
       live_lines: 0.5,
       management: 2,
+      manusis: 10,
     }),
     []
   );
@@ -168,7 +171,7 @@ export function usePermissions() {
 
   // Verifica se o usuário tem permissão para acessar uma página específica
   const hasPageAccess = useCallback(
-    (page: PermissionPage): boolean => {
+    (page: PermissionPage, equal: Boolean = false): boolean => {
       // Super usuários tem acesso a tudo
       if (isSuperUser) return true;
 
@@ -179,6 +182,11 @@ export function usePermissions() {
 
       // Verificar o nível de acesso necessário para a página
       const requiredLevel = pageAccessLevels[page] ?? Infinity;
+      // Se equal for true, verifica se o nível do usuário é igual ao nível necessário
+      if (equal) {
+        return userLvl === requiredLevel;
+      }
+      // Caso contrário, verifica se o nível do usuário é maior ou igual ao nível necessário
       return userLvl >= requiredLevel;
     },
     [isSuperUser, userLvl, pageAccessLevels, userException]
