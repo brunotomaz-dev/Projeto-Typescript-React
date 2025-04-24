@@ -11,6 +11,7 @@ import Home from './pages/Home/home';
 import LiveLines from './pages/LiveLines/liveLines';
 import LoginPage from './pages/Login/login';
 import Management from './pages/Management/management';
+import Manusis from './pages/Manusis/Manusis';
 import ProductionLive from './pages/ProductionLive/productionLive';
 import ShopFloor from './pages/ShopFloor/sfm';
 import SupervisionPage from './pages/Supervision/supervision';
@@ -54,6 +55,10 @@ function App() {
                 requiredMinLevel={levelMap['Líderes']}
               />
             }
+          />
+          <Route
+            path='manusis'
+            element={<PrivateRoute element={<Manusis />} requiredPage='manusis' />}
           />
         </Routes>
       </main>
