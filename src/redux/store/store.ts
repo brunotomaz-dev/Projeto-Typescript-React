@@ -1,4 +1,5 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { configureStore } from '@reduxjs/toolkit';
+import discardsReducer from './features/discardSlice';
 import homeReducer from './features/homeSlice';
 import productionReducer from './features/productionSlice';
 import sidebarReducer from './features/sidebarSlice';
@@ -10,6 +11,7 @@ export const store = configureStore({
     home: homeReducer,
     user: userReducer,
     production: productionReducer,
+    discards: discardsReducer,
   },
 });
 

@@ -23,6 +23,7 @@ import SupervAbsence from './components/superv.Absence';
 import AbsenceTable from './components/superv.AbsTable';
 import CardGauges from './components/Superv.CardGauges';
 import CaixasPessoa from './components/superv.CxsPessoa';
+import SupervDiscardsTable from './components/Superv.DiscardsTable';
 import PresenceTable from './components/superv.PresenceTable';
 import ProductionTable from './components/superv.prodTable';
 
@@ -216,6 +217,10 @@ const SupervisionPage: React.FC = () => {
               <CardGauges shift={superTurn} today={selectedDate} />
             </Card>
           </Col>
+        </Row>
+
+        <Row className='mb-3'>
+          <SupervDiscardsTable />
         </Row>
 
         <SupervAbsence
