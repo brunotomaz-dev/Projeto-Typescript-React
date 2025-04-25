@@ -1,7 +1,8 @@
 // cSpell: words superv
 import React from 'react';
-import { Card, Col } from 'react-bootstrap';
+import { Col } from 'react-bootstrap';
 import MaxDiscardsTable from './superv.MaxDiscardsTable';
+import NoDiscardsTable from './superv.NoDIscardsTable';
 import TotalDiscardsTable from './superv.TotalDiscardsTable';
 
 const SupervDiscardsTable: React.FC = () => {
@@ -17,9 +18,7 @@ const SupervDiscardsTable: React.FC = () => {
         <MaxDiscardsTable />
       </Col>
       <Col xl={4}>
-        <Card className='bg-transparent border-0 h-100 shadow'>
-          <h5 className='text-center fs-5'>Linhas que não apontaram descartes</h5>
-        </Card>
+        <NoDiscardsTable />
       </Col>
     </>
   );
