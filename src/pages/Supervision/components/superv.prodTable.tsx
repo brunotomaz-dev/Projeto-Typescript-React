@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Card, Table } from 'react-bootstrap';
 import { getProduction } from '../../../api/apiRequests';
 import { TurnoID } from '../../../helpers/constants';
+import { setDiscardData } from '../../../redux/store/features/discardSlice';
+import { useAppDispatch } from '../../../redux/store/hooks';
 import { iProduction } from '../../ProductionLive/interfaces/production.interface';
 import { iDescartes } from '../interface/Descartes.interface';
 //cSpell: words paes
@@ -13,7 +15,6 @@ interface iProductionTableProps {
   shift: TurnoID;
   todayString: string;
   totalProduction: (total: number) => void;
-  descartes: (data: iDescartes[]) => void;
 }
 
 type iProductionProduct = 'Bolinha' | 'Baguete';
@@ -22,8 +23,10 @@ const ProductionTable: React.FC<iProductionTableProps> = ({
   shift,
   todayString,
   totalProduction,
-  descartes,
 }) => {
+  /* ------------------------------------------- REDUX ------------------------------------------ */
+  const dispatch = useAppDispatch();
+
   /* ----------------------------------------- LOCAL STATE ---------------------------------------- */
   const [allBagProduction, setAllBagProduction] = useState<iProductionTotal>({});
   const [allBolProduction, setAllBolProduction] = useState<iProductionTotal>({});
@@ -32,10 +35,7 @@ const ProductionTable: React.FC<iProductionTableProps> = ({
   const [totalByProductBag, setTotalByProductBag] = useState<number>(0);
 
   /* --------------------------------------------------------------------------------- Funções ---- */
-  const calcAndSetProduction = (
-    data: iProductionTotal,
-    productType: iProductionProduct
-  ) => {
+  const calcAndSetProduction = (data: iProductionTotal, productType: iProductionProduct) => {
     const isBolinha = productType === 'Bolinha';
 
     const setProduct = isBolinha ? setAllBolProduction : setAllBagProduction;
@@ -80,7 +80,8 @@ const ProductionTable: React.FC<iProductionTableProps> = ({
         };
       });
 
-      descartes(discardsData);
+      // Envia os dados de descarte para o Redux
+      dispatch(setDiscardData(discardsData));
 
       /* -------------------------------------------------------------------------------- Produção ---- */
       // Calcula a produção total por produto e transforma em caixas
@@ -122,9 +123,7 @@ const ProductionTable: React.FC<iProductionTableProps> = ({
               .map(([produto, total]) => (
                 <tr key={produto}>
                   <td>{produto}</td>
-                  <td className='text-end'>
-                    {Math.floor(total).toLocaleString('pt-BR')}
-                  </td>
+                  <td className='text-end'>{Math.floor(total).toLocaleString('pt-BR')}</td>
                 </tr>
               ))}
             {totalByProductBag > 0 && (
@@ -142,9 +141,7 @@ const ProductionTable: React.FC<iProductionTableProps> = ({
               .map(([produto, total]) => (
                 <tr key={produto}>
                   <td>{produto}</td>
-                  <td className='text-end'>
-                    {Math.floor(total).toLocaleString('pt-BR')}
-                  </td>
+                  <td className='text-end'>{Math.floor(total).toLocaleString('pt-BR')}</td>
                 </tr>
               ))}
             {totalByProductBol > 0 && (

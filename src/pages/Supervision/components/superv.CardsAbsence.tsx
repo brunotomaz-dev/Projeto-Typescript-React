@@ -12,7 +12,7 @@ const SuperCardsAbsence: React.FC<iCardsProps> = ({ title, value, onClick }) => 
   return (
     <Col className='p-1 align-content-center'>
       <Card
-        className='shadow border-0 fs-responsive'
+        className='shadow border-0 fs-responsive action-card'
         style={{ cursor: onClick ? 'pointer' : 'default' }}
         onClick={onClick}
       >

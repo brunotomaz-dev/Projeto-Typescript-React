@@ -26,7 +26,6 @@ import CaixasPessoa from './components/superv.CxsPessoa';
 import SupervDiscardsTable from './components/Superv.DiscardsTable';
 import PresenceTable from './components/superv.PresenceTable';
 import ProductionTable from './components/superv.prodTable';
-import { iDescartes } from './interface/Descartes.interface';
 
 interface iActionToShow extends iActionPlanCards {
   nivelExibicao: number;
@@ -57,7 +56,6 @@ const SupervisionPage: React.FC = () => {
   const { showToast, ToastDisplay } = useToast();
   const [actionPlanData, setActionPlanData] = useState<iActionPlanCards[]>([]);
   const [actionPlanToShow, setActionPlanToShow] = useState<iActionToShow[]>([]);
-  const [discards, setDiscards] = useState<iDescartes[]>([]);
 
   /* ------------------------------------------- HANDLES ------------------------------------------ */
   const handleTurnChange = (turn: TurnoID) => {
@@ -173,10 +171,6 @@ const SupervisionPage: React.FC = () => {
     setTotalPresentes(total);
   };
 
-  const handleDiscards = (data: iDescartes[]) => {
-    setDiscards(data);
-  };
-
   /* ---------------------------------------------------------------------------------------------- */
   /*                                             Layout                                             */
   /* ---------------------------------------------------------------------------------------------- */
@@ -213,7 +207,6 @@ const SupervisionPage: React.FC = () => {
               shift={superTurn}
               todayString={selectedDate}
               totalProduction={handleProductionTotal}
-              descartes={handleDiscards}
             />
           </Col>
           <Col>
@@ -227,7 +220,7 @@ const SupervisionPage: React.FC = () => {
         </Row>
 
         <Row className='mb-3'>
-          <SupervDiscardsTable discardData={discards} />
+          <SupervDiscardsTable />
         </Row>
 
         <SupervAbsence
