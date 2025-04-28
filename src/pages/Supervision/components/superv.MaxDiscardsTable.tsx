@@ -76,7 +76,7 @@ const MaxDiscardsTable: React.FC = () => {
               <Card key={`discard-${index}`} className='h-100 shadow border-0 action-card'>
                 <Card.Body>
                   <Card.Text className='mb-0 text-muted fs-5'>Linha {item.linha}</Card.Text>
-                  <Card.Text className='text-center fs-3'>
+                  <Card.Text className='text-center fs-3 text-truncate'>
                     {item.valor.toLocaleString('pt-BR')} {un}
                   </Card.Text>
                 </Card.Body>
