@@ -24,6 +24,8 @@ const NoDiscardsTable: React.FC = () => {
 
   /* ---------------------------------------- Constantes ---------------------------------------- */
   const hasNoDiscardLines = noDiscardLines.length > 0;
+  const fullDiscardLines = noDiscardLines.length === discardData.length;
+  const displayDiscardLines = hasNoDiscardLines && !fullDiscardLines;
 
   /* -------------------------------------------------------------------------------------------- */
   /*                                            LAYOUT                                            */
@@ -34,27 +36,28 @@ const NoDiscardsTable: React.FC = () => {
         <h5 className='text-center fs-5 mb-0'>Linhas sem Descarte/Reprocesso</h5>
       </Card.Header>
       <Card.Body>
-        <Row>
-          {hasNoDiscardLines ? (
-            <>
-              {noDiscardLines.map((item, index) => (
-                <Col xl={6} xs={12} className='p-1' key={`discard-${index}`}>
-                  <Card className='h-100 shadow border-0'>
-                    <Card.Body key={`discard-${index}`}>
-                      <Card.Text className='mb-0 fs-3 text-center'>
-                        Linha {item.linha}
-                      </Card.Text>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
-            </>
-          ) : (
-            <Alert variant='warning' className='text-center'>
-              Nenhuma linha sem descarte encontrado.
-            </Alert>
-          )}
-        </Row>
+        {displayDiscardLines ? (
+          <Row>
+            {noDiscardLines.map((item, index) => (
+              <Col xl={6} xs={12} className='p-1' key={`discard-${index}`}>
+                <Card className='h-100 shadow border-0'>
+                  <Card.Body key={`discard-${index}`}>
+                    <Card.Text className='mb-0 fs-3 text-center'>Linha {item.linha}</Card.Text>
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        ) : (
+          <Alert
+            variant={`${displayDiscardLines ? 'success' : 'warning'}`}
+            className='text-center'
+          >
+            {fullDiscardLines
+              ? 'Nenhum apontamento feito.'
+              : 'Todas as linhas apontaram descarte.'}
+          </Alert>
+        )}
       </Card.Body>
     </Card>
   );
