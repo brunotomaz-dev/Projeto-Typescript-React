@@ -1,5 +1,6 @@
 import React from 'react';
 import MonthProdCardsMNT from './monthProduction.Management';
+import CxsPessoaHeatmap from './prod.CxsPessoa';
 import TodayProductionCards from './todayProductionCard';
 
 const ManagementProduction: React.FC = () => {
@@ -9,6 +10,7 @@ const ManagementProduction: React.FC = () => {
   const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
   return (
     <>
+      <CxsPessoaHeatmap />
       <TodayProductionCards today={today} />
       <MonthProdCardsMNT firstDay={firstDay} />
     </>

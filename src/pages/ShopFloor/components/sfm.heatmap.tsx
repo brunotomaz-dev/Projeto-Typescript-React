@@ -120,6 +120,21 @@ const Heatmap: React.FC<iHeatmapProps> = ({ indicator }) => {
       },
       tooltip: {
         position: 'top',
+        formatter: (params: any) => {
+          const valor = params.data[2];
+
+          // Verifica se o valor é nulo ou indefinido
+          if (valor === null || valor === undefined) {
+            return `Dia: ${params.data[0]}<br>
+                    ${showByLine ? 'Linha' : 'Turno'}: ${params.data[1]}<br>
+                    Sem dados`;
+          }
+
+          // Formatação com informação do indicador
+          return `Dia: ${params.data[0]}<br>
+                  ${showByLine ? 'Linha' : 'Turno'}: ${showByLine ? params.data[1] + 1 : params.data[1]}<br>
+                  ${indicator.charAt(0).toUpperCase() + indicator.slice(1)}: ${valor}%`;
+        },
         shadowColor: 'rgba(0, 0, 0, 0.5)',
         shadowBlur: 10,
       },
