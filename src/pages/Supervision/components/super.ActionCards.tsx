@@ -19,7 +19,7 @@ interface iSupervActionCardsProps {
 const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }) => {
   /* -------------------------------------------- HOOK -------------------------------------------- */
   const { ToastDisplay, showToast } = useToast();
-  const { hasMinLevel } = usePermissions();
+  const { hasElementAccess } = usePermissions();
   const { isPinned, pinnedCards, togglePin } = usePinnedCards();
 
   /* ------------------------------------------- Funções ------------------------------------------ */
@@ -62,7 +62,7 @@ const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }
     <>
       {processedActionData.length > 0 && (
         <>
-          {hasMinLevel(2) && (
+          {hasElementAccess('post_it_action') && (
             <>
               {/* Indicador de modo de visualização */}
               <div className='d-flex justify-content-between mb-3 align-items-center'>
@@ -99,9 +99,7 @@ const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }
                 : action.dias_aberto > 6
                   ? 'outline-light'
                   : 'outline-secondary';
-              const pinIcon = isPinned(action.recno)
-                ? 'bi-pin-fill'
-                : 'bi-pin-angle-fill';
+              const pinIcon = isPinned(action.recno) ? 'bi-pin-fill' : 'bi-pin-angle-fill';
               return (
                 <Card
                   key={action.recno}

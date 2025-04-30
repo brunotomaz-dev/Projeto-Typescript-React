@@ -8,12 +8,12 @@ import { AxiosError, isAxiosError } from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { clearUser, setUser } from '../redux/store/features/userSlice';
 // import { useAppDispatch } from '../redux/store/hooks';
-import { levelMap } from '../hooks/usePermissions';
+import { functionalLevelMap, sectorAccessMap } from '../hooks/usePermissions';
 import { store } from '../redux/store/store';
 import axios from './axiosConfig';
 
 // const dispatch = useAppDispatch();
-const dispatch = store.dispatch
+const dispatch = store.dispatch;
 
 /**
  * Interface que representa um token JWT decodificado.
@@ -41,7 +41,6 @@ interface LoginResponse {
   groups: string[];
 }
 
-
 /**
  * Função para registrar um novo usuário.
  * @param username - Nome de usuário.
@@ -50,9 +49,21 @@ interface LoginResponse {
  * @param firstName - Primeiro nome.
  * @param lastName - Último nome.
  */
-export const register = async (username: string, password: string, email: string, firstName: string, lastName: string) => {
+export const register = async (
+  username: string,
+  password: string,
+  email: string,
+  firstName: string,
+  lastName: string
+) => {
   try {
-    const response = await axios.post('/api/register/', { username, password, email, first_name: firstName, last_name: lastName });
+    const response = await axios.post('/api/register/', {
+      username,
+      password,
+      email,
+      first_name: firstName,
+      last_name: lastName,
+    });
     return response.data;
   } catch (error) {
     throw new Error('Registration failed');
@@ -94,16 +105,27 @@ export const login = async (username: string, password: string): Promise<Decoded
 
     const decoded = jwtDecode<DecodedToken>(access);
 
-    dispatch(setUser({
-      fullName: `${first_name} ${last_name}`,
-      groups: groups,
-      user_id: decoded.user_id,
-      level: Math.max(0, ...groups.map(group => levelMap[group as keyof typeof levelMap] || 0))
-    }))
+    const functionalGroups = groups.filter((g) => Object.keys(functionalLevelMap).includes(g));
+    const sectorGroups = groups.filter((g) => Object.keys(sectorAccessMap).includes(g));
+
+    dispatch(
+      setUser({
+        fullName: `${first_name} ${last_name}`,
+        groups: groups,
+        userId: decoded.user_id,
+        functionalRole: functionalGroups,
+        functionalLevel: Math.max(
+          0,
+          ...functionalGroups.map(
+            (group) => functionalLevelMap[group as keyof typeof functionalLevelMap] || 0
+          )
+        ),
+        sectors: sectorGroups,
+      })
+    );
 
     // Retorna o token decodificado
     return decoded;
-
   } catch (error: unknown) {
     if (isAxiosError(error)) {
       const axiosError = error as AxiosError;
@@ -129,18 +151,30 @@ export const logout = () => {
  */
 export const initAuth = (): boolean => {
   const token = localStorage.getItem('access_token');
-  
+
   if (token && !checkTokenExpiration(token)) {
     const username = localStorage.getItem('username') || '';
     const groups = JSON.parse(localStorage.getItem('groups') || '[]') as string[];
     const decoded = jwtDecode<DecodedToken>(token);
-    
-    dispatch(setUser({
-      fullName: username,
-      groups,
-      user_id: decoded.user_id,
-      level: Math.max(0, ...groups.map(group => levelMap[group as keyof typeof levelMap] || 0))
-    }));
+
+    const functionalGroups = groups.filter((g) => Object.keys(functionalLevelMap).includes(g));
+    const sectorGroups = groups.filter((g) => Object.keys(sectorAccessMap).includes(g));
+
+    dispatch(
+      setUser({
+        fullName: username,
+        groups,
+        userId: decoded.user_id,
+        functionalRole: functionalGroups,
+        functionalLevel: Math.max(
+          0,
+          ...functionalGroups.map(
+            (group) => functionalLevelMap[group as keyof typeof functionalLevelMap] || 0
+          )
+        ),
+        sectors: sectorGroups,
+      })
+    );
     return true;
   } else {
     logout();
@@ -148,11 +182,14 @@ export const initAuth = (): boolean => {
   }
 };
 
-export const changePassword = async (oldPassword: string, newPassword: string): Promise<void> => {
+export const changePassword = async (
+  oldPassword: string,
+  newPassword: string
+): Promise<void> => {
   try {
     await axios.post('/api/change-password/', {
       old_password: oldPassword,
-      new_password: newPassword
+      new_password: newPassword,
     });
   } catch (error) {
     if (isAxiosError(error)) {

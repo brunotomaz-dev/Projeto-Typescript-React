@@ -5,7 +5,6 @@ import { useEffect } from 'react';
 import { initAuth } from './api/auth';
 import PrivateRoute from './api/PrivateRoute';
 import Sidebar from './components/sidebar';
-import { levelMap } from './hooks/usePermissions';
 import HomeFake from './pages/example';
 import Home from './pages/Home/home';
 import LiveLines from './pages/LiveLines/liveLines';
@@ -49,12 +48,7 @@ function App() {
           />
           <Route
             path='supervision'
-            element={
-              <PrivateRoute
-                element={<SupervisionPage />}
-                requiredMinLevel={levelMap['Líderes']}
-              />
-            }
+            element={<PrivateRoute element={<SupervisionPage />} requiredPage='supervision' />}
           />
           <Route
             path='manusis'

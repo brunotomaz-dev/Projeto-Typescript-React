@@ -17,13 +17,13 @@ interface iActionPlanTableProps {
   onDataChange: (actionPlan: iActionPlanCards[]) => void;
 }
 
-const ActionPlanCards: React.FC<iActionPlanTableProps> = ({
-  status,
-  shift,
-  onDataChange,
-}) => {
+const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDataChange }) => {
   /* --------------------------------------------- ROOK -------------------------------------------- */
-  const { hasActionPlanPermission, userLvl, hasMinLevel } = usePermissions();
+  const {
+    hasResourcePermission,
+    userFunctionalLevel: userLvl,
+    hasElementAccess,
+  } = usePermissions();
   const { ToastDisplay, showToast } = useToast();
   const { isPinned, togglePin, pinnedCards } = usePinnedCards();
 
@@ -83,8 +83,7 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({
   };
 
   const calcularDiasEmAberto = (dataRegistro: Date | string) => {
-    const dataInicial =
-      dataRegistro instanceof Date ? dataRegistro : parseISO(dataRegistro);
+    const dataInicial = dataRegistro instanceof Date ? dataRegistro : parseISO(dataRegistro);
 
     const hoje = startOfDay(new Date());
     const dias = differenceInDays(hoje, dataInicial);
@@ -108,7 +107,7 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({
 
   // Handler para confirmar exclusão
   const handleConfirmDelete = async () => {
-    if (!selectedActionPlan || !hasActionPlanPermission('delete')) return;
+    if (!selectedActionPlan || !hasResourcePermission('action_plan', 'delete')) return;
 
     try {
       setIsDeleting(true);
@@ -174,7 +173,7 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({
       <Card className='bg-transparent border-0 shadow mb-3 pt-2 px-2'>
         <Card.Header className='d-flex justify-content-between align-items-center'>
           <h5 className='text-center fs-5'>Planos de Ação</h5>
-          {hasActionPlanPermission('create') && (
+          {hasResourcePermission('action_plan', 'create') && (
             <Button variant='primary' size='sm' onClick={() => setShowCreateModal(true)}>
               <i className='bi bi-plus-lg me-1'></i>
               Novo Plano
@@ -203,9 +202,7 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({
                   : actionPlan.dias_aberto > 2
                     ? 'outline-light'
                     : 'outline-secondary';
-            const pinIcon = isPinned(actionPlan.recno)
-              ? 'bi-pin-fill'
-              : 'bi-pin-angle-fill';
+            const pinIcon = isPinned(actionPlan.recno) ? 'bi-pin-fill' : 'bi-pin-angle-fill';
 
             return (
               <Card
@@ -222,11 +219,9 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({
                 <Card.Header
                   className={`d-flex justify-content-between align-items-center ${headerColor}`}
                 >
-                  <span className='fw-bold'>
-                    Dias em Aberto: {actionPlan.dias_aberto}
-                  </span>
+                  <span className='fw-bold'>Dias em Aberto: {actionPlan.dias_aberto}</span>
                   <div>
-                    {hasMinLevel(3) && (
+                    {hasElementAccess('btn_pin_action') && (
                       <Button
                         variant={btnVariant}
                         size='sm'
@@ -236,7 +231,7 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({
                         <i className={pinIcon}></i>
                       </Button>
                     )}
-                    {hasActionPlanPermission('update') && (
+                    {hasResourcePermission('action_plan', 'update') && (
                       <Button
                         variant={`${actionPlan.dias_aberto > 2 ? 'outline-light' : 'outline-secondary'}`}
                         size='sm'
@@ -246,7 +241,7 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({
                         <i className='bi bi-pencil-fill'></i>
                       </Button>
                     )}
-                    {hasActionPlanPermission('delete') && (
+                    {hasResourcePermission('action_plan', 'delete') && (
                       <Button
                         variant={`${actionPlan.dias_aberto > 2 ? 'outline-light' : 'outline-secondary'}`}
                         size='sm'
