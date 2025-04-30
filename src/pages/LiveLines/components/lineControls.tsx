@@ -1,12 +1,12 @@
 import React from 'react';
 import { FormSelect, Row } from 'react-bootstrap';
 import { colorObj } from '../../../helpers/constants';
+import { useAppSelector } from '../../../redux/store/hooks';
 import { iInfoIhmLive } from '../interfaces/infoIhm.interface';
 import MachineStatus from './lineStatus';
 
 interface ControlsProps {
   selectedLine: number;
-  selectedShift: string;
   lines: number[];
   turnos: Record<string, string>;
   shiftOptions: string[];
@@ -20,7 +20,6 @@ interface ControlsProps {
 
 const LineControls: React.FC<ControlsProps> = ({
   selectedLine,
-  selectedShift,
   lines,
   turnos,
   shiftOptions,
@@ -31,11 +30,13 @@ const LineControls: React.FC<ControlsProps> = ({
   statusRender,
   infoParada,
 }) => {
+  /* ----------------------------------------------- HOOK's ----------------------------------------------- */
+  const selectedShift = useAppSelector((state) => state.liveLines.selectedShift);
+
   // Definir o problema e motivo da parada
   let problema = infoParada?.problema || 'Não Apontado';
   const motivo = infoParada?.motivo || 'Não apontado';
-  problema =
-    motivo === 'Parada Programada' ? infoParada?.causa || 'Não Apontado' : problema;
+  problema = motivo === 'Parada Programada' ? infoParada?.causa || 'Não Apontado' : problema;
 
   const bgColor = colorObj[motivo as keyof typeof colorObj] || colorObj['Não apontado'];
 
@@ -79,9 +80,7 @@ const LineControls: React.FC<ControlsProps> = ({
         </Row>
       )}
       {status !== 'true' && statusRender && (
-        <Row className='card text-center fs-4 bg-light p-3'>
-          {infoParada?.tempo} minutos
-        </Row>
+        <Row className='card text-center fs-4 bg-light p-3'>{infoParada?.tempo} minutos</Row>
       )}
     </>
   );

@@ -7,27 +7,23 @@ import { getShiftByTime } from '../../../helpers/turn';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { useToast } from '../../../hooks/useToast';
 import { iInfoIHM } from '../../../interfaces/InfoIHM.interface';
+import { useAppSelector } from '../../../redux/store/hooks';
 import { iMaquinaIHM } from '../interfaces/maquinaIhm.interface';
 import CreateStopModal from './ModalCreate';
 import EditStopModal from './ModalUpdate';
 
 interface iUpdateStopsProps {
   selectedLine: number;
-  selectedShift: string;
-  selectedDate: string;
   nowDate: string;
-  selectedMachine?: string;
   onUpdate: () => void;
 }
 
-const UpdateStops: React.FC<iUpdateStopsProps> = ({
-  nowDate,
-  selectedDate,
-  selectedLine,
-  selectedShift,
-  selectedMachine,
-  onUpdate,
-}) => {
+const UpdateStops: React.FC<iUpdateStopsProps> = ({ nowDate, selectedLine, onUpdate }) => {
+  /* ------------------------------------------------ REDUX ----------------------------------------------- */
+  const selectedDate = useAppSelector((state) => state.liveLines.selectedDate);
+  const selectedMachine = useAppSelector((state) => state.liveLines.selectedMachine);
+  const selectedShift = useAppSelector((state) => state.liveLines.selectedShift);
+
   /* ----------------------------------------- Constantes ----------------------------------------- */
   const isToday = nowDate === selectedDate; // Verifica se a data selecionada é hoje
 
@@ -286,8 +282,7 @@ const UpdateStops: React.FC<iUpdateStopsProps> = ({
           <br />
           {isToday ? (
             <>
-              Verifique se o turno e linha estão corretos ou se há apontamentos
-              registrados.
+              Verifique se o turno e linha estão corretos ou se há apontamentos registrados.
               {canCreate && (
                 <div className='mt-3'>
                   <Button variant='primary' size='sm' onClick={handleCreateClick}>
@@ -322,12 +317,7 @@ const UpdateStops: React.FC<iUpdateStopsProps> = ({
       />
 
       {/* Modal de confirmação de exclusão */}
-      <Modal
-        show={showDeleteModal}
-        onHide={handleCancelDelete}
-        centered
-        backdrop='static'
-      >
+      <Modal show={showDeleteModal} onHide={handleCancelDelete} centered backdrop='static'>
         <Modal.Header closeButton>
           <Modal.Title>Confirmar Exclusão</Modal.Title>
         </Modal.Header>
@@ -344,8 +334,7 @@ const UpdateStops: React.FC<iUpdateStopsProps> = ({
                 <strong>Data:</strong>{' '}
                 {format(
                   parseISO(
-                    maquinaIHM.find((item) => item.recno === stopToDelete)
-                      ?.data_registro || ''
+                    maquinaIHM.find((item) => item.recno === stopToDelete)?.data_registro || ''
                   ),
                   'dd/MM/yyyy',
                   { locale: ptBR }

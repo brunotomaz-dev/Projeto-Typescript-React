@@ -3,7 +3,10 @@ import { useAppSelector } from '../redux/store/hooks';
 
 export type PermissionAction = 'view' | 'create' | 'update' | 'delete' | 'flag';
 export type PermissionResource = 'absence' | 'presence' | 'action_plan' | 'ihm_appointments';
-export type PermissionElement = 'btn_pin_action' | 'post_it_action';
+export type PermissionElement =
+  | 'btn_pin_action'
+  | 'post_it_action'
+  | 'btn_OS_preventive_history';
 
 export type PermissionPage =
   | 'supervision'
@@ -39,8 +42,8 @@ type SectorRole =
 export const functionalLevelMap: Record<FunctionalRole, number> = {
   Operadores: 0.5,
   Lideres: 1,
-  Analistas: 2,
   Supervisores: 2,
+  Analistas: 2,
   Especialistas: 3,
   Coordenadores: 3,
   Gerentes: 4,
@@ -263,21 +266,32 @@ export function usePermissions() {
       const elementRequirements: Record<
         PermissionElement,
         {
-          minLevel: number;
+          minLevel?: number;
           requiredSectors?: string[];
+          customCheck?: (userFunctionalLevel: number, sectorGroups: string[]) => boolean;
         }
       > = {
         btn_pin_action: { minLevel: 3 },
         post_it_action: { minLevel: 2, requiredSectors: ['Produção'] },
-        // btn_cancel_order: { minLevel: 3, requiredSectors: ['Manutenção'] },
-        // Adicione outros elementos conforme necessário
+        btn_OS_preventive_history: {
+          customCheck: (fLvl, sec) => {
+            if (fLvl >= 3) return true; // Permite para níveis 3 ou superiores
+            if (fLvl === 2 && sec.includes('Manutenção')) return true; // Permite para nível 2 se setor for Manutenção
+            return false; // Caso contrário, não permite
+          },
+        },
       };
 
       const requirements = elementRequirements[elementId];
       if (!requirements) return true; // Se não definido, permite por padrão
 
+      // Verifica se há uma verificação personalizada
+      if (requirements.customCheck) {
+        return requirements.customCheck(userFunctionalLevel, sectorGroups);
+      }
+
       // Verificar nível funcional
-      if (userFunctionalLevel < requirements.minLevel) return false;
+      if (requirements.minLevel && userFunctionalLevel < requirements.minLevel) return false;
 
       // Verificar setores necessários (se definidos)
       if (
