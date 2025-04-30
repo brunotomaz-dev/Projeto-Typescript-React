@@ -11,6 +11,13 @@ export enum OS_Status {
   DISAPPROVED = 8,
 }
 
+export enum Service_Type {
+  PREVENTIVA = 1,
+  CORRETIVA = 4,
+  PREVENTIVA_PONTUAL = 6,
+  CORRETIVA_PROGRAMADA = 7,
+}
+
 export interface iMaintenanceOrders {
   assunto_principal: string;
   assunto_secundario: string;
