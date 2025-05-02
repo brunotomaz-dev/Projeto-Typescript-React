@@ -19,8 +19,10 @@ const DashYamazumi: React.FC<iYamazumiProps> = ({ data }) => {
   const chartData = useMemo(() => {
     // Se não houver dados, retornar objeto vazio
     if (!data || data.length === 0) {
+      setIsLoading(false);
       return { xAxis: [], series: [] };
     }
+
     setIsLoading(true); // Iniciar o carregamento
 
     // Processar os dados conforme as regras
@@ -46,9 +48,7 @@ const DashYamazumi: React.FC<iYamazumiProps> = ({ data }) => {
     });
 
     // Obter todas as linhas distintas (eixo X) e ordenar numericamente de 1 a 14
-    const linhas = [...new Set(processedData.map((item) => item.linha))].sort(
-      (a, b) => a - b
-    );
+    const linhas = [...new Set(processedData.map((item) => item.linha))].sort((a, b) => a - b);
 
     // Obter todos os motivos distintos (para as séries)
     const motivos = [
@@ -112,10 +112,7 @@ const DashYamazumi: React.FC<iYamazumiProps> = ({ data }) => {
         let tooltip = `<strong>${params[0].axisValue}</strong><br/>`;
 
         // Somar o tempo total
-        let tempoTotal = params.reduce(
-          (total: number, item: any) => total + item.value,
-          0
-        );
+        let tempoTotal = params.reduce((total: number, item: any) => total + item.value, 0);
 
         // Adicionar cada motivo
         params.forEach((item: any) => {
@@ -187,8 +184,7 @@ const DashYamazumi: React.FC<iYamazumiProps> = ({ data }) => {
             className='d-flex justify-content-center align-items-center p-2'
           >
             <Alert variant='info' className='text-center'>
-              Sem dados disponíveis para exibição. Por favor, selecione outra data ou
-              período.
+              Sem dados disponíveis para exibição. Por favor, selecione outra data ou período.
             </Alert>
           </Row>
         )
