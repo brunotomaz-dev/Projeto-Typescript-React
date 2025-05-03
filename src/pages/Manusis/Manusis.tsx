@@ -7,6 +7,7 @@ import { Alert, Badge, Card, Col, Container, Row, Spinner } from 'react-bootstra
 import { getOrdemServico, getSolicitacaoServico } from '../../api/apiRequests';
 import PageLayout from '../../components/pageLayout';
 import DatePickerComponent from './components/DatePickerComponent';
+import { formatHourDecimal } from './functions/formatHourDecimal';
 import { iMaintenanceOrders, OS_Status } from './interfaces/MaintenanceOrders';
 import { iServiceRequirement, SR_Status } from './interfaces/ServiceRequirement.interface';
 
@@ -141,33 +142,6 @@ const Manusis: React.FC = () => {
   const hasNoClosedOrders = closedOrdersByDate.length === 0;
 
   /* ------------------------------------------ Funções ----------------------------------------- */
-  // Função para converter decimal de horas em formato legível (horas ou minutos)
-  const formatHourDecimal = (decimalHours: number | string): string => {
-    if (!decimalHours && decimalHours !== 0) return '-';
-
-    // Converter para número caso venha como string
-    const hours = typeof decimalHours === 'string' ? parseFloat(decimalHours) : decimalHours;
-
-    // Converter para minutos
-    const totalMinutes = hours * 60;
-
-    // Se for menos de uma hora, mostrar em minutos
-    if (hours < 1) {
-      return `${Math.round(totalMinutes)} minutos`;
-    }
-
-    // Se for hora exata, mostrar apenas horas
-    if (hours % 1 === 0) {
-      return `${hours} ${hours === 1 ? 'hora' : 'horas'}`;
-    }
-
-    // Caso contrário, mostrar horas e minutos
-    const wholeHours = Math.floor(hours);
-    const minutes = Math.round((hours - wholeHours) * 60);
-
-    return `${wholeHours} ${wholeHours === 1 ? 'hora' : 'horas'} e ${minutes} minutos`;
-  };
-
   // Adicione uma função para calcular a diferença de horas entre duas datas
   const getHoursDifference = (dateString: string, timeString: string): number => {
     if (!dateString || !timeString) return 0;
@@ -195,9 +169,7 @@ const Manusis: React.FC = () => {
       <h1>Manusis</h1>
       <Col className='mb-2'>
         <DatePickerComponent onDateChange={handleDateChange} selectedDate={selectedDate} />
-        {ssLoading && (
-          <Spinner animation='border' role='status' className='ms-2 align-middle' />
-        )}
+        {ssLoading && <Spinner animation='border' role='status' className='ms-2 align-middle' />}
       </Col>
       <Container fluid>
         <Row className='gap-1'>
@@ -235,8 +207,7 @@ const Manusis: React.FC = () => {
                             : 'border-light shadow-sm'
                       }`}
                     >
-                      SS {sr.numero_ss} - {sr.descricao_localizacao_nivel1} /
-                      {sr.assunto_principal}
+                      SS {sr.numero_ss} - {sr.descricao_localizacao_nivel1} /{sr.assunto_principal}
                     </Card.Header>
                     <Card.Body>
                       <Card.Title>{sr.ativo}</Card.Title>
@@ -265,11 +236,7 @@ const Manusis: React.FC = () => {
               </>
             )}
           </Col>
-          <Col
-            xs={12}
-            xl={4}
-            className='bg-success-subtle p-2 rounded-3 d-flex flex-column gap-2'
-          >
+          <Col xs={12} xl={4} className='bg-success-subtle p-2 rounded-3 d-flex flex-column gap-2'>
             <h4 className='text-center fs-4'>
               Ordens Abertas
               {hasOrders && (
@@ -292,8 +259,7 @@ const Manusis: React.FC = () => {
                   <Card.Header
                     className={`${os.fim_atendimento !== '-' && 'bg-success text-light'}`}
                   >
-                    OS {os.numero_os} - {os.descricao_localizacao_nivel1} /
-                    {os.assunto_principal}
+                    OS {os.numero_os} - {os.descricao_localizacao_nivel1} /{os.assunto_principal}
                   </Card.Header>
                   <Card.Body>
                     <Card.Title>{os.ativo}</Card.Title>
@@ -320,9 +286,7 @@ const Manusis: React.FC = () => {
                       {os.fim_atendimento !== '-' ? (
                         <Badge bg='success'>Aberta</Badge>
                       ) : (
-                        os.fim_atendimento === '-' && (
-                          <Badge bg='warning'>Em Atendimento</Badge>
-                        )
+                        os.fim_atendimento === '-' && <Badge bg='warning'>Em Atendimento</Badge>
                       )}
                       <br />
                       <strong>Data da Abertura</strong> {os.data_criacao}
@@ -347,8 +311,7 @@ const Manusis: React.FC = () => {
                     </Card.Text>
                   </Card.Body>
                   <Card.Footer className='text-center'>
-                    <strong>Tempo Estimado:</strong>{' '}
-                    {formatHourDecimal(os.tempo_estimado_trabalho)}
+                    <strong>Tempo Estimado:</strong> {formatHourDecimal(os.tempo_estimado_trabalho)}
                     <br />
                     <strong>Tempo Realizado:</strong>{' '}
                     {formatHourDecimal(os.tempo_trabalho_realizado)}
@@ -357,11 +320,7 @@ const Manusis: React.FC = () => {
                 </Card>
               ))}
           </Col>
-          <Col
-            xs={12}
-            xl={4}
-            className='bg-warning-subtle p-2 rounded-3 d-flex flex-column gap-2'
-          >
+          <Col xs={12} xl={4} className='bg-warning-subtle p-2 rounded-3 d-flex flex-column gap-2'>
             <h4 className='text-center fs-4'>
               Ordens Fechadas
               {hasClosedOrders && (
@@ -379,8 +338,7 @@ const Manusis: React.FC = () => {
               closedOrdersByDate.map((os) => (
                 <Card key={os.id} className='border-light shadow-sm'>
                   <Card.Header className=''>
-                    OS {os.numero_os} - {os.descricao_localizacao_nivel1} /
-                    {os.assunto_principal}
+                    OS {os.numero_os} - {os.descricao_localizacao_nivel1} /{os.assunto_principal}
                   </Card.Header>
                   <Card.Body>
                     <Card.Title>{os.ativo}</Card.Title>
@@ -426,8 +384,7 @@ const Manusis: React.FC = () => {
                     </Card.Text>
                   </Card.Body>
                   <Card.Footer className='text-center'>
-                    <strong>Tempo Estimado:</strong>{' '}
-                    {formatHourDecimal(os.tempo_estimado_trabalho)}
+                    <strong>Tempo Estimado:</strong> {formatHourDecimal(os.tempo_estimado_trabalho)}
                     <br />
                     <strong>Tempo Realizado:</strong>{' '}
                     {formatHourDecimal(os.tempo_trabalho_realizado)}
