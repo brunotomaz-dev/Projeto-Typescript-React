@@ -310,14 +310,14 @@ const LiveLines: React.FC = () => {
   }, [selectedLine, selectedShift]);
 
   // Limpeza do componente
-  // useEffect(() => {
-  //   return () => {
-  //     // Restaura os dados do redux
-  //     dispatch(setLiveSelectedDate(nowDate));
-  //     dispatch(setLiveSelectedMachine(''));
-  //     dispatch(setLiveSelectedShift(shiftActual));
-  //   };
-  // }, [dispatch, nowDate, shiftActual]);
+  useEffect(() => {
+    return () => {
+      // Restaura os dados do redux
+      dispatch(setLiveSelectedDate(nowDate));
+      dispatch(setLiveSelectedMachine(''));
+      dispatch(setLiveSelectedShift(shiftActual));
+    };
+  }, [dispatch, nowDate, shiftActual]);
 
   /* --------------------------------------------- USE INTERVAL --------------------------------------------- */
 
