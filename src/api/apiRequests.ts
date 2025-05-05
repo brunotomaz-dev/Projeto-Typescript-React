@@ -486,6 +486,7 @@ export const getSolicitacaoServico = async (data: iSolicitacaoServico) => {
 /* ---------------------------------------------------------------------------------------------- */
 interface iOrdemServico {
   data_criacao?: string;
+  data_criacao__gt?: string;
   status_id?: number;
   numero_os?: string;
   inicio_atendimento?: string;

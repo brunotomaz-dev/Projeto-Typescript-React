@@ -64,11 +64,11 @@ const LiveLinesHeader: React.FC<HeaderProps> = ({
               {isOpenedUpdateStops ? 'Fechar Apontamentos' : 'Ver Apontamentos'}
             </Button>
           )}
-          {/* {hasBtnHistAccess && (
+          {hasBtnHistAccess && (
             <Button variant='outline-secondary' onClick={() => setIsOpened(true)}>
               Ver Histórico
             </Button>
-          )} */}
+          )}
         </Stack>
       </Row>
       <ModalServiceHistory isOpened={isOpened} onHide={() => setIsOpened(false)} />

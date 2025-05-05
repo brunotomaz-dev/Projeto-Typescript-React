@@ -11,7 +11,7 @@ import {
   setLiveSelectedMachine,
   setLiveSelectedShift,
 } from '../../redux/store/features/liveLinesSlice';
-import { useAppDispatch } from '../../redux/store/hooks';
+import { useAppDispatch, useAppSelector } from '../../redux/store/hooks';
 import BarStops from './components/barStops';
 import EfficiencyComparison from './components/effComparison';
 import GaugeAverage from './components/gaugeAverage';
@@ -48,7 +48,7 @@ const LiveLines: React.FC = () => {
   const nowDate = format(now, 'yyyy-MM-dd');
   const lines = Array.from({ length: 14 }, (_, i) => i + 1);
   const cardStyle = { borderRadius: '10px', fontSize: '1.5vw' };
-  const shift = getShift();
+  const shiftActual = getShift();
   const turnos = {
     NOT: 'Noturno',
     MAT: 'Matutino',
@@ -58,6 +58,7 @@ const LiveLines: React.FC = () => {
 
   /* ------------------------------------------------ REDUX ----------------------------------------------- */
   const dispatch = useAppDispatch();
+  const shift = useAppSelector((state) => state.liveLines.selectedShift);
 
   /* -------------------------------------------- ESTADOS LOCAIS -------------------------------------------- */
   const [selectedDate, setSelectedDate] = useState<string>(nowDate);
@@ -116,8 +117,8 @@ const LiveLines: React.FC = () => {
       DEFAULT: ['TOT', 'NOT', 'MAT', 'VES'],
     };
 
-    return selectedDate === nowDate ? opt[shift as keyof typeof opt] : opt.DEFAULT;
-  }, [nowDate, selectedDate, shift]);
+    return selectedDate === nowDate ? opt[shiftActual as keyof typeof opt] : opt.DEFAULT;
+  }, [nowDate, selectedDate, shiftActual]);
 
   // Filtro de dados
   const filterData = useMemo(() => {
@@ -308,20 +309,16 @@ const LiveLines: React.FC = () => {
     });
   }, [selectedLine, selectedShift]);
 
+  // Limpeza do componente
   // useEffect(() => {
-  //   const handleResize = () => {
-  //     setContainerHeight(window.innerWidth >= 1200 ? '100%' : '400px');
+  //   return () => {
+  //     // Restaura os dados do redux
+  //     dispatch(setLiveSelectedDate(nowDate));
+  //     dispatch(setLiveSelectedMachine(''));
+  //     dispatch(setLiveSelectedShift(shiftActual));
   //   };
+  // }, [dispatch, nowDate, shiftActual]);
 
-  //   // Configuração inicial
-  //   handleResize();
-
-  //   // Adiciona listener
-  //   window.addEventListener('resize', handleResize);
-
-  //   // Cleanup
-  //   return () => window.removeEventListener('resize', handleResize);
-  // }, []);
   /* --------------------------------------------- USE INTERVAL --------------------------------------------- */
 
   // Nova requisição em intervalo de 60s
