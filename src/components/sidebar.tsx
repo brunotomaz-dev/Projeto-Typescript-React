@@ -34,7 +34,16 @@ const Sidebar: React.FC = () => {
   };
 
   /* -------------------------------------------- HOOK -------------------------------------------- */
-  const { hasPageAccess, hasMinLevel } = usePermissions();
+  const { hasPageAccess, userRole } = usePermissions();
+
+  /* ----------------------------------------- RolesMap ----------------------------------------- */
+  const roleMap: Record<string, string> = {
+    Lideres: 'Liderança',
+    Supervisores: 'Supervisão',
+    Gerentes: 'Gerência',
+    Analistas: 'Supervisão',
+    Coordenadores: 'Coordenação',
+  };
 
   /* ------------------------------------- Gerenciamento de ciclo do app ------------------------------------ */
   useEffect(() => {
@@ -58,7 +67,9 @@ const Sidebar: React.FC = () => {
     },
     { label: 'Home', icon: 'bi bi-house', href: '/' },
     hasPageAccess('supervision') && {
-      label: hasMinLevel(2) ? 'Supervisão' : 'Liderança',
+      label: userRole?.some((role) => Object.keys(roleMap).includes(role))
+        ? roleMap[userRole[0]]
+        : 'Supervisão',
       icon: 'bi bi-eye',
       href: '/supervision',
     },

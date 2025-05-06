@@ -313,10 +313,7 @@ export const createActionPlan = async (actionPlanData: Omit<iActionPlan, 'recno'
 // Atualizar plano de ação
 export const updateActionPlan = async (actionPlanData: iActionPlan) => {
   try {
-    const response = await api.put(
-      `/api/action_plan/${actionPlanData.recno}/`,
-      actionPlanData
-    );
+    const response = await api.put(`/api/action_plan/${actionPlanData.recno}/`, actionPlanData);
     return response.data;
   } catch (error) {
     console.error('Erro ao atualizar plano de ação:', error);
@@ -489,10 +486,13 @@ export const getSolicitacaoServico = async (data: iSolicitacaoServico) => {
 /* ---------------------------------------------------------------------------------------------- */
 interface iOrdemServico {
   data_criacao?: string;
+  data_criacao__gt?: string;
   status_id?: number;
   numero_os?: string;
   inicio_atendimento?: string;
   data_conclusao?: string;
+  tipo_manutencao?: number;
+  cod_ativo?: string;
 }
 
 export const getOrdemServico = async (data: iOrdemServico) => {

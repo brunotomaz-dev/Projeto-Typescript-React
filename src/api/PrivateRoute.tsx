@@ -11,17 +11,12 @@ interface PrivateRouteProps {
   requiredMinLevel?: number;
 }
 
-const PrivateRoute: React.FC<PrivateRouteProps> = ({
-  element,
-  requiredPage,
-  requiredLevel,
-  requiredMinLevel,
-}) => {
+const PrivateRoute: React.FC<PrivateRouteProps> = ({ element, requiredPage }) => {
   // Estado de autenticação do usuário
   const { isLoggedIn } = useAppSelector((state: { user: UserState }) => state.user);
 
   // Permissões do usuário
-  const { hasPageAccess, hasMinLevel, hasLevel, isSuperUser } = usePermissions();
+  const { hasPageAccess, isSuperUser } = usePermissions();
 
   // Verificar se está autenticado
   if (!isLoggedIn) {
@@ -31,16 +26,6 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({
   // Super usuário tem acesso a tudo
   if (isSuperUser) {
     return element;
-  }
-
-  // Verificar nível mínimo requerido
-  if (requiredMinLevel !== undefined && !hasMinLevel(requiredMinLevel)) {
-    return <Navigate to='/' replace />;
-  }
-
-  // Verificar nível específico requerido
-  if (requiredLevel !== undefined && !hasLevel(requiredLevel)) {
-    return <Navigate to='/' replace />;
   }
 
   // Verificar permissão de página específica

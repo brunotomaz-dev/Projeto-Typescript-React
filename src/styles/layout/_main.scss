@@ -16,6 +16,10 @@
   background: none;
 }
 
+.bg-light-grey-sfm {
+  background-color: v.$light-grey-sfm;
+}
+
 .fs-responsive {
   --fs-1: clamp(1rem, 4vw, 3rem);
   --fs-2: clamp(1rem, 3vw, 2.5rem);

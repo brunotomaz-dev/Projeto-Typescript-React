@@ -1,43 +1,51 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface UserState extends User {
   isLoggedIn: boolean;
 }
 
 interface User {
+  userId: string;
   fullName: string;
   groups: string[];
-  user_id: string;
-  level: number;
+  functionalLevel: number;
+  sectors: string[];
+  functionalRole?: string[];
 }
 
 const initialState: UserState = {
-  fullName: "",
+  fullName: '',
   groups: [],
   isLoggedIn: false,
-  user_id: "",
-  level: 0
+  userId: '',
+  functionalLevel: 0,
+  sectors: [],
+  functionalRole: [],
 };
 
 export const userSlice = createSlice({
-  name: "user",
+  name: 'user',
   initialState,
   reducers: {
     setUser: (state, action: PayloadAction<User>) => {
       state.fullName = action.payload.fullName;
       state.groups = action.payload.groups;
-      state.user_id = action.payload.user_id;
-      state.level = action.payload.level;
+      state.userId = action.payload.userId;
+      state.functionalLevel = action.payload.functionalLevel;
+      state.sectors = action.payload.sectors;
+      state.functionalRole = action.payload.functionalRole;
       state.isLoggedIn = true;
     },
     clearUser: (state) => {
-      state.fullName = "";
+      state.fullName = '';
       state.groups = [];
-      state.user_id = "";
-      state.level = 0;
+      state.userId = '';
+      state.functionalLevel = 0;
+      state.sectors = [];
+      state.functionalRole = [];
       state.isLoggedIn = false;
     },
-  }
+  },
 });
 
 export const { setUser, clearUser } = userSlice.actions;

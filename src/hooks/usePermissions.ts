@@ -3,6 +3,11 @@ import { useAppSelector } from '../redux/store/hooks';
 
 export type PermissionAction = 'view' | 'create' | 'update' | 'delete' | 'flag';
 export type PermissionResource = 'absence' | 'presence' | 'action_plan' | 'ihm_appointments';
+export type PermissionElement =
+  | 'btn_pin_action'
+  | 'post_it_action'
+  | 'btn_OS_preventive_history';
+
 export type PermissionPage =
   | 'supervision'
   | 'shop_floor'
@@ -11,26 +16,49 @@ export type PermissionPage =
   | 'management'
   | 'manusis';
 
-type roleTypes =
-  | 'Líderes'
-  | 'Supervisores'
+// Contexto funcional (cargos)
+type FunctionalRole =
+  | 'Operadores'
+  | 'Lideres'
   | 'Analistas'
+  | 'Supervisores'
   | 'Especialistas'
   | 'Coordenadores'
   | 'Gerentes'
-  | 'Dev'
+  | 'Diretores'
+  | 'Dev';
+
+// Contexto setorial
+type SectorRole =
+  | 'Produção'
+  | 'Manutenção'
+  | 'Qualidade'
+  | 'PCP'
+  | 'TI'
   | 'Basic'
-  | 'Manutenção';
-export const levelMap: Record<roleTypes, number> = {
-  Basic: 0.5,
-  Líderes: 1,
-  Analistas: 2,
+  | 'Almoxarifado';
+
+// Mapear níveis para cada contexto
+export const functionalLevelMap: Record<FunctionalRole, number> = {
+  Operadores: 0.5,
+  Lideres: 1,
   Supervisores: 2,
+  Analistas: 2,
   Especialistas: 3,
   Coordenadores: 3,
   Gerentes: 4,
-  Manutenção: 10,
+  Diretores: 5,
   Dev: 99,
+};
+
+export const sectorAccessMap: Record<SectorRole, string[]> = {
+  Basic: ['shop_floor', 'live_lines'],
+  Produção: ['supervision', 'hour_production', 'management'],
+  Manutenção: ['manusis', 'management'],
+  Qualidade: [''],
+  PCP: [''],
+  Almoxarifado: [''],
+  TI: ['all'],
 };
 
 // Tipo para exceções de usuário
@@ -92,61 +120,16 @@ const userExceptions: Record<string, UserException> = {
 
 export function usePermissions() {
   /* -------------------------------------------- REDUX ------------------------------------------- */
-  // Recebe o nível do usuário logado
-  const userLvl = useAppSelector((state) => state.user.level);
   // Recebe os grupos do usuário logado
   const userGroups = useAppSelector((state) => state.user.groups);
   // Recebe o nome completo do usuário
   const userName = useAppSelector((state) => state.user.fullName);
+  // Recebe função e setor dos grupos
+  const userFunctionalLevel = useAppSelector((state) => state.user.functionalLevel);
+  const sectorGroups = useAppSelector((state) => state.user.sectors);
 
-  /* --------------------------------- MAPA DE NÍVEIS POR RECURSO --------------------------------- */
-  const permissionsLevels = useMemo(
-    () => ({
-      absence: {
-        view: 0, // todos podem ver
-        create: 1, // líderes e acima podem criar
-        update: 1, // líderes e acima podem atualizar
-        delete: 2, // somente supervisores e acima podem deletar
-        flag: 3,
-      },
-      presence: {
-        view: 0,
-        create: 1,
-        update: 1,
-        delete: 2,
-        flag: 3,
-      },
-      action_plan: {
-        view: 1,
-        create: 1,
-        update: 1,
-        delete: 2,
-        flag: 3,
-      },
-      ihm_appointments: {
-        view: 2,
-        create: 2,
-        update: 2,
-        delete: 3,
-        flag: 3,
-      },
-    }),
-    []
-  );
-
-  /* -------------------------------------- ACESSO A PÁGINAS -------------------------------------- */
-  const pageAccessLevels = useMemo(
-    () => ({
-      home: 0,
-      supervision: 1,
-      shop_floor: 0.5,
-      hour_production: 1,
-      live_lines: 0.5,
-      management: 2,
-      manusis: 10,
-    }),
-    []
-  );
+  // Recebe Role do usuário
+  const userRole = useAppSelector((state) => state.user.functionalRole);
 
   /* -------------------------------- VERIFICAÇÃO DE SUPER USUÁRIO -------------------------------- */
   const isSuperUser = useMemo(() => userGroups.includes('Dev'), [userGroups]);
@@ -158,68 +141,169 @@ export function usePermissions() {
     [userName]
   );
 
-  /* ------------------------------------ FUNÇÕES DE PERMISSÃO ------------------------------------ */
-  // Verifica se o usuário tem permissão para acessar um recurso específico
+  /* -------------------------------------- ACESSO A PÁGINAS -------------------------------------- */
+  // Verifica acesso a páginas
+  const hasPageAccess = useCallback(
+    (page: PermissionPage): boolean => {
+      // Super usuários tem acesso a tudo
+      if (isSuperUser) return true;
+
+      // Verificar exceções específicas
+      if (userException?.pages?.includes(page)) return true;
+
+      // Requisitos específicos para cada página
+      const pageRequirements: Record<
+        PermissionPage,
+        {
+          minLevel: number;
+          requiredSectors?: string[];
+        }
+      > = {
+        supervision: { minLevel: 1 },
+        shop_floor: { minLevel: 0.5 },
+        hour_production: { minLevel: 1 },
+        live_lines: { minLevel: 0.5 },
+        management: { minLevel: 3 },
+        manusis: { minLevel: 1, requiredSectors: ['Manutenção'] },
+      };
+
+      const requirements = pageRequirements[page];
+
+      // Verificar nível funcional
+      if (userFunctionalLevel < requirements.minLevel) return false;
+
+      // Verificar setores necessários (se definidos)
+      if (
+        requirements.requiredSectors &&
+        !requirements.requiredSectors.some((sector) => sectorGroups.includes(sector))
+      ) {
+        return false;
+      }
+
+      return true;
+    },
+    [isSuperUser, userFunctionalLevel, sectorGroups, userException]
+  );
+
+  /* ------------------------------------- Acesso A Recursos ------------------------------------ */
+  // Verifica acesso a recursos e ações
   const hasResourcePermission = useCallback(
     (resource: PermissionResource, action: PermissionAction): boolean => {
       // Super usuários tem acesso a tudo
       if (isSuperUser) return true;
 
-      // Verificar se o usuário tem uma exceção para esse recurso e ação
-      if (userException?.resources?.[resource]?.includes(action)) {
-        return true;
+      // Verificar exceções específicas
+      if (userException?.resources?.[resource]?.includes(action)) return true;
+
+      // Definir requisitos para cada recurso e ação
+      const resourceRequirements: Record<
+        PermissionResource,
+        Record<
+          PermissionAction,
+          {
+            minLevel: number;
+            requiredSectors?: string[];
+          }
+        >
+      > = {
+        absence: {
+          view: { minLevel: 0 },
+          create: { minLevel: 1, requiredSectors: ['Produção'] },
+          update: { minLevel: 1, requiredSectors: ['Produção'] },
+          delete: { minLevel: 2, requiredSectors: ['Produção'] },
+          flag: { minLevel: 3, requiredSectors: ['Produção'] },
+        },
+        presence: {
+          view: { minLevel: 0 },
+          create: { minLevel: 1, requiredSectors: ['Produção'] },
+          update: { minLevel: 1, requiredSectors: ['Produção'] },
+          delete: { minLevel: 2, requiredSectors: ['Produção'] },
+          flag: { minLevel: 3, requiredSectors: ['Produção'] },
+        },
+        action_plan: {
+          view: { minLevel: 1 },
+          create: { minLevel: 1 },
+          update: { minLevel: 1 },
+          delete: { minLevel: 2 },
+          flag: { minLevel: 3 },
+        },
+        ihm_appointments: {
+          view: { minLevel: 2 },
+          create: { minLevel: 2, requiredSectors: ['Produção'] },
+          update: { minLevel: 2, requiredSectors: ['Produção'] },
+          delete: { minLevel: 3, requiredSectors: ['Produção'] },
+          flag: { minLevel: 3, requiredSectors: ['Produção'] },
+        },
+      };
+
+      const requirements = resourceRequirements[resource]?.[action];
+      if (!requirements) return false;
+
+      // Verificar nível funcional
+      if (userFunctionalLevel < requirements.minLevel) return false;
+
+      // Verificar setores necessários (se definidos)
+      if (
+        requirements.requiredSectors &&
+        !requirements.requiredSectors.some((sector) => sectorGroups.includes(sector))
+      ) {
+        return false;
       }
 
-      // Verificar o nível de permissão para a ação no recurso
-      const requiredLevel = permissionsLevels[resource]?.[action] ?? Infinity;
-      return userLvl >= requiredLevel;
+      return true;
     },
-    [isSuperUser, userLvl, permissionsLevels, userException]
+    [isSuperUser, userFunctionalLevel, sectorGroups, userException]
   );
 
-  // Verifica se o usuário tem permissão para acessar uma página específica
-  const hasPageAccess = useCallback(
-    (page: PermissionPage, equal: Boolean = false): boolean => {
+  /* --------------------------------------- Elementos UI --------------------------------------- */
+  // Verificação para botões e elementos da UI
+  const hasElementAccess = useCallback(
+    (elementId: PermissionElement): boolean => {
       // Super usuários tem acesso a tudo
       if (isSuperUser) return true;
 
-      // Verificar se o usuário tem uma exceção para essa página
-      if (userException?.pages?.includes(page)) {
-        return true;
+      // Definir requisitos para cada elemento
+      const elementRequirements: Record<
+        PermissionElement,
+        {
+          minLevel?: number;
+          requiredSectors?: string[];
+          customCheck?: (userFunctionalLevel: number, sectorGroups: string[]) => boolean;
+        }
+      > = {
+        btn_pin_action: { minLevel: 3 },
+        post_it_action: { minLevel: 2, requiredSectors: ['Produção'] },
+        btn_OS_preventive_history: {
+          customCheck: (fLvl, sec) => {
+            if (fLvl >= 3) return true; // Permite para níveis 3 ou superiores
+            if (fLvl === 2 && sec.includes('Manutenção')) return true; // Permite para nível 2 se setor for Manutenção
+            return false; // Caso contrário, não permite
+          },
+        },
+      };
+
+      const requirements = elementRequirements[elementId];
+      if (!requirements) return true; // Se não definido, permite por padrão
+
+      // Verifica se há uma verificação personalizada
+      if (requirements.customCheck) {
+        return requirements.customCheck(userFunctionalLevel, sectorGroups);
       }
 
-      // Verificar o nível de acesso necessário para a página
-      const requiredLevel = pageAccessLevels[page] ?? Infinity;
-      // Se equal for true, verifica se o nível do usuário é igual ao nível necessário
-      if (equal) {
-        return userLvl === requiredLevel;
+      // Verificar nível funcional
+      if (requirements.minLevel && userFunctionalLevel < requirements.minLevel) return false;
+
+      // Verificar setores necessários (se definidos)
+      if (
+        requirements.requiredSectors &&
+        !requirements.requiredSectors.some((sector) => sectorGroups.includes(sector))
+      ) {
+        return false;
       }
-      // Caso contrário, verifica se o nível do usuário é maior ou igual ao nível necessário
-      return userLvl >= requiredLevel;
-    },
-    [isSuperUser, userLvl, pageAccessLevels, userException]
-  );
 
-  // Verificação de nível mínimo
-  const hasMinLevel = useCallback(
-    (level: number): boolean => {
-      return isSuperUser || userLvl >= level;
+      return true;
     },
-    [isSuperUser, userLvl]
-  );
-
-  // Verificação de um nível específico
-  const hasLevel = useCallback(
-    (level: number): boolean => {
-      return isSuperUser || userLvl === level;
-    },
-    [userLvl, isSuperUser]
-  );
-
-  /* --------------------------------------- MAIS REPETIDOS --------------------------------------- */
-  const hasActionPlanPermission = useCallback(
-    (action: PermissionAction): boolean => hasResourcePermission('action_plan', action),
-    [hasResourcePermission]
+    [isSuperUser, userFunctionalLevel, sectorGroups]
   );
 
   /* ---------------------------------------------------------------------------------------------- */
@@ -228,11 +312,11 @@ export function usePermissions() {
   return {
     hasResourcePermission,
     hasPageAccess,
-    hasMinLevel,
-    hasActionPlanPermission,
-    hasLevel,
+    hasElementAccess,
+    userFunctionalLevel,
+    userSectors: sectorGroups,
     isSuperUser,
-    userLvl,
-    userName, // Adicionando o nome do usuário ao retorno para facilitar depuração
+    userName,
+    userRole,
   };
 }

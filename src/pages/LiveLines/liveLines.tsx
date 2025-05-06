@@ -6,6 +6,12 @@ import PageLayout from '../../components/pageLayout';
 import { IndicatorType } from '../../helpers/constants';
 import { getShift } from '../../helpers/turn';
 import useInterval from '../../hooks/useInterval';
+import {
+  setLiveSelectedDate,
+  setLiveSelectedMachine,
+  setLiveSelectedShift,
+} from '../../redux/store/features/liveLinesSlice';
+import { useAppDispatch, useAppSelector } from '../../redux/store/hooks';
 import BarStops from './components/barStops';
 import EfficiencyComparison from './components/effComparison';
 import GaugeAverage from './components/gaugeAverage';
@@ -42,13 +48,17 @@ const LiveLines: React.FC = () => {
   const nowDate = format(now, 'yyyy-MM-dd');
   const lines = Array.from({ length: 14 }, (_, i) => i + 1);
   const cardStyle = { borderRadius: '10px', fontSize: '1.5vw' };
-  const shift = getShift();
+  const shiftActual = getShift();
   const turnos = {
     NOT: 'Noturno',
     MAT: 'Matutino',
     VES: 'Vespertino',
     TOT: 'Total',
   };
+
+  /* ------------------------------------------------ REDUX ----------------------------------------------- */
+  const dispatch = useAppDispatch();
+  const shift = useAppSelector((state) => state.liveLines.selectedShift);
 
   /* -------------------------------------------- ESTADOS LOCAIS -------------------------------------------- */
   const [selectedDate, setSelectedDate] = useState<string>(nowDate);
@@ -84,10 +94,18 @@ const LiveLines: React.FC = () => {
     if (date) {
       const formattedDate = format(startOfDay(date), 'yyyy-MM-dd');
       setSelectedDate(formattedDate);
+      dispatch(setLiveSelectedDate(formattedDate));
       if (formattedDate === nowDate) {
         setSelectedShift(shift);
+        dispatch(setLiveSelectedShift(shift));
       }
     }
+  };
+
+  // Mudança de turno
+  const handleShiftChange = (shift: string) => {
+    setSelectedShift(shift);
+    dispatch(setLiveSelectedShift(shift));
   };
 
   // Opções de turno
@@ -99,8 +117,8 @@ const LiveLines: React.FC = () => {
       DEFAULT: ['TOT', 'NOT', 'MAT', 'VES'],
     };
 
-    return selectedDate === nowDate ? opt[shift as keyof typeof opt] : opt.DEFAULT;
-  }, [nowDate, selectedDate, shift]);
+    return selectedDate === nowDate ? opt[shiftActual as keyof typeof opt] : opt.DEFAULT;
+  }, [nowDate, selectedDate, shiftActual]);
 
   // Filtro de dados
   const filterData = useMemo(() => {
@@ -108,9 +126,7 @@ const LiveLines: React.FC = () => {
       if (selectedShift === 'TOT') {
         return data.filter((item) => item.linha === selectedLine);
       }
-      return data.filter(
-        (item) => item.linha === selectedLine && item.turno === selectedShift
-      );
+      return data.filter((item) => item.linha === selectedLine && item.turno === selectedShift);
     };
   }, [selectedLine, selectedShift]);
 
@@ -130,8 +146,7 @@ const LiveLines: React.FC = () => {
     }
 
     const average =
-      filteredData.reduce((acc, curr) => acc + (curr[indicator] ?? 0), 0) /
-      filteredData.length;
+      filteredData.reduce((acc, curr) => acc + (curr[indicator] ?? 0), 0) / filteredData.length;
     setState(average * 100);
   };
 
@@ -212,10 +227,11 @@ const LiveLines: React.FC = () => {
     calculateAverage(eficienciaFiltered, 'eficiencia', setEficiencia);
     calculateAverage(filterData(perfData), 'performance', setPerformance);
     calculateAverage(filterData(repData), 'reparo', setReparos);
-    setProductionTotal(
-      eficienciaFiltered.reduce((acc, curr) => acc + curr.total_produzido, 0)
-    );
+    setProductionTotal(eficienciaFiltered.reduce((acc, curr) => acc + curr.total_produzido, 0));
+
+    // Envia os dados de maquina para os estados locais/globais
     setSelectedMachine(eficienciaFiltered[0]?.maquina_id ?? '');
+    dispatch(setLiveSelectedMachine(eficienciaFiltered[0]?.maquina_id ?? ''));
   }, [effData, perfData, repData, filterData]);
 
   // Requisição de Maquina Info
@@ -228,11 +244,13 @@ const LiveLines: React.FC = () => {
     void fetchInfoIHM();
   }, [selectedDate, selectedShift, selectedLine, isUpdated]);
 
+  // Requisição de eficiência média
   useEffect(() => {
     // Data inicial
     const now = startOfDay(new Date());
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
     const firstDayString = format(firstDay, 'yyyy-MM-dd');
+
     void getIndicator(
       IndicatorType.EFFICIENCY,
       [firstDayString],
@@ -251,19 +269,15 @@ const LiveLines: React.FC = () => {
       // Eficiência do turno
       const turnData = filteredData.filter((item) => item.turno === selectedShift);
       const turnAverage =
-        turnData.reduce(
-          (acc, curr): number => acc + (Math.round(curr.eficiencia * 100) ?? 0),
-          0
-        ) / turnData.length;
+        turnData.reduce((acc, curr): number => acc + (Math.round(curr.eficiencia * 100) ?? 0), 0) /
+        turnData.length;
       setTurnEff(turnAverage || 0);
 
       // Eficiência da linha
       const lineData = filteredData.filter((item) => item.linha === selectedLine);
       const lineAverage =
-        lineData.reduce(
-          (acc, curr): number => acc + (Math.round(curr.eficiencia * 100) ?? 0),
-          0
-        ) / lineData.length;
+        lineData.reduce((acc, curr): number => acc + (Math.round(curr.eficiencia * 100) ?? 0), 0) /
+        lineData.length;
       setLineEff(lineAverage || 0);
 
       // Eficiência da linha matutino
@@ -295,20 +309,16 @@ const LiveLines: React.FC = () => {
     });
   }, [selectedLine, selectedShift]);
 
-  // useEffect(() => {
-  //   const handleResize = () => {
-  //     setContainerHeight(window.innerWidth >= 1200 ? '100%' : '400px');
-  //   };
+  // Limpeza do componente
+  useEffect(() => {
+    return () => {
+      // Restaura os dados do redux
+      dispatch(setLiveSelectedDate(nowDate));
+      dispatch(setLiveSelectedMachine(''));
+      dispatch(setLiveSelectedShift(shiftActual));
+    };
+  }, [dispatch, nowDate, shiftActual]);
 
-  //   // Configuração inicial
-  //   handleResize();
-
-  //   // Adiciona listener
-  //   window.addEventListener('resize', handleResize);
-
-  //   // Cleanup
-  //   return () => window.removeEventListener('resize', handleResize);
-  // }, []);
   /* --------------------------------------------- USE INTERVAL --------------------------------------------- */
 
   // Nova requisição em intervalo de 60s
@@ -339,9 +349,7 @@ const LiveLines: React.FC = () => {
   return (
     <PageLayout>
       <LiveLinesHeader
-        selectedDate={selectedDate}
         nowDate={nowDate}
-        selectedMachine={selectedMachine}
         onDateChange={handleDateChange}
         isOpenedUpdateStops={isOpenedUpdateStops}
         setIsOpenedUpdateStops={setIsOpenedUpdateStops}
@@ -353,11 +361,7 @@ const LiveLines: React.FC = () => {
           xl={5}
           className='card bg-transparent shadow d-flex justify-content-center border-0 mb-lg-0 mb-2'
         >
-          <LineIndicators
-            eficiencia={eficiencia}
-            performance={performance}
-            reparos={reparos}
-          />
+          <LineIndicators eficiencia={eficiencia} performance={performance} reparos={reparos} />
         </Col>
         {/* -------------------------------------- COLUNA DA PRODUÇÃO -------------------------------------- */}
         <Col xs={3} xl={2} className='card bg-transparent shadow mb-lg-0 mb-2'>
@@ -381,7 +385,6 @@ const LiveLines: React.FC = () => {
             turnEff={turnEff}
             lineEff={lineEff}
             currentEff={eficiencia}
-            currentTurn={selectedShift}
           />
         </Col>
       </Row>
@@ -390,12 +393,11 @@ const LiveLines: React.FC = () => {
         <Col xs xl={2} className='card bg-transparent border-0 h-100'>
           <LineControls
             selectedLine={selectedLine}
-            selectedShift={selectedShift}
             lines={lines}
             turnos={turnos}
             shiftOptions={handleShiftOptions}
             onLineChange={setSelectedLine}
-            onShiftChange={setSelectedShift}
+            onShiftChange={handleShiftChange}
             cardStyle={cardStyle}
             status={maquinaInfo.at(-1)?.status || '-'}
             statusRender={shift === selectedShift && selectedDate === nowDate}
@@ -403,11 +405,7 @@ const LiveLines: React.FC = () => {
           />
         </Col>
         {/* --------------------------- COLUNA DOS GRÁFICOS DE CICLOS E TIMELINE --------------------------- */}
-        <Col
-          xs={12}
-          xl
-          className='card p-2 shadow border-0 bg-transparent justify-content-around'
-        >
+        <Col xs={12} xl className='card p-2 shadow border-0 bg-transparent justify-content-around'>
           <LineCycle maqInfo={maquinaInfo} />
           <Timeline data={infoIHM} />
         </Col>
@@ -434,14 +432,7 @@ const LiveLines: React.FC = () => {
       {/* ----------------------------------- Tabela De Apontamentos ----------------------------------- */}
       {isOpenedUpdateStops && (
         <Col className='p-2'>
-          <UpdateStops
-            selectedDate={selectedDate}
-            nowDate={nowDate}
-            selectedLine={selectedLine}
-            selectedShift={selectedShift}
-            selectedMachine={selectedMachine}
-            onUpdate={handleUpdate}
-          />
+          <UpdateStops nowDate={nowDate} selectedLine={selectedLine} onUpdate={handleUpdate} />
         </Col>
       )}
     </PageLayout>

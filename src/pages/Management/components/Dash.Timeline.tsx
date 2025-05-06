@@ -11,11 +11,7 @@ interface DashTimelineProps {
   selectedShift: TurnoID;
 }
 
-const DashTimeline: React.FC<DashTimelineProps> = ({
-  data,
-  selectedLines,
-  selectedShift,
-}) => {
+const DashTimeline: React.FC<DashTimelineProps> = ({ data, selectedLines, selectedShift }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Processa todos os dados para criar a timeline multi-linha
@@ -40,9 +36,7 @@ const DashTimeline: React.FC<DashTimelineProps> = ({
       linesToShow = selectedLines;
     } else {
       // Extrair números de linha únicos dos dados
-      linesToShow = Array.from(new Set(data.map((item) => item.linha))).sort(
-        (a, b) => a - b
-      );
+      linesToShow = Array.from(new Set(data.map((item) => item.linha))).sort((a, b) => a - b);
     }
 
     // Processar os dados para o formato de timeline
@@ -93,8 +87,8 @@ const DashTimeline: React.FC<DashTimelineProps> = ({
     const maxTime = Math.max(...processed.map((item) => item.endMinutes));
 
     const range = {
-      min: Math.max(0, minTime - 30), // 30 minutos antes do primeiro evento
-      max: Math.min(24 * 60, maxTime + 30), // 30 minutos depois do último evento
+      min: Math.max(0, minTime),
+      max: Math.min(24 * 60, maxTime),
     };
 
     // Extrair motivos únicos e ordená-los
@@ -321,8 +315,7 @@ const DashTimeline: React.FC<DashTimelineProps> = ({
             className='d-flex justify-content-center align-items-center p-2'
           >
             <Alert variant='info' className='text-center'>
-              Sem dados disponíveis para exibição. Por favor, selecione outra data ou
-              período.
+              Sem dados disponíveis para exibição. Por favor, selecione outra data ou período.
             </Alert>
           </Row>
         )

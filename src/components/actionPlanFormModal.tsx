@@ -30,7 +30,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
   onSubmit,
 }) => {
   /* -------------------------------------------- REDUX ------------------------------------------- */
-  const userLevel = useAppSelector((state) => state.user.level);
+  const userLevel = useAppSelector((state) => state.user.functionalLevel);
 
   /* ------------------------------------------ CONSTANTS ----------------------------------------- */
   const MAX_DESCRIPTION_LENGTH = 256;
@@ -71,9 +71,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
           // Garantir que data_registro é um objeto Date
           data_registro: ensureDate(actionPlan.data_registro),
           // Garantir que data_conclusao é um objeto Date ou null
-          data_conclusao: actionPlan.data_conclusao
-            ? ensureDate(actionPlan.data_conclusao)
-            : null,
+          data_conclusao: actionPlan.data_conclusao ? ensureDate(actionPlan.data_conclusao) : null,
         }
       : { ...emptyForm }
   );
@@ -91,9 +89,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
         // Garantir que data_registro é um objeto Date
         data_registro: ensureDate(actionPlan.data_registro),
         // Garantir que data_conclusao é um objeto Date ou null
-        data_conclusao: actionPlan.data_conclusao
-          ? ensureDate(actionPlan.data_conclusao)
-          : null,
+        data_conclusao: actionPlan.data_conclusao ? ensureDate(actionPlan.data_conclusao) : null,
       });
     }
   }, [actionPlan, isEditing]);
@@ -153,8 +149,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
   const handleConclusaoChange = (novoStatus: number) => {
     // Se o status atual já é o mesmo que o clicado, volte para "Em Andamento" (0)
     // exceto se já for "Em Andamento", nesse caso mantém
-    const statusFinal =
-      formData.conclusao === novoStatus && novoStatus !== 0 ? 0 : novoStatus;
+    const statusFinal = formData.conclusao === novoStatus && novoStatus !== 0 ? 0 : novoStatus;
 
     // Define a data de conclusão quando o status for 1 ou 2, ou limpa quando for 0
     const novaDataConclusao = statusFinal > 0 ? new Date() : null;
@@ -249,9 +244,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
   return (
     <Modal show={show} onHide={onHide} size='lg' centered>
       <Modal.Header closeButton>
-        <Modal.Title>
-          {isEditing ? 'Editar Plano de Ação' : 'Novo Plano de Ação'}
-        </Modal.Title>
+        <Modal.Title>{isEditing ? 'Editar Plano de Ação' : 'Novo Plano de Ação'}</Modal.Title>
       </Modal.Header>
 
       <Form noValidate validated={validated} onSubmit={handleSubmit}>
@@ -275,9 +268,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
               <Form.Label>Data de Registro</Form.Label>
 
               <DatePicker
-                selected={
-                  formData.data_registro ? ensureDate(formData.data_registro) : null
-                }
+                selected={formData.data_registro ? ensureDate(formData.data_registro) : null}
                 onChange={handleDateChange}
                 dateFormat='dd/MM/yyyy'
                 className='form-control text-center'
@@ -385,9 +376,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
             </Form.Control.Feedback>
             <Row className='d-flex justify-content-between mt-1'>
               {descriptionCharsLeft < 256 && (
-                <small
-                  className={`text-muted ${descriptionCharsLeft < 20 ? 'text-danger' : ''}`}
-                >
+                <small className={`text-muted ${descriptionCharsLeft < 20 ? 'text-danger' : ''}`}>
                   {descriptionCharsLeft} caracteres restantes
                 </small>
               )}
@@ -404,9 +393,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
               onChange={handleChange}
               required
             />
-            <Form.Control.Feedback type='invalid'>
-              Informe a causa raiz.
-            </Form.Control.Feedback>
+            <Form.Control.Feedback type='invalid'>Informe a causa raiz.</Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className='mb-3'>
@@ -419,9 +406,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
               onChange={handleChange}
               required
             />
-            <Form.Control.Feedback type='invalid'>
-              Informe a contenção.
-            </Form.Control.Feedback>
+            <Form.Control.Feedback type='invalid'>Informe a contenção.</Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className='mb-3'>

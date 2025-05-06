@@ -3,13 +3,13 @@ import EChartsReact from 'echarts-for-react';
 import React from 'react';
 import { Row } from 'react-bootstrap';
 import { BSColors, ColorsSTM } from '../../../helpers/constants';
+import { useAppSelector } from '../../../redux/store/hooks';
 
 interface EfficiencyComparisonProps {
   factoryEff: number;
   turnEff: number;
   lineEff: number;
   currentEff: number;
-  currentTurn: string;
   meta?: number;
 }
 
@@ -18,9 +18,11 @@ const EfficiencyComparison: React.FC<EfficiencyComparisonProps> = ({
   turnEff,
   lineEff,
   currentEff,
-  currentTurn,
   meta = 90,
 }) => {
+  /* ------------------------------------------------ REDUX ----------------------------------------------- */
+  const currentTurn = useAppSelector((state) => state.liveLines.selectedShift);
+
   // Arredondar os valores
   factoryEff = Math.round(factoryEff);
   turnEff = Math.round(turnEff);
