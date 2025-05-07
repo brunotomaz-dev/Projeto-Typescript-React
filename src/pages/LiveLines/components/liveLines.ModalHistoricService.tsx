@@ -34,6 +34,7 @@ const ModalServiceHistory: React.FC<iProps> = ({ isOpened, onHide }) => {
   const fetchPreventiveMachineHistory = async () => {
     setProgress(0);
     setIsLoading(true);
+    setProgress(10);
 
     const response: iMaintenanceOrders[] = await getOrdemServico({
       status_id: OS_Status.CLOSED,
