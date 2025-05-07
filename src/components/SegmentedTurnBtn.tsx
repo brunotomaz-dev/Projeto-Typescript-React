@@ -7,6 +7,7 @@ interface iSegmentedTurnBtnProps {
   onTurnChange?: (turn: TurnoID) => void;
   all?: boolean;
   small?: boolean;
+  fullWidth?: boolean;
 }
 
 const SegmentedTurnBtn: React.FC<iSegmentedTurnBtnProps> = ({
@@ -14,6 +15,7 @@ const SegmentedTurnBtn: React.FC<iSegmentedTurnBtnProps> = ({
   onTurnChange,
   all = false,
   small = false,
+  fullWidth = false,
 }) => {
   // Define as opções de turno
   const turnOptions = [
@@ -41,6 +43,7 @@ const SegmentedTurnBtn: React.FC<iSegmentedTurnBtnProps> = ({
       onChange={handleTurnChange}
       key={'segmented-btn-turn'}
       small={small}
+      fullWidth={fullWidth}
     />
   );
 };

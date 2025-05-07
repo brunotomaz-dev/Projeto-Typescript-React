@@ -70,7 +70,6 @@ export const usePinnedCards = (
 
       // Se encontramos pins inválidos, removê-los
       if (invalidPins.length > 0) {
-        console.log(`Removendo ${invalidPins.length} pins inválidos:`, invalidPins);
         setPinnedCards((prev) => prev.filter((pin) => validRecnos.includes(pin)));
       }
     }

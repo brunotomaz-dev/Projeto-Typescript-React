@@ -291,6 +291,7 @@ export const getActionPlan = async (data: DateParam, conclusao?: number) => {
 
   try {
     const response = await api.get('api/action_plan/', { params: params });
+    console.log('Response:', response.data);
     return response.data;
   } catch (error) {
     console.error('Erro ao buscar dados de plano de ação', error);
@@ -300,7 +301,6 @@ export const getActionPlan = async (data: DateParam, conclusao?: number) => {
 
 // Criar plano de ação
 export const createActionPlan = async (actionPlanData: Omit<iActionPlan, 'recno'>) => {
-  console.log(actionPlanData);
   try {
     const response = await api.post('/api/action_plan/', actionPlanData);
     return response.data;
