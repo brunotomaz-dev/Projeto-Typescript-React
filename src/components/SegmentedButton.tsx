@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Nav } from 'react-bootstrap';
 
 interface iSegmanetedButtonOption {
@@ -14,17 +14,37 @@ interface iSegmentedButtonProps {
   onChange?: (value: string) => void;
   rounded?: 'full' | 'small' | 'medium';
   fullWidth?: boolean;
+  small?: boolean;
 }
 
 const SegmentedButton: React.FC<iSegmentedButtonProps> = ({
   options,
-  value: btnValue,
+  value,
   onChange,
   rounded = 'medium',
   fullWidth = false,
+  small = false,
 }) => {
-  // Estado para controlar a aba ativa
-  const [activeTab, setActiveTab] = useState(btnValue);
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    // Adicionar uma pequena demora artificial apenas na primeira renderização
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+
+      // Forçar re-renderização após primeiro render para garantir que os estilos sejam aplicados
+      const timer = setTimeout(() => {
+        // Este setState vazio força uma re-renderização
+        // eslint-disable-next-line
+        setState({});
+      }, 50);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  // Estado vazio apenas para forçar re-renderização
+  const [_state, setState] = React.useState({});
 
   // Estilo de arredondamento baseado na prop 'rounded'
   const roundStyle = {
@@ -36,38 +56,55 @@ const SegmentedButton: React.FC<iSegmentedButtonProps> = ({
   // Estilo para o botão se 'fullWidth' for verdadeiro
   const fullWidthStyle = fullWidth ? 'w-100' : 'w-25';
 
-  // Effect para sincronizar o valor ativo com o valor externo
-  useEffect(() => {
-    onChange?.(activeTab);
-  }, [activeTab]);
+  // Manipulador para quando o usuário clica em uma opção
+  const handleSelect = (selectedKey: string | null) => {
+    if (selectedKey && onChange) {
+      onChange(selectedKey);
+    }
+  };
+
+  // Aplicar estilo diretamente por CSS customizado
+  const customStyles = `
+    .navbar-pill-active {
+      background-color: var(--bs-light-grey) !important;
+      color: var(--bs-secondary) !important;
+    }
+  `;
 
   /* ------------------------------------------------------------------------------------------------------ */
   /*                                                 LAYOUT                                                 */
   /* ------------------------------------------------------------------------------------------------------ */
   return (
-    <Nav
-      variant='pills'
-      className={`gap-1 p-1 bg-white ${roundStyle} shadow-sm ${fullWidthStyle}`}
-      activeKey={activeTab}
-      onSelect={(selectedKey) => setActiveTab(selectedKey || btnValue)}
-      fill
-      style={
-        {
-          '--bs-nav-pills-link-active-bg': 'var(--bs-light-grey)',
-          '--bs-nav-pills-link-active-color': 'var(--bs-secondary)',
-          '--bs-nav-link-color': 'var(--bs-secondary)',
-        } as React.CSSProperties
-      }
-    >
-      {options.map((option) => (
-        <Nav.Item>
-          <Nav.Link key={option.value} eventKey={option.value} className={roundStyle}>
-            {option.icon && option.icon}
-            {option.label}
-          </Nav.Link>
-        </Nav.Item>
-      ))}
-    </Nav>
+    <>
+      <style>{customStyles}</style>
+      <Nav
+        variant='pills'
+        className={`gap-1 p-1 bg-white ${roundStyle} shadow-sm ${fullWidthStyle} ${small ? 'small' : ''}`}
+        activeKey={value}
+        onSelect={handleSelect}
+        fill
+        style={
+          {
+            '--bs-nav-pills-link-active-bg': 'var(--bs-light-grey)',
+            '--bs-nav-pills-link-active-color': 'var(--bs-secondary)',
+            '--bs-nav-link-color': 'var(--bs-secondary)',
+          } as React.CSSProperties
+        }
+      >
+        {options.map((option) => (
+          <Nav.Item key={option.value}>
+            <Nav.Link
+              eventKey={option.value}
+              className={`${roundStyle} ${option.value === value ? 'navbar-pill-active' : ''}`}
+              disabled={option.disabled}
+            >
+              {option.icon && option.icon}
+              {option.label}
+            </Nav.Link>
+          </Nav.Item>
+        ))}
+      </Nav>
+    </>
   );
 };
 

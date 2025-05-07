@@ -81,6 +81,7 @@ const ManagementDashboards: React.FC = () => {
           turn={turn}
           all
           key={'dashboards-turn'}
+          small
         />
         <ManagementLinePicker onChange={setSelectedLines} />
       </Stack>

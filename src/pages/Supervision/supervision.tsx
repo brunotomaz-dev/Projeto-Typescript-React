@@ -95,9 +95,7 @@ const SupervisionPage: React.FC = () => {
 
     // Terceiro passo: filtrar por turno se necessário
     if (isLeadership || isSupervisor) {
-      setActionPlanToShow(
-        filteredByRules.filter((plan) => plan.turno === superTurns[userName])
-      );
+      setActionPlanToShow(filteredByRules.filter((plan) => plan.turno === superTurns[userName]));
     } else {
       setActionPlanToShow(filteredByRules);
     }
