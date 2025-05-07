@@ -20,7 +20,19 @@ const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }
   /* -------------------------------------------- HOOK -------------------------------------------- */
   const { ToastDisplay, showToast } = useToast();
   const { hasElementAccess } = usePermissions();
-  const { isPinned, pinnedCards, togglePin } = usePinnedCards();
+
+  // Extrair recnos válidos dos dados atuais (apenas se os dados não estiverem vazios)
+  const validRecnos = useMemo(
+    () => (actionPlanData.length > 0 ? actionPlanData.map((action) => action.recno) : []),
+    [actionPlanData]
+  );
+
+  // Passar opção de limpeza para o hook
+  const { isPinned, pinnedCards, togglePin } = usePinnedCards(3, 'supervActionPinnedCards', {
+    // Só habilitar limpeza se tivermos dados válidos
+    enabled: validRecnos.length > 0,
+    validRecnos,
+  });
 
   /* ------------------------------------------- Funções ------------------------------------------ */
   // Determina automaticamente se devemos mostrar apenas os pinados ou todos
@@ -88,8 +100,7 @@ const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }
           {/* Cartões de ação */}
           <Row className='row-wrap gap-3 justify-content-center cards-container'>
             {processedActionData.map((action) => {
-              const headerColor =
-                action.dias_aberto > 6 ? 'bg-danger text-light' : 'bg-warning';
+              const headerColor = action.dias_aberto > 6 ? 'bg-danger text-light' : 'bg-warning';
               const borderStyle =
                 action.dias_aberto > 6
                   ? 'border-danger border border-1'
