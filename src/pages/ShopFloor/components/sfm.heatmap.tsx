@@ -190,13 +190,11 @@ const Heatmap: React.FC<iHeatmapProps> = ({ indicator }) => {
   /* -------------------------------------------------------------------------------------------------------- */
   return (
     <>
-      <div className='w-75 mx-auto'>
-        <SegmentedButtonTurno
-          turnos={TurnosObj}
-          onTurnoChange={handleTurnoChange}
-          onByLineChange={handleLineTurnChange}
-        />
-      </div>
+      <SegmentedButtonTurno
+        turnos={TurnosObj}
+        onTurnoChange={handleTurnoChange}
+        onByLineChange={handleLineTurnChange}
+      />
       <EChartsReact option={options} opts={{ renderer: 'canvas' }} />
     </>
   );

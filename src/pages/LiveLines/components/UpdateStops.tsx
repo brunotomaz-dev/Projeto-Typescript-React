@@ -65,7 +65,7 @@ const UpdateStops: React.FC<iUpdateStopsProps> = ({ nowDate, selectedLine, onUpd
           setMaquinaIHM(res);
         })
         .catch((err) => {
-          console.log('err', err);
+          console.error('err', err);
           showToast('Erro ao carregar dados', 'danger');
         });
     }
@@ -105,7 +105,7 @@ const UpdateStops: React.FC<iUpdateStopsProps> = ({ nowDate, selectedLine, onUpd
           setMaquinaIHM(convertedData);
         })
         .catch((err) => {
-          console.log('err', err);
+          console.error('err', err);
           showToast('Erro ao carregar dados históricos', 'danger');
         });
     }
@@ -174,7 +174,7 @@ const UpdateStops: React.FC<iUpdateStopsProps> = ({ nowDate, selectedLine, onUpd
         showToast('Registro excluído com sucesso', 'success');
       })
       .catch((err) => {
-        console.log('err', err);
+        console.error('err', err);
         showToast('Erro ao excluir registro', 'danger');
       })
       .finally(() => {

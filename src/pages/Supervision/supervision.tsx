@@ -95,9 +95,7 @@ const SupervisionPage: React.FC = () => {
 
     // Terceiro passo: filtrar por turno se necessário
     if (isLeadership || isSupervisor) {
-      setActionPlanToShow(
-        filteredByRules.filter((plan) => plan.turno === superTurns[userName])
-      );
+      setActionPlanToShow(filteredByRules.filter((plan) => plan.turno === superTurns[userName]));
     } else {
       setActionPlanToShow(filteredByRules);
     }
@@ -196,7 +194,9 @@ const SupervisionPage: React.FC = () => {
             minDate={parseISO('2024-08-01')}
             maxDate={now}
           />
-          <SegmentedTurnBtn turn={superTurn} onTurnChange={handleTurnChange} />
+          <Col style={{ minWidth: '340px', maxWidth: '450px' }}>
+            <SegmentedTurnBtn turn={superTurn} onTurnChange={handleTurnChange} fullWidth />
+          </Col>
         </Stack>
 
         <SupervActionCards actionPlanData={actionPlanToShow} />

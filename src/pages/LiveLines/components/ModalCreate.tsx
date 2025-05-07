@@ -138,8 +138,7 @@ const CreateStopModal: React.FC<CreateStopModalProps> = ({
       }));
 
       // Atualizar opções de equipamentos baseado no motivo
-      const motivoData =
-        apontamentosHierarquia[value as keyof typeof apontamentosHierarquia];
+      const motivoData = apontamentosHierarquia[value as keyof typeof apontamentosHierarquia];
 
       if (motivoData) {
         setAvailableEquipment(Object.keys(motivoData));
@@ -165,9 +164,7 @@ const CreateStopModal: React.FC<CreateStopModalProps> = ({
           value in motivoData[formData.equipamento as keyof typeof motivoData]
         ) {
           const equipObj = motivoData[formData.equipamento as keyof typeof motivoData];
-          setAvailableCauses(
-            (equipObj[value as keyof typeof equipObj] as string[]) || []
-          );
+          setAvailableCauses((equipObj[value as keyof typeof equipObj] as string[]) || []);
         } else {
           setAvailableCauses([]);
         }
@@ -208,7 +205,6 @@ const CreateStopModal: React.FC<CreateStopModalProps> = ({
         dataToSend.os_numero = '0';
       }
 
-      console.log('Dados a serem enviados:', dataToSend);
       await insertMaquinaIHM(dataToSend as iMaquinaIHM);
       showToast('Apontamento registrado com sucesso!', 'success');
       onSave();

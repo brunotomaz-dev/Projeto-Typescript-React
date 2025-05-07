@@ -5,15 +5,14 @@ import { logout } from '../api/auth';
 import STMLogoPxB from '../assets/Login_pxb.png';
 import STMLogo from '../assets/Logo Santa Massa.png';
 import { usePermissions } from '../hooks/usePermissions';
-import { SidebarState, toggleCollapsed } from '../redux/store/features/sidebarSlice';
+import { SidebarState } from '../redux/store/features/sidebarSlice';
 import { UserState } from '../redux/store/features/userSlice';
-import { useAppDispatch, useAppSelector } from '../redux/store/hooks';
+import { useAppSelector } from '../redux/store/hooks';
 import ChangePasswordModal from './changePasswordModal';
 
 const Sidebar: React.FC = () => {
   /* ---------------------------------------- Gerenciamento de estado --------------------------------------- */
   const location = useLocation();
-  const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const { isCollapsed } = useAppSelector((state: { sidebar: SidebarState }) => state.sidebar);
@@ -23,10 +22,6 @@ const Sidebar: React.FC = () => {
     groups: userGroups,
   } = useAppSelector((state: { user: UserState }) => state.user);
   const [showChangePassword, setShowChangePassword] = useState(false);
-
-  const toggleSidebar = () => {
-    dispatch(toggleCollapsed());
-  };
 
   const handleLogout = () => {
     logout();
@@ -106,10 +101,6 @@ const Sidebar: React.FC = () => {
       <div
         className={`d-flex flex-column flex-shrink-0 p-3 text-bg-light sidebar ${isCollapsed ? 'collapsed' : ''} z-3`}
       >
-        {/* Toggle Sidebar */}
-        <button className='btn btn-link align-self-end' onClick={toggleSidebar}>
-          <i className={`bi ${isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'}`}></i>
-        </button>
         {/* Logo Santa Massa */}
         <Link
           to='/init'
@@ -204,10 +195,7 @@ const Sidebar: React.FC = () => {
         </div>
       </div>
       {/* Modal de Password */}
-      <ChangePasswordModal
-        show={showChangePassword}
-        onHide={() => setShowChangePassword(false)}
-      />
+      <ChangePasswordModal show={showChangePassword} onHide={() => setShowChangePassword(false)} />
     </>
   );
 };

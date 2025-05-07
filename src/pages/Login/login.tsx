@@ -1,13 +1,22 @@
 import React, { useState } from 'react';
+import { Button, Col, Container, FloatingLabel, Form, InputGroup } from 'react-bootstrap';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../../api/auth';
 import stmLogo from '../../assets/Logo Santa Massa.png';
 import PageLayout from '../../components/pageLayout';
 
 const LoginPage = () => {
+  /* ---------------------------------------------------------------------------------------- Local State - */
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+
+  /* -------------------------------------------------------------------------------------------- Handles - */
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,43 +35,53 @@ const LoginPage = () => {
     }
   };
 
+  /* ------------------------------------------------------------------------------------------------------ */
+  /*                                                 LAYOUT                                                 */
+  /* ------------------------------------------------------------------------------------------------------ */
   return (
     <PageLayout>
-      <section className='form-signin m-auto w-25'>
-        <form
+      <Container className='m-auto' style={{ maxWidth: '400px' }}>
+        <Col className='p-2 d-flex flex-column justify-content-center align-items-center'>
+          <img className='mb-4' src={stmLogo} alt='Logo Santa Massa' width='100' />
+          <h1 className='h3 fw-normal'>Por favor, faça login</h1>
+        </Col>
+        <Form
           onSubmit={(e) => {
             void handleSubmit(e);
           }}
         >
-          <img className='mb-4' src={stmLogo} alt='Logo Santa Massa' width='72' />
-          <h1 className='h3 mb-3 fw-normal'>Por favor, faça login</h1>
-          <div className='form-floating mb-2'>
-            <input
-              type='text'
-              className='form-control'
-              id='floatingInput'
-              placeholder='Usuário'
-              onChange={(e) => setUsername(e.target.value)}
-              value={username}
-            />
-            <label htmlFor='floatingInput'>Usuário</label>
-          </div>
-          <div className='form-floating mb-2'>
-            <input
-              type='password'
-              className='form-control'
-              id='floatingPassword'
-              placeholder='Senha'
-              onChange={(e) => setPassword(e.target.value)}
-              value={password}
-            />
-            <label htmlFor='floatingPassword'>Senha</label>
-          </div>
-          <button className='w-100 btn btn-lg btn-primary' type='submit'>
-            Entrar
-          </button>
-        </form>
-      </section>
+          <Form.Group className='mb-3' controlId='formBasicUser'>
+            <FloatingLabel label='Usuário' className='mb-3'>
+              <Form.Control
+                type='text'
+                placeholder='Usuário'
+                onChange={(e) => setUsername(e.target.value)}
+                value={username}
+              />
+            </FloatingLabel>
+            <InputGroup>
+              <FloatingLabel label='Senha'>
+                <Form.Control
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder='Senha'
+                  onChange={(e) => setPassword(e.target.value)}
+                  value={password}
+                />
+              </FloatingLabel>
+              <Button
+                className='bg-white text-black border-1 border-light-grey border-start-0'
+                onClick={togglePasswordVisibility}
+                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+              >
+                {!showPassword ? <FaEyeSlash /> : <FaEye />}
+              </Button>
+            </InputGroup>
+            <Button variant='primary' type='submit' className='mt-3 w-100' size='lg'>
+              Entrar
+            </Button>
+          </Form.Group>
+        </Form>
+      </Container>
     </PageLayout>
   );
 };

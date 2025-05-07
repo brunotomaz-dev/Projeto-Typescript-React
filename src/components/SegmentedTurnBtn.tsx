@@ -5,17 +5,19 @@ import SegmentedButton from './SegmentedButton';
 interface iSegmentedTurnBtnProps {
   turn: TurnoID;
   onTurnChange?: (turn: TurnoID) => void;
-  variant?: 'default' | 'pills' | 'modern' | 'subtle';
   all?: boolean;
-  size?: 'sm' | 'md' | 'lg';
+  small?: boolean;
+  fullWidth?: boolean;
 }
 
 const SegmentedTurnBtn: React.FC<iSegmentedTurnBtnProps> = ({
   turn,
   onTurnChange,
-  variant = 'modern',
   all = false,
+  small = false,
+  fullWidth = false,
 }) => {
+  // Define as opções de turno
   const turnOptions = [
     { value: 'NOT' as TurnoID, label: 'Noturno' },
     { value: 'MAT' as TurnoID, label: 'Matutino' },
@@ -27,12 +29,21 @@ const SegmentedTurnBtn: React.FC<iSegmentedTurnBtnProps> = ({
     turnOptions.push({ value: 'ALL' as TurnoID, label: 'Total' });
   }
 
+  // Função para lidar com a mudança de turno
+  const handleTurnChange = (value: string) => {
+    if (onTurnChange) {
+      onTurnChange(value as TurnoID);
+    }
+  };
+
   return (
     <SegmentedButton
       options={turnOptions}
       value={turn}
-      onChange={onTurnChange}
-      variant={variant}
+      onChange={handleTurnChange}
+      key={'segmented-btn-turn'}
+      small={small}
+      fullWidth={fullWidth}
     />
   );
 };
