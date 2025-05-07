@@ -1,186 +1,74 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { ButtonGroup } from 'react-bootstrap';
+import React, { useEffect, useState } from 'react';
+import { Nav } from 'react-bootstrap';
 
-// Interface para as opções do botão segmentado
-interface SegmentOption<T> {
-  value: T; // Valor da opção (pode ser qualquer tipo)
-  label: string; // Texto a ser exibido
-  icon?: React.ReactNode; // Ícone opcional
-  disabled?: boolean; // Permite desabilitar opções individuais
+interface iSegmanetedButtonOption {
+  value: string;
+  label: string;
+  icon?: React.ReactNode;
+  disabled?: boolean;
 }
 
-// Props do componente
-interface SegmentedButtonProps<T> {
-  options: SegmentOption<T>[];
-  value: T;
-  onChange?: (value: T) => void;
+interface iSegmentedButtonProps {
+  options: iSegmanetedButtonOption[];
+  value: string;
+  onChange?: (value: string) => void;
+  rounded?: 'full' | 'small' | 'medium';
   fullWidth?: boolean;
-  size?: 'sm' | 'md' | 'lg';
-  variant?: 'default' | 'pills' | 'modern' | 'subtle';
-  className?: string;
-  iconPosition?: 'start' | 'end' | 'top' | 'none';
-  compact?: boolean; // Para versão mais compacta
-  ariaLabel?: string; // Descrição de acessibilidade
 }
 
-function SegmentedButton<T>({
+const SegmentedButton: React.FC<iSegmentedButtonProps> = ({
   options,
-  value,
+  value: btnValue,
   onChange,
+  rounded = 'medium',
   fullWidth = false,
-  size = 'md',
-  variant = 'default',
-  className = '',
-  iconPosition = 'start',
-  compact = false,
-  ariaLabel = 'Opções de navegação',
-}: SegmentedButtonProps<T>) {
-  const [selectedValue, setSelectedValue] = useState<T>(value);
-  const buttonGroupRef = useRef<HTMLDivElement>(null);
-  const [indicatorStyle, setIndicatorStyle] = useState({});
+}) => {
+  // Estado para controlar a aba ativa
+  const [activeTab, setActiveTab] = useState(btnValue);
 
-  // Sincronizar com o valor externo quando ele mudar
+  // Estilo de arredondamento baseado na prop 'rounded'
+  const roundStyle = {
+    full: 'rounded-5',
+    small: 'rounded-2',
+    medium: 'rounded-3',
+  }[rounded];
+
+  // Estilo para o botão se 'fullWidth' for verdadeiro
+  const fullWidthStyle = fullWidth ? 'w-100' : 'w-25';
+
+  // Effect para sincronizar o valor ativo com o valor externo
   useEffect(() => {
-    if (value !== selectedValue) {
-      setSelectedValue(value);
-    }
-  }, [value]);
+    onChange?.(activeTab);
+  }, [activeTab]);
 
-  // Atualizar o indicador quando mudar a seleção
-  useEffect(() => {
-    updateIndicatorPosition();
-  }, [selectedValue, options]);
-
-  // Atualizar o indicador em caso de resize
-  useEffect(() => {
-    window.addEventListener('resize', updateIndicatorPosition);
-    return () => {
-      window.removeEventListener('resize', updateIndicatorPosition);
-    };
-  }, []);
-
-  const handleButtonClick = (optionValue: T) => {
-    if (optionValue === selectedValue) return; // Evitar atualizações desnecessárias
-
-    setSelectedValue(optionValue);
-    if (onChange) {
-      onChange(optionValue);
-    }
-  };
-
-  // Calcular a posição do indicador deslizante
-  const updateIndicatorPosition = () => {
-    if (!buttonGroupRef.current) return;
-
-    const buttonGroup = buttonGroupRef.current;
-    const buttons = buttonGroup.querySelectorAll('button');
-
-    // Encontrar o índice do botão selecionado
-    const index = options.findIndex(
-      (option) => JSON.stringify(option.value) === JSON.stringify(selectedValue)
-    );
-
-    if (index >= 0 && index < buttons.length) {
-      const selectedButton = buttons[index];
-
-      setIndicatorStyle({
-        left: `${selectedButton.offsetLeft}px`,
-        width: `${selectedButton.offsetWidth}px`,
-        opacity: 1,
-      });
-    }
-  };
-
-  // Classes CSS com base nas props
-  const containerClasses = [
-    'segmented-button-container',
-    variant,
-    size,
-    fullWidth ? 'w-100' : '',
-    compact ? 'compact' : '',
-    className,
-  ]
-    .filter(Boolean)
-    .join(' ');
-
-  const buttonGroupClasses = [
-    'segmented-button-group',
-    variant,
-    size,
-    fullWidth ? 'w-100' : '',
-  ]
-    .filter(Boolean)
-    .join(' ');
-
-  const buttonClasses = `segmented-btn ${variant} ${size}`;
-
-  // Renderizar o conteúdo do botão (ícone + texto)
-  const renderButtonContent = (option: SegmentOption<T>) => {
-    const { label, icon } = option;
-
-    if (!icon || iconPosition === 'none') {
-      return label;
-    }
-
-    const iconElement = <span className='segmented-btn-icon'>{icon}</span>;
-    const textElement = <span className='segmented-btn-text'>{label}</span>;
-
-    switch (iconPosition) {
-      case 'start':
-        return (
-          <div className='d-flex align-items-center'>
-            {iconElement}
-            {textElement}
-          </div>
-        );
-      case 'end':
-        return (
-          <div className='d-flex align-items-center'>
-            {textElement}
-            {iconElement}
-          </div>
-        );
-      case 'top':
-        return (
-          <div className='d-flex flex-column align-items-center'>
-            {iconElement}
-            {textElement}
-          </div>
-        );
-      default:
-        return label;
-    }
-  };
-
+  /* ------------------------------------------------------------------------------------------------------ */
+  /*                                                 LAYOUT                                                 */
+  /* ------------------------------------------------------------------------------------------------------ */
   return (
-    <div className={containerClasses}>
-      <ButtonGroup
-        ref={buttonGroupRef}
-        className={buttonGroupClasses}
-        role='group'
-        aria-label={ariaLabel}
-      >
-        {options.map((option) => {
-          const isSelected =
-            JSON.stringify(option.value) === JSON.stringify(selectedValue);
-          return (
-            <button
-              key={String(option.value)}
-              type='button'
-              className={`${buttonClasses} ${isSelected ? 'active' : ''}`}
-              onClick={() => handleButtonClick(option.value)}
-              disabled={option.disabled}
-              aria-pressed={isSelected}
-              aria-label={option.label}
-            >
-              {renderButtonContent(option)}
-            </button>
-          );
-        })}
-        <div className='segmented-indicator' style={indicatorStyle} />
-      </ButtonGroup>
-    </div>
+    <Nav
+      variant='pills'
+      className={`gap-1 p-1 bg-white ${roundStyle} shadow-sm ${fullWidthStyle}`}
+      activeKey={activeTab}
+      onSelect={(selectedKey) => setActiveTab(selectedKey || btnValue)}
+      fill
+      style={
+        {
+          '--bs-nav-pills-link-active-bg': 'var(--bs-light-grey)',
+          '--bs-nav-pills-link-active-color': 'var(--bs-secondary)',
+          '--bs-nav-link-color': 'var(--bs-secondary)',
+        } as React.CSSProperties
+      }
+    >
+      {options.map((option) => (
+        <Nav.Item>
+          <Nav.Link key={option.value} eventKey={option.value} className={roundStyle}>
+            {option.icon && option.icon}
+            {option.label}
+          </Nav.Link>
+        </Nav.Item>
+      ))}
+    </Nav>
   );
-}
+};
 
 export default SegmentedButton;

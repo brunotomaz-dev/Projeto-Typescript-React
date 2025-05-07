@@ -97,7 +97,6 @@ const Manusis: React.FC = () => {
           return dateB.getTime() - dateA.getTime();
         });
 
-        console.log('Ordens Fechadas:', response);
         setClosedOrdersByDate(response);
       })
       .catch((error) => {

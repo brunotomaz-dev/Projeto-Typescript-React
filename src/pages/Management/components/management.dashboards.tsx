@@ -76,7 +76,12 @@ const ManagementDashboards: React.FC = () => {
           onChange={handleDateChange}
           initialMode={dateMode}
         />
-        <SegmentedTurnBtn onTurnChange={(turno) => setTurn(turno)} turn={turn} all />
+        <SegmentedTurnBtn
+          onTurnChange={(turno) => setTurn(turno)}
+          turn={turn}
+          all
+          key={'dashboards-turn'}
+        />
         <ManagementLinePicker onChange={setSelectedLines} />
       </Stack>
       <Row className='mb-3'>
@@ -152,11 +157,7 @@ const ManagementDashboards: React.FC = () => {
         <Row>
           <Col xs={12}>
             <Card className='p-2 bg-transparent border-0 shadow-sm'>
-              <DashTimeline
-                data={infoIhmData}
-                selectedLines={selectedLines}
-                selectedShift={turn}
-              />
+              <DashTimeline data={infoIhmData} selectedLines={selectedLines} selectedShift={turn} />
             </Card>
           </Col>
         </Row>

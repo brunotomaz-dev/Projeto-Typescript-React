@@ -13,9 +13,9 @@ interface iSegmentedTurnBtnProps {
 const SegmentedTurnBtn: React.FC<iSegmentedTurnBtnProps> = ({
   turn,
   onTurnChange,
-  variant = 'modern',
   all = false,
 }) => {
+  // Define as opções de turno
   const turnOptions = [
     { value: 'NOT' as TurnoID, label: 'Noturno' },
     { value: 'MAT' as TurnoID, label: 'Matutino' },
@@ -27,14 +27,14 @@ const SegmentedTurnBtn: React.FC<iSegmentedTurnBtnProps> = ({
     turnOptions.push({ value: 'ALL' as TurnoID, label: 'Total' });
   }
 
-  return (
-    <SegmentedButton
-      options={turnOptions}
-      value={turn}
-      onChange={onTurnChange}
-      variant={variant}
-    />
-  );
+  // Função para lidar com a mudança de turno
+  const handleTurnChange = (value: string) => {
+    if (onTurnChange) {
+      onTurnChange(value as TurnoID);
+    }
+  };
+
+  return <SegmentedButton options={turnOptions} value={turn} onChange={handleTurnChange} />;
 };
 
 export default SegmentedTurnBtn;

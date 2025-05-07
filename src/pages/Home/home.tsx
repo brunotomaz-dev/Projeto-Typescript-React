@@ -5,14 +5,9 @@ import { getIndicator } from '../../api/apiRequests';
 import GaugeChart from '../../components/gauge';
 import PageLayout from '../../components/pageLayout';
 import { IndicatorType } from '../../helpers/constants';
-import {
-  iEficiencia,
-  iPerformance,
-  iRepair,
-} from '../../interfaces/Indicators.interfaces';
+import { iEficiencia, iPerformance, iRepair } from '../../interfaces/Indicators.interfaces';
 import { setLineMachine } from '../../redux/store/features/homeSlice';
-import { useAppDispatch, useAppSelector } from '../../redux/store/hooks';
-import { RootState } from '../../redux/store/store';
+import { useAppDispatch } from '../../redux/store/hooks';
 import HomeAbsence from './components/home.absence';
 import HomeCartCountCart from './components/home.cartCount';
 import HomeEstoqueCard from './components/home.estoque';
@@ -22,7 +17,6 @@ import HomeProductionCard from './components/home.production';
 //cSpell: words eficiencia
 
 const Home: React.FC = () => {
-  const fullName = useAppSelector((state: RootState) => state.user.fullName);
   /* -------------------------------------------- REDUX ------------------------------------------- */
   const dispatch = useAppDispatch();
 
@@ -51,9 +45,7 @@ const Home: React.FC = () => {
       : 0;
 
   const repairsMedia =
-    repairs.length > 0
-      ? repairs.reduce((acc, curr) => acc + curr.reparo, 0) / repairs.length
-      : 0;
+    repairs.length > 0 ? repairs.reduce((acc, curr) => acc + curr.reparo, 0) / repairs.length : 0;
 
   /* ------------------------------------------- EFFECT ------------------------------------------- */
   useEffect(() => {
@@ -69,9 +61,7 @@ const Home: React.FC = () => {
       );
       setEficiencia(data.filter((item) => item.eficiencia > 0));
     });
-    void getIndicator('performance', nowDate).then((data: iPerformance[]) =>
-      setPerformance(data)
-    );
+    void getIndicator('performance', nowDate).then((data: iPerformance[]) => setPerformance(data));
     void getIndicator('repair', nowDate).then((data: iRepair[]) => setRepairs(data));
   }, [nowDate, dispatch]);
 
@@ -80,8 +70,6 @@ const Home: React.FC = () => {
   /* ---------------------------------------------------------------------------------------------- */
   return (
     <PageLayout>
-      <h3>Olá, {fullName}</h3>
-      <p>Seja bem-vindo ao sistema de gestão de produção da Santa Massa</p>
       <h1 className='text-center p-2'>Dados do dia</h1>
       <section className='container-fluid'>
         <Row className='row'>
