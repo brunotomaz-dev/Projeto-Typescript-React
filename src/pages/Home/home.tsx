@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { Card, Col, Row } from 'react-bootstrap';
 import { getIndicator } from '../../api/apiRequests';
 import GaugeChart from '../../components/gauge';
-import PageLayout from '../../components/pageLayout';
 import { IndicatorType } from '../../helpers/constants';
 import { iEficiencia, iPerformance, iRepair } from '../../interfaces/Indicators.interfaces';
 import { setLineMachine } from '../../redux/store/features/homeSlice';
@@ -69,7 +68,7 @@ const Home: React.FC = () => {
   /*                                             Layout                                             */
   /* ---------------------------------------------------------------------------------------------- */
   return (
-    <PageLayout>
+    <>
       <h1 className='text-center p-2'>Dados do dia</h1>
       <section className='container-fluid'>
         <Row className='row'>
@@ -115,7 +114,7 @@ const Home: React.FC = () => {
           </Col>
         </Row>
       </section>
-    </PageLayout>
+    </>
   );
 };
 

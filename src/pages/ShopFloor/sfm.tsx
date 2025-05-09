@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { Card, Col, Row } from 'react-bootstrap';
 import { getIndicator } from '../../api/apiRequests';
 import GaugeChart from '../../components/gauge';
-import PageLayout from '../../components/pageLayout';
 import { IndicatorType, RecheioMeta } from '../../helpers/constants';
 import Heatmap from './components/sfm.heatmap';
 import LineSFM from './components/sfm.line';
@@ -125,7 +124,7 @@ const ShopFloor: React.FC = () => {
 
   /* ------------------------------------------------ Layout ------------------------------------------------ */
   return (
-    <PageLayout>
+    <>
       <h1 className='text-center'>Shop Floor Management</h1>
       <Card className='shadow bg-transparent border-0 p-3 mb-2'>
         <Row>
@@ -172,10 +171,7 @@ const ShopFloor: React.FC = () => {
           <Col className='col-2'>
             <Card className='bg-transparent border-0 p-3 mb-2'>
               <p className='text-center'>Mês Atual</p>
-              <GaugeChart
-                indicator={IndicatorType.PERFORMANCE}
-                data={currentPerformance}
-              />
+              <GaugeChart indicator={IndicatorType.PERFORMANCE} data={currentPerformance} />
             </Card>
           </Col>
         </Row>
@@ -205,7 +201,7 @@ const ShopFloor: React.FC = () => {
           </Col>
         </Row>
       </Card>
-    </PageLayout>
+    </>
   );
 };
 

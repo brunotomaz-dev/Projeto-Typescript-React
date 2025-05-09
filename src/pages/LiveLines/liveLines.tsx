@@ -2,7 +2,6 @@ import { format, startOfDay } from 'date-fns';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Col, Row } from 'react-bootstrap';
 import { getIndicator, getInfoIHM, getMaquinaInfo } from '../../api/apiRequests';
-import PageLayout from '../../components/pageLayout';
 import { IndicatorType } from '../../helpers/constants';
 import { getShift } from '../../helpers/turn';
 import useInterval from '../../hooks/useInterval';
@@ -347,7 +346,7 @@ const LiveLines: React.FC = () => {
   /*                                                  Layout                                                  */
   /* -------------------------------------------------------------------------------------------------------- */
   return (
-    <PageLayout>
+    <>
       <LiveLinesHeader
         nowDate={nowDate}
         onDateChange={handleDateChange}
@@ -435,7 +434,7 @@ const LiveLines: React.FC = () => {
           <UpdateStops nowDate={nowDate} selectedLine={selectedLine} onUpdate={handleUpdate} />
         </Col>
       )}
-    </PageLayout>
+    </>
   );
 };
 

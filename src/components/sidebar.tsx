@@ -1,19 +1,23 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Button } from 'react-bootstrap';
 import { FaTools } from 'react-icons/fa';
+import { GoSidebarCollapse, GoSidebarExpand } from 'react-icons/go';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { logout } from '../api/auth';
 import STMLogoPxB from '../assets/Login_pxb.png';
+import STMLogoH from '../assets/Logo Horizontal.png';
 import STMLogo from '../assets/Logo Santa Massa.png';
 import { usePermissions } from '../hooks/usePermissions';
-import { SidebarState } from '../redux/store/features/sidebarSlice';
+import { SidebarState, toggleCollapsed } from '../redux/store/features/sidebarSlice';
 import { UserState } from '../redux/store/features/userSlice';
-import { useAppSelector } from '../redux/store/hooks';
+import { useAppDispatch, useAppSelector } from '../redux/store/hooks';
 import ChangePasswordModal from './changePasswordModal';
 
 const Sidebar: React.FC = () => {
   /* ---------------------------------------- Gerenciamento de estado --------------------------------------- */
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   const { isCollapsed } = useAppSelector((state: { sidebar: SidebarState }) => state.sidebar);
   const {
@@ -22,7 +26,6 @@ const Sidebar: React.FC = () => {
     groups: userGroups,
   } = useAppSelector((state: { user: UserState }) => state.user);
   const [showChangePassword, setShowChangePassword] = useState(false);
-  const [chevronUp, setChevronUp] = useState(false);
 
   // Ref para o elemento do dropdown
   const dropdownRef = useRef<HTMLAnchorElement>(null);
@@ -30,6 +33,10 @@ const Sidebar: React.FC = () => {
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const toggleSidebar = () => {
+    dispatch(toggleCollapsed());
   };
 
   /* -------------------------------------------- HOOK -------------------------------------------- */
@@ -57,34 +64,6 @@ const Sidebar: React.FC = () => {
       activePill.classList.remove('text-black');
     }
   }, [location.pathname, userGroups]);
-
-  // Efeito para detectar quando o dropdown é aberto/fechado
-  useEffect(() => {
-    // Função para atualizar o estado do chevron
-    const handleDropdownToggle = (e: Event) => {
-      // Verificar se o elemento clicado é o dropdown que queremos monitorar
-      if (e.target && (e.target as Element).closest('[data-bs-target="#adicionais"]')) {
-        // Verificar o estado atual do dropdown (expandido ou colapsado)
-        const isExpanded = document.getElementById('adicionais')?.classList.contains('show');
-        setChevronUp(!!isExpanded);
-      }
-    };
-
-    // Ouvir eventos de bootstrap collapse
-    document.addEventListener('shown.bs.collapse', handleDropdownToggle);
-    document.addEventListener('hidden.bs.collapse', handleDropdownToggle);
-
-    // Cleanup ao desmontar componente
-    return () => {
-      document.removeEventListener('shown.bs.collapse', handleDropdownToggle);
-      document.removeEventListener('hidden.bs.collapse', handleDropdownToggle);
-    };
-  }, []);
-
-  // Função para alternar o dropdown manualmente
-  const toggleDropdown = () => {
-    setChevronUp(!chevronUp);
-  };
 
   const navItems = [
     location.pathname === '/login' && {
@@ -133,30 +112,24 @@ const Sidebar: React.FC = () => {
   /* ------------------------------------------------ Layout ------------------------------------------------ */
   return (
     <>
-      <aside
-        className={`d-flex flex-column flex-shrink-0 p-3 text-bg-light sidebar ${isCollapsed ? 'collapsed' : ''} z-3`}
-        id='sidebar'
-      >
+      <aside id='sidebar' className={`${!isCollapsed ? 'expand' : ''}`}>
         {/* -------------------------------------------- Header -------------------------------------------- */}
         <Link
           to='/init'
-          className='d-flex align-items-center sidebar-link mb-3 mb-md-0 me-md-auto text-black text-decoration-none'
+          className='text-black mx-auto mt-3 logo-container d-flex justify-content-center'
         >
-          <img
-            src={STMLogo}
-            alt='Logo Colorido Santa Massa'
-            width='40vw'
-            className={`${isCollapsed ? 'me-0 ms-2' : 'me-2'}`}
-          />
-          <span className='fs-5'>Shop Floor Management</span>
+          <div className='logo-wrapper'>
+            <img src={STMLogo} alt='Logo Colorido Santa Massa' className='logo-square' />
+            <img src={STMLogoH} alt='Logo Colorido Santa Massa' className='logo-horizontal' />
+          </div>
         </Link>
         <hr></hr>
         {/* ------------------------------------------- Navegação ------------------------------------------ */}
-        <ul className='nav nav-pills flex-column mb-auto'>
+        <ul className='nav nav-pills sidebar-nav'>
           {navItems.map(
             (item) =>
               item && (
-                <li key={item.label} className='nav-item side-pill-h mb-1'>
+                <li key={item.label} className='nav-item side-pill-h'>
                   <Link to={item.href} className='sidebar-link nav-link text-black'>
                     {typeof item.icon === 'string' ? (
                       <i className={`${item.icon}`}></i>
@@ -171,27 +144,17 @@ const Sidebar: React.FC = () => {
           {/* ----------------------------------------- Adicionais ----------------------------------------- */}
           <hr />
           {hasPageAccess('manusis') && (
-            <li className='sidebar-item nav-item side-pill-h mb-1'>
+            <li className='sidebar-item nav-item side-pill-h'>
               <a
                 ref={dropdownRef}
                 href='#'
                 className='sidebar-link has-dropdown collapsed nav-link text-black'
                 data-bs-toggle='collapse'
                 data-bs-target='#Manutenção'
-                aria-expanded={chevronUp ? 'true' : 'false'}
                 aria-controls='Manutenção'
-                onClick={toggleDropdown}
               >
                 <i className='bi bi-tools'></i>
                 <span>Manutenção</span>
-                <i
-                  className='bi bi-chevron-down float-end'
-                  style={{
-                    transform: chevronUp ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.3s ease',
-                    display: isCollapsed ? 'none' : 'block',
-                  }}
-                ></i>
               </a>
               <ul
                 className='sidebar-dropdown list-unstyled collapse'
@@ -217,7 +180,7 @@ const Sidebar: React.FC = () => {
             </li>
           )}
         </ul>
-        <hr></hr>
+
         {/* ----------------------------------------- User Dropdown ---------------------------------------- */}
         <div className='dropdown'>
           <Link
@@ -276,6 +239,16 @@ const Sidebar: React.FC = () => {
       </aside>
       {/* Modal de Password */}
       <ChangePasswordModal show={showChangePassword} onHide={() => setShowChangePassword(false)} />
+      <Button
+        onClick={toggleSidebar}
+        variant='link'
+        size='lg'
+        aria-label='Toggle sidebar'
+        id='toggle-btn'
+        className='shadow'
+      >
+        {isCollapsed ? <GoSidebarCollapse /> : <GoSidebarExpand />}
+      </Button>
     </>
   );
 };
