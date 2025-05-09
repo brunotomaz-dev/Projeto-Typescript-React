@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FaTools } from 'react-icons/fa';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { logout } from '../api/auth';
@@ -22,6 +22,10 @@ const Sidebar: React.FC = () => {
     groups: userGroups,
   } = useAppSelector((state: { user: UserState }) => state.user);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [chevronUp, setChevronUp] = useState(false);
+
+  // Ref para o elemento do dropdown
+  const dropdownRef = useRef<HTMLAnchorElement>(null);
 
   const handleLogout = () => {
     logout();
@@ -53,6 +57,34 @@ const Sidebar: React.FC = () => {
       activePill.classList.remove('text-black');
     }
   }, [location.pathname, userGroups]);
+
+  // Efeito para detectar quando o dropdown é aberto/fechado
+  useEffect(() => {
+    // Função para atualizar o estado do chevron
+    const handleDropdownToggle = (e: Event) => {
+      // Verificar se o elemento clicado é o dropdown que queremos monitorar
+      if (e.target && (e.target as Element).closest('[data-bs-target="#adicionais"]')) {
+        // Verificar o estado atual do dropdown (expandido ou colapsado)
+        const isExpanded = document.getElementById('adicionais')?.classList.contains('show');
+        setChevronUp(!!isExpanded);
+      }
+    };
+
+    // Ouvir eventos de bootstrap collapse
+    document.addEventListener('shown.bs.collapse', handleDropdownToggle);
+    document.addEventListener('hidden.bs.collapse', handleDropdownToggle);
+
+    // Cleanup ao desmontar componente
+    return () => {
+      document.removeEventListener('shown.bs.collapse', handleDropdownToggle);
+      document.removeEventListener('hidden.bs.collapse', handleDropdownToggle);
+    };
+  }, []);
+
+  // Função para alternar o dropdown manualmente
+  const toggleDropdown = () => {
+    setChevronUp(!chevronUp);
+  };
 
   const navItems = [
     location.pathname === '/login' && {
@@ -88,6 +120,9 @@ const Sidebar: React.FC = () => {
       icon: 'bi bi-gear',
       href: '/management',
     },
+  ];
+
+  const manusisItems = [
     hasPageAccess('manusis') && {
       label: 'Manusis',
       icon: <FaTools />,
@@ -98,13 +133,14 @@ const Sidebar: React.FC = () => {
   /* ------------------------------------------------ Layout ------------------------------------------------ */
   return (
     <>
-      <div
+      <aside
         className={`d-flex flex-column flex-shrink-0 p-3 text-bg-light sidebar ${isCollapsed ? 'collapsed' : ''} z-3`}
+        id='sidebar'
       >
-        {/* Logo Santa Massa */}
+        {/* -------------------------------------------- Header -------------------------------------------- */}
         <Link
           to='/init'
-          className='d-flex align-items-center mb-3 mb-md-0 me-md-auto text-black text-decoration-none'
+          className='d-flex align-items-center sidebar-link mb-3 mb-md-0 me-md-auto text-black text-decoration-none'
         >
           <img
             src={STMLogo}
@@ -112,33 +148,77 @@ const Sidebar: React.FC = () => {
             width='40vw'
             className={`${isCollapsed ? 'me-0 ms-2' : 'me-2'}`}
           />
-          {!isCollapsed && <span className='fs-5'>Shop Floor Management</span>}
+          <span className='fs-5'>Shop Floor Management</span>
         </Link>
         <hr></hr>
-        {/* Navigation */}
+        {/* ------------------------------------------- Navegação ------------------------------------------ */}
         <ul className='nav nav-pills flex-column mb-auto'>
           {navItems.map(
             (item) =>
               item && (
                 <li key={item.label} className='nav-item side-pill-h mb-1'>
-                  <Link to={item.href} className='nav-link text-black'>
+                  <Link to={item.href} className='sidebar-link nav-link text-black'>
                     {typeof item.icon === 'string' ? (
-                      <i
-                        className={`bi ${item.icon} ${isCollapsed ? 'me-0 fs-3' : 'me-2 fs-5'}`}
-                      ></i>
+                      <i className={`${item.icon}`}></i>
                     ) : (
-                      <span className={`${isCollapsed ? 'me-0 fs-3' : 'me-2 fs-5'}`}>
-                        {item.icon}
-                      </span>
+                      <i>{item.icon}</i>
                     )}
-                    {!isCollapsed && <span>{item.label}</span>}
+                    <span>{item.label}</span>
                   </Link>
                 </li>
               )
           )}
+          {/* ----------------------------------------- Adicionais ----------------------------------------- */}
+          <hr />
+          {hasPageAccess('manusis') && (
+            <li className='sidebar-item nav-item side-pill-h mb-1'>
+              <a
+                ref={dropdownRef}
+                href='#'
+                className='sidebar-link has-dropdown collapsed nav-link text-black'
+                data-bs-toggle='collapse'
+                data-bs-target='#Manutenção'
+                aria-expanded={chevronUp ? 'true' : 'false'}
+                aria-controls='Manutenção'
+                onClick={toggleDropdown}
+              >
+                <i className='bi bi-tools'></i>
+                <span>Manutenção</span>
+                <i
+                  className='bi bi-chevron-down float-end'
+                  style={{
+                    transform: chevronUp ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.3s ease',
+                    display: isCollapsed ? 'none' : 'block',
+                  }}
+                ></i>
+              </a>
+              <ul
+                className='sidebar-dropdown list-unstyled collapse'
+                id='Manutenção'
+                data-bs-parent='sidebar'
+              >
+                {manusisItems.map(
+                  (item) =>
+                    item && (
+                      <li key={item.label} className='sidebar-item nav-item side-pill-h mb-1'>
+                        <Link to={item.href} className='sidebar-link nav-link text-black'>
+                          {typeof item.icon === 'string' ? (
+                            <i className={`${item.icon}`}></i>
+                          ) : (
+                            <i>{item.icon}</i>
+                          )}
+                          <span>{item.label}</span>
+                        </Link>
+                      </li>
+                    )
+                )}
+              </ul>
+            </li>
+          )}
         </ul>
         <hr></hr>
-        {/* User Dropdown */}
+        {/* ----------------------------------------- User Dropdown ---------------------------------------- */}
         <div className='dropdown'>
           <Link
             to='/'
@@ -193,7 +273,7 @@ const Sidebar: React.FC = () => {
             )}
           </ul>
         </div>
-      </div>
+      </aside>
       {/* Modal de Password */}
       <ChangePasswordModal show={showChangePassword} onHide={() => setShowChangePassword(false)} />
     </>
