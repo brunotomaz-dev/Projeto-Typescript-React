@@ -4,7 +4,7 @@ import './styles/main.scss';
 import { useEffect } from 'react';
 import { initAuth } from './api/auth';
 import PrivateRoute from './api/PrivateRoute';
-import Sidebar from './components/sidebar';
+import PageLayout from './components/pageLayout';
 import HomeFake from './pages/example';
 import Home from './pages/Home/home';
 import LiveLines from './pages/LiveLines/liveLines';
@@ -21,42 +21,37 @@ function App() {
   }, []);
 
   return (
-    <>
-      <main className='w-100 d-flex'>
-        <Sidebar />
-        <Routes>
-          <Route path='init' element={<HomeFake />} />
-          <Route path='/' element={<Home />} />
-          <Route path='login' element={<LoginPage />} />
-          <Route
-            path='sfm'
-            element={<PrivateRoute element={<ShopFloor />} requiredPage='shop_floor' />}
-          />
-          <Route
-            path='p-live'
-            element={
-              <PrivateRoute element={<ProductionLive />} requiredPage='hour_production' />
-            }
-          />
-          <Route
-            path='live'
-            element={<PrivateRoute element={<LiveLines />} requiredPage='live_lines' />}
-          />
-          <Route
-            path='management'
-            element={<PrivateRoute element={<Management />} requiredPage='management' />}
-          />
-          <Route
-            path='supervision'
-            element={<PrivateRoute element={<SupervisionPage />} requiredPage='supervision' />}
-          />
-          <Route
-            path='manusis'
-            element={<PrivateRoute element={<Manusis />} requiredPage='manusis' />}
-          />
-        </Routes>
-      </main>
-    </>
+    <PageLayout>
+      <Routes>
+        <Route path='init' element={<HomeFake />} />
+        <Route path='/' element={<Home />} />
+        <Route path='login' element={<LoginPage />} />
+        <Route
+          path='sfm'
+          element={<PrivateRoute element={<ShopFloor />} requiredPage='shop_floor' />}
+        />
+        <Route
+          path='p-live'
+          element={<PrivateRoute element={<ProductionLive />} requiredPage='hour_production' />}
+        />
+        <Route
+          path='live'
+          element={<PrivateRoute element={<LiveLines />} requiredPage='live_lines' />}
+        />
+        <Route
+          path='management'
+          element={<PrivateRoute element={<Management />} requiredPage='management' />}
+        />
+        <Route
+          path='supervision'
+          element={<PrivateRoute element={<SupervisionPage />} requiredPage='supervision' />}
+        />
+        <Route
+          path='manusis'
+          element={<PrivateRoute element={<Manusis />} requiredPage='manusis' />}
+        />
+      </Routes>
+    </PageLayout>
   );
 }
 

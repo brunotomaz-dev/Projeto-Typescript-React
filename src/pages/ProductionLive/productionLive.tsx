@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { getHourProduction, getProduction } from '../../api/apiRequests';
-import PageLayout from '../../components/pageLayout';
 import { useAppSelector } from '../../redux/store/hooks';
 import { RootState } from '../../redux/store/store';
 import ProductionLiveTable from './components/productionLive.table';
@@ -86,7 +85,7 @@ const ProductionLive: React.FC = () => {
   /*                                                  layout                                                  */
   /* -------------------------------------------------------------------------------------------------------- */
   return (
-    <PageLayout>
+    <>
       <h1 className='text-center p-2'>Caixas produzidas por hora</h1>
       <div className='d-flex justify-content-between mb-2 ms-3'>
         <DatePicker
@@ -113,7 +112,7 @@ const ProductionLive: React.FC = () => {
           {error}
         </div>
       )}
-    </PageLayout>
+    </>
   );
 };
 

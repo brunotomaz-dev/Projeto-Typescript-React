@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Button, Card, CardText, Col, Modal, ProgressBar, Row } from 'react-bootstrap';
 import { getOrdemServico } from '../../../api/apiRequests';
 import { toTitleCase } from '../../../helpers/helper.functions';
-import { useAppSelector } from '../../../redux/store/hooks';
+import { setPreventiva } from '../../../redux/store/features/preventivaSlice';
+import { useAppDispatch, useAppSelector } from '../../../redux/store/hooks';
 import { formatHourDecimal } from '../../Manusis/functions/formatHourDecimal';
 import {
   iMaintenanceOrders,
@@ -20,15 +21,15 @@ interface iProps {
 const ModalServiceHistory: React.FC<iProps> = ({ isOpened, onHide }) => {
   /* ------------------------------------------------------------------------------------------- Redux ---- */
   const machine = useAppSelector((state) => state.liveLines.selectedMachine);
+  const dispatch = useAppDispatch();
 
   /* ---------------------------------------------------------------------------------------- Local State - */
-  const [machineHistory, setMachineHistory] = useState<iMaintenanceOrders[]>([]);
+  const [preventiveHistory, setPreventiveHistory] = useState<iMaintenanceOrders[]>([]);
   const [serviceOrders, setServiceOrders] = useState<iMaintenanceOrders[]>([]);
   const [recentMaintenanceOrders, setRecentMaintenanceOrders] = useState<iMaintenanceOrders[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [progressOS, setProgressOS] = useState(0);
-  const [lastPreventive, setLastPreventive] = useState<string>('');
 
   /* ---------------------------------------------------------------------------------------------- Fetch - */
   const fetchPreventiveMachineHistory = async () => {
@@ -67,8 +68,7 @@ const ModalServiceHistory: React.FC<iProps> = ({ isOpened, onHide }) => {
       // Limitar a 5 registros
       response.splice(5);
 
-      setMachineHistory(response);
-      setLastPreventive(response[0].data_conclusao);
+      setPreventiveHistory(response);
     }
     // Atualizar o progresso
     setProgress(100);
@@ -81,12 +81,12 @@ const ModalServiceHistory: React.FC<iProps> = ({ isOpened, onHide }) => {
     setProgressOS(0);
     setIsLoading(true);
 
-    const conclusionDate = format(new Date(machineHistory[0].data_conclusao), 'yyyy-MM-dd');
+    const conclusionDate = format(new Date(preventiveHistory[0].data_conclusao), 'yyyy-MM-dd');
     // Atualizar o progresso
     setProgressOS(35);
 
     const response: iMaintenanceOrders[] = await getOrdemServico({
-      cod_ativo: machineHistory[0].codigo_ativo,
+      cod_ativo: preventiveHistory[0].codigo_ativo,
       data_criacao__gt: conclusionDate,
       tipo_manutencao: Service_Type.CORRETIVA,
     });
@@ -102,6 +102,7 @@ const ModalServiceHistory: React.FC<iProps> = ({ isOpened, onHide }) => {
       });
 
       setServiceOrders(response);
+      dispatch(setPreventiva({ id: preventiveHistory[0].numero_os, data: response }));
       setRecentMaintenanceOrders(response.slice(0, 10)); // Limitar registros
     }
     // Atualizar o progresso
@@ -114,7 +115,7 @@ const ModalServiceHistory: React.FC<iProps> = ({ isOpened, onHide }) => {
 
   /* -------------------------------------------------------------------------------------------- Handles - */
   const handleClose = () => {
-    setMachineHistory([]);
+    setPreventiveHistory([]);
     onHide && onHide();
   };
 
@@ -126,23 +127,27 @@ const ModalServiceHistory: React.FC<iProps> = ({ isOpened, onHide }) => {
   }, [isOpened]);
 
   useEffect(() => {
-    if (machineHistory.length > 0) {
+    if (preventiveHistory.length > 0) {
       fetchServicesOrders();
     }
-  }, [machineHistory]);
+  }, [preventiveHistory]);
 
   /* ----------------------------------------------------------------------------------------- Constantes - */
   const title =
-    machineHistory.length > 0 ? toTitleCase(machineHistory[0].ativo) : `Máquina: ${machine}`;
+    preventiveHistory.length > 0 ? toTitleCase(preventiveHistory[0].ativo) : `Máquina: ${machine}`;
 
-  const hasPreventiveHistory = machineHistory.length > 0;
+  const hasPreventiveHistory = preventiveHistory.length > 0;
 
   /* ---------------------------------------------------------------------------------------- Componentes - */
   const PreventiveContent: React.FC = () => {
     return (
       <>
         <p>
-          Última Preventiva Finalizada: <strong>{lastPreventive}</strong>
+          Última Preventiva Finalizada:{' '}
+          <strong>
+            {preventiveHistory[0].data_conclusao}
+            {` (OS - ${preventiveHistory[0].numero_os})`}
+          </strong>
         </p>
         <p>
           OS abertas desde a última preventiva: <strong>{serviceOrders.length}</strong>

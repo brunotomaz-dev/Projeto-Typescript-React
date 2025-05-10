@@ -5,7 +5,6 @@ import DOMPurify from 'dompurify';
 import React, { useEffect, useState } from 'react';
 import { Alert, Badge, Card, Col, Container, Row, Spinner } from 'react-bootstrap';
 import { getOrdemServico, getSolicitacaoServico } from '../../api/apiRequests';
-import PageLayout from '../../components/pageLayout';
 import DatePickerComponent from './components/DatePickerComponent';
 import { formatHourDecimal } from './functions/formatHourDecimal';
 import { iMaintenanceOrders, OS_Status } from './interfaces/MaintenanceOrders';
@@ -164,8 +163,8 @@ const Manusis: React.FC = () => {
   /*                                            LAYOUT                                            */
   /* -------------------------------------------------------------------------------------------- */
   return (
-    <PageLayout>
-      <h1>Manusis</h1>
+    <>
+      <h1 className='text-center fs-1'>Manusis</h1>
       <Col className='mb-2'>
         <DatePickerComponent onDateChange={handleDateChange} selectedDate={selectedDate} />
         {ssLoading && <Spinner animation='border' role='status' className='ms-2 align-middle' />}
@@ -394,7 +393,7 @@ const Manusis: React.FC = () => {
           </Col>
         </Row>
       </Container>
-    </PageLayout>
+    </>
   );
 };
 

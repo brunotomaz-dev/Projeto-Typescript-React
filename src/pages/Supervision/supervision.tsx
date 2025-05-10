@@ -7,7 +7,6 @@ import { Card, Col, Container, Row, Stack } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 import { getAbsenceData, getPresenceData } from '../../api/apiRequests';
 import ActionPlanCards from '../../components/actionPlanCards';
-import PageLayout from '../../components/pageLayout';
 import SegmentedTurnBtn from '../../components/SegmentedTurnBtn';
 import { ActionPlanStatus, superTurns, TurnoID } from '../../helpers/constants';
 import { getShift } from '../../helpers/turn';
@@ -173,7 +172,7 @@ const SupervisionPage: React.FC = () => {
   /*                                             Layout                                             */
   /* ---------------------------------------------------------------------------------------------- */
   return (
-    <PageLayout>
+    <>
       <h4 className='text-center fs-4'>
         {isSupervisor ? 'Supervisão - ' : isLeadership ? 'Liderança - ' : ''}
         {userName}
@@ -250,7 +249,7 @@ const SupervisionPage: React.FC = () => {
         </Row>
       </Container>
       {ToastDisplay && <ToastDisplay />}
-    </PageLayout>
+    </>
   );
 };
 

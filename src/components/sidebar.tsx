@@ -1,19 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Button } from 'react-bootstrap';
 import { FaTools } from 'react-icons/fa';
+import { GoSidebarCollapse, GoSidebarExpand } from 'react-icons/go';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { logout } from '../api/auth';
 import STMLogoPxB from '../assets/Login_pxb.png';
+import STMLogoH from '../assets/Logo Horizontal.png';
 import STMLogo from '../assets/Logo Santa Massa.png';
 import { usePermissions } from '../hooks/usePermissions';
-import { SidebarState } from '../redux/store/features/sidebarSlice';
+import { SidebarState, toggleCollapsed } from '../redux/store/features/sidebarSlice';
 import { UserState } from '../redux/store/features/userSlice';
-import { useAppSelector } from '../redux/store/hooks';
+import { useAppDispatch, useAppSelector } from '../redux/store/hooks';
 import ChangePasswordModal from './changePasswordModal';
 
 const Sidebar: React.FC = () => {
   /* ---------------------------------------- Gerenciamento de estado --------------------------------------- */
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   const { isCollapsed } = useAppSelector((state: { sidebar: SidebarState }) => state.sidebar);
   const {
@@ -23,9 +27,16 @@ const Sidebar: React.FC = () => {
   } = useAppSelector((state: { user: UserState }) => state.user);
   const [showChangePassword, setShowChangePassword] = useState(false);
 
+  // Ref para o elemento do dropdown
+  const dropdownRef = useRef<HTMLAnchorElement>(null);
+
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const toggleSidebar = () => {
+    dispatch(toggleCollapsed());
   };
 
   /* -------------------------------------------- HOOK -------------------------------------------- */
@@ -88,6 +99,9 @@ const Sidebar: React.FC = () => {
       icon: 'bi bi-gear',
       href: '/management',
     },
+  ];
+
+  const manusisItems = [
     hasPageAccess('manusis') && {
       label: 'Manusis',
       icon: <FaTools />,
@@ -98,47 +112,76 @@ const Sidebar: React.FC = () => {
   /* ------------------------------------------------ Layout ------------------------------------------------ */
   return (
     <>
-      <div
-        className={`d-flex flex-column flex-shrink-0 p-3 text-bg-light sidebar ${isCollapsed ? 'collapsed' : ''} z-3`}
-      >
-        {/* Logo Santa Massa */}
+      <aside id='sidebar' className={`${!isCollapsed ? 'expand' : ''}`}>
+        {/* -------------------------------------------- Header -------------------------------------------- */}
         <Link
           to='/init'
-          className='d-flex align-items-center mb-3 mb-md-0 me-md-auto text-black text-decoration-none'
+          className='text-black mx-auto mt-3 logo-container d-flex justify-content-center'
         >
-          <img
-            src={STMLogo}
-            alt='Logo Colorido Santa Massa'
-            width='40vw'
-            className={`${isCollapsed ? 'me-0 ms-2' : 'me-2'}`}
-          />
-          {!isCollapsed && <span className='fs-5'>Shop Floor Management</span>}
+          <div className='logo-wrapper'>
+            <img src={STMLogo} alt='Logo Colorido Santa Massa' className='logo-square' />
+            <img src={STMLogoH} alt='Logo Colorido Santa Massa' className='logo-horizontal' />
+          </div>
         </Link>
         <hr></hr>
-        {/* Navigation */}
-        <ul className='nav nav-pills flex-column mb-auto'>
+        {/* ------------------------------------------- Navegação ------------------------------------------ */}
+        <ul className='nav nav-pills sidebar-nav'>
           {navItems.map(
             (item) =>
               item && (
-                <li key={item.label} className='nav-item side-pill-h mb-1'>
-                  <Link to={item.href} className='nav-link text-black'>
+                <li key={item.label} className='nav-item side-pill-h'>
+                  <Link to={item.href} className='sidebar-link nav-link text-black'>
                     {typeof item.icon === 'string' ? (
-                      <i
-                        className={`bi ${item.icon} ${isCollapsed ? 'me-0 fs-3' : 'me-2 fs-5'}`}
-                      ></i>
+                      <i className={`${item.icon}`}></i>
                     ) : (
-                      <span className={`${isCollapsed ? 'me-0 fs-3' : 'me-2 fs-5'}`}>
-                        {item.icon}
-                      </span>
+                      <i>{item.icon}</i>
                     )}
-                    {!isCollapsed && <span>{item.label}</span>}
+                    <span>{item.label}</span>
                   </Link>
                 </li>
               )
           )}
+          {/* ----------------------------------------- Adicionais ----------------------------------------- */}
+          <hr />
+          {hasPageAccess('manusis') && (
+            <li className='sidebar-item nav-item side-pill-h'>
+              <a
+                ref={dropdownRef}
+                href='#'
+                className='sidebar-link has-dropdown collapsed nav-link text-black'
+                data-bs-toggle='collapse'
+                data-bs-target='#Manutenção'
+                aria-controls='Manutenção'
+              >
+                <i className='bi bi-tools'></i>
+                <span>Manutenção</span>
+              </a>
+              <ul
+                className='sidebar-dropdown list-unstyled collapse'
+                id='Manutenção'
+                data-bs-parent='sidebar'
+              >
+                {manusisItems.map(
+                  (item) =>
+                    item && (
+                      <li key={item.label} className='sidebar-item nav-item side-pill-h mb-1'>
+                        <Link to={item.href} className='sidebar-link nav-link text-black'>
+                          {typeof item.icon === 'string' ? (
+                            <i className={`${item.icon}`}></i>
+                          ) : (
+                            <i>{item.icon}</i>
+                          )}
+                          <span>{item.label}</span>
+                        </Link>
+                      </li>
+                    )
+                )}
+              </ul>
+            </li>
+          )}
         </ul>
-        <hr></hr>
-        {/* User Dropdown */}
+
+        {/* ----------------------------------------- User Dropdown ---------------------------------------- */}
         <div className='dropdown'>
           <Link
             to='/'
@@ -193,9 +236,19 @@ const Sidebar: React.FC = () => {
             )}
           </ul>
         </div>
-      </div>
+      </aside>
       {/* Modal de Password */}
       <ChangePasswordModal show={showChangePassword} onHide={() => setShowChangePassword(false)} />
+      <Button
+        onClick={toggleSidebar}
+        variant='link'
+        size='lg'
+        aria-label='Toggle sidebar'
+        id='toggle-btn'
+        className='shadow'
+      >
+        {isCollapsed ? <GoSidebarCollapse /> : <GoSidebarExpand />}
+      </Button>
     </>
   );
 };
