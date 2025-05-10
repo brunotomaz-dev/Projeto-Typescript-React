@@ -196,10 +196,10 @@ $transition-timing: ease-in-out;
   }
   
   // Dropdown no footer
-  .dropdown {
+  .sidebar-footer {
     padding: 0 0.5rem;
     position: fixed;
-    bottom: 5px;
+    bottom: 20px;
   }
   
   // Navegação
@@ -216,12 +216,19 @@ $transition-timing: ease-in-out;
     }
   }
 
+  .sidebar-header {
+    position: fixed;
+    top: 0;
+  }
+
   // Navegação da sidebar
   .sidebar-nav {
     padding: 0;
     flex: 1 1 auto;
     flex-direction: column;
-    margin: 0 auto;
+    margin: 0 5px;
+    position: fixed;
+    top: 100px;
   }
 
   // Item da sidebar

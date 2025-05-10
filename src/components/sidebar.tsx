@@ -114,16 +114,18 @@ const Sidebar: React.FC = () => {
     <>
       <aside id='sidebar' className={`${!isCollapsed ? 'expand' : ''}`}>
         {/* -------------------------------------------- Header -------------------------------------------- */}
-        <Link
-          to='/init'
-          className='text-black mx-auto mt-3 logo-container d-flex justify-content-center'
-        >
-          <div className='logo-wrapper'>
-            <img src={STMLogo} alt='Logo Colorido Santa Massa' className='logo-square' />
-            <img src={STMLogoH} alt='Logo Colorido Santa Massa' className='logo-horizontal' />
-          </div>
-        </Link>
-        <hr></hr>
+        <section className='sidebar-header'>
+          <Link
+            to='/init'
+            className='text-black mx-auto mt-3 logo-container d-flex justify-content-center'
+          >
+            <div className='logo-wrapper'>
+              <img src={STMLogo} alt='Logo Colorido Santa Massa' className='logo-square' />
+              <img src={STMLogoH} alt='Logo Colorido Santa Massa' className='logo-horizontal' />
+            </div>
+          </Link>
+          <hr></hr>
+        </section>
         {/* ------------------------------------------- Navegação ------------------------------------------ */}
         <ul className='nav nav-pills sidebar-nav'>
           {navItems.map(
@@ -164,7 +166,7 @@ const Sidebar: React.FC = () => {
                 {manusisItems.map(
                   (item) =>
                     item && (
-                      <li key={item.label} className='sidebar-item nav-item side-pill-h mb-1'>
+                      <li key={item.label} className='sidebar-item nav-item side-pill-h'>
                         <Link to={item.href} className='sidebar-link nav-link text-black'>
                           {typeof item.icon === 'string' ? (
                             <i className={`${item.icon}`}></i>
@@ -182,7 +184,7 @@ const Sidebar: React.FC = () => {
         </ul>
 
         {/* ----------------------------------------- User Dropdown ---------------------------------------- */}
-        <div className='dropdown'>
+        <div className='dropdown sidebar-footer'>
           <Link
             to='/'
             className='d-flex align-items-center text-black text-decoration-none dropdown-toggle'
