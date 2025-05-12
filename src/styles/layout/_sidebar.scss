@@ -138,6 +138,16 @@ $transition-timing: ease-in-out;
         }
       }
     }
+
+    .sidebar-nav {
+      width: 250px;
+      max-width: 250px;
+    }
+
+    .sidebar-header, .sidebar-footer {
+      width: 255px;
+      max-width: 255px;
+    }
   }
   
   // Estado recolhido
@@ -192,6 +202,11 @@ $transition-timing: ease-in-out;
     .logo-horizontal {
       opacity: 0;
       pointer-events: none;
+    }
+
+    .sidebar-header {
+      width: 70px;
+      max-width: 70px;
     }
   }
   

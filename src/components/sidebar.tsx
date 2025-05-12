@@ -65,6 +65,7 @@ const Sidebar: React.FC = () => {
     }
   }, [location.pathname, userGroups]);
 
+  /* ---------------------------------------------- Nav Itens ---------------------------------------------- */
   const navItems = [
     location.pathname === '/login' && {
       label: 'Login',
@@ -103,11 +104,13 @@ const Sidebar: React.FC = () => {
 
   const manusisItems = [
     hasPageAccess('manusis') && {
-      label: 'Manusis',
-      icon: <FaTools />,
+      label: 'Solicitações "Ao vivo"',
+      icon: 'bi bi-file-earmark-text',
       href: '/manusis',
     },
   ];
+
+  const hasMaintananceAccess = manusisItems.some((item) => item !== false);
 
   /* ------------------------------------------------ Layout ------------------------------------------------ */
   return (
@@ -124,7 +127,7 @@ const Sidebar: React.FC = () => {
               <img src={STMLogoH} alt='Logo Colorido Santa Massa' className='logo-horizontal' />
             </div>
           </Link>
-          <hr></hr>
+          <hr />
         </section>
         {/* ------------------------------------------- Navegação ------------------------------------------ */}
         <ul className='nav nav-pills sidebar-nav'>
@@ -144,47 +147,52 @@ const Sidebar: React.FC = () => {
               )
           )}
           {/* ----------------------------------------- Adicionais ----------------------------------------- */}
-          <hr />
-          {hasPageAccess('manusis') && (
-            <li className='sidebar-item nav-item side-pill-h'>
-              <a
-                ref={dropdownRef}
-                href='#'
-                className='sidebar-link has-dropdown collapsed nav-link text-black'
-                data-bs-toggle='collapse'
-                data-bs-target='#Manutenção'
-                aria-controls='Manutenção'
-              >
-                <i className='bi bi-tools'></i>
-                <span>Manutenção</span>
-              </a>
-              <ul
-                className='sidebar-dropdown list-unstyled collapse'
-                id='Manutenção'
-                data-bs-parent='sidebar'
-              >
-                {manusisItems.map(
-                  (item) =>
-                    item && (
-                      <li key={item.label} className='sidebar-item nav-item side-pill-h'>
-                        <Link to={item.href} className='sidebar-link nav-link text-black'>
-                          {typeof item.icon === 'string' ? (
-                            <i className={`${item.icon}`}></i>
-                          ) : (
-                            <i>{item.icon}</i>
-                          )}
-                          <span>{item.label}</span>
-                        </Link>
-                      </li>
-                    )
-                )}
-              </ul>
-            </li>
+          {hasMaintananceAccess && (
+            <>
+              <hr />
+              <li className='sidebar-item nav-item side-pill-h'>
+                <a
+                  ref={dropdownRef}
+                  href='#'
+                  className='sidebar-link has-dropdown collapsed nav-link text-black'
+                  data-bs-toggle='collapse'
+                  data-bs-target='#Manutenção'
+                  aria-controls='Manutenção'
+                >
+                  <i>
+                    <FaTools />
+                  </i>
+                  <span>Manutenção</span>
+                </a>
+                <ul
+                  className='sidebar-dropdown list-unstyled collapse'
+                  id='Manutenção'
+                  data-bs-parent='sidebar'
+                >
+                  {manusisItems.map(
+                    (item) =>
+                      item && (
+                        <li key={item.label} className='sidebar-item nav-item side-pill-h'>
+                          <Link to={item.href} className='sidebar-link nav-link text-black'>
+                            {typeof item.icon === 'string' ? (
+                              <i className={`${item.icon}`}></i>
+                            ) : (
+                              <i>{item.icon}</i>
+                            )}
+                            <span>{item.label}</span>
+                          </Link>
+                        </li>
+                      )
+                  )}
+                </ul>
+              </li>
+            </>
           )}
         </ul>
 
         {/* ----------------------------------------- User Dropdown ---------------------------------------- */}
         <div className='dropdown sidebar-footer'>
+          <hr />
           <Link
             to='/'
             className='d-flex align-items-center text-black text-decoration-none dropdown-toggle'
