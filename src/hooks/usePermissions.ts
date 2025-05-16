@@ -127,10 +127,7 @@ export function usePermissions() {
 
   /* ----------------------------- VERIFICAÇÃO DE EXCEÇÕES DE USUÁRIO ---------------------------- */
   // Verifica se o usuário atual tem exceções
-  const userException = useMemo(
-    () => (userName ? userExceptions[userName] : undefined),
-    [userName]
-  );
+  const userException = useMemo(() => (userName ? userExceptions[userName] : undefined), [userName]);
 
   /* -------------------------------------- ACESSO A PÁGINAS -------------------------------------- */
   // Verifica acesso a páginas
@@ -148,6 +145,7 @@ export function usePermissions() {
         {
           minLevel: number;
           requiredSectors?: string[];
+          customCheck?: (userFunctionalLevel: number, sectorGroups: string[]) => boolean;
         }
       > = {
         supervision: { minLevel: 1 },
@@ -156,10 +154,25 @@ export function usePermissions() {
         live_lines: { minLevel: 0.5 },
         management: { minLevel: 3 },
         manusis: { minLevel: 1, requiredSectors: ['Manutenção'] },
-        preventive: { minLevel: 1, requiredSectors: ['Manutenção'] },
+        preventive: {
+          minLevel: 3, // Nível padrão para outros setores
+          customCheck: (fLvl, sectors) => {
+            // Se for do setor de Manutenção, nível mínimo é 2
+            if (sectors.includes('Manutenção')) {
+              return fLvl >= 2;
+            }
+            // Se for de outro setor, nível mínimo é 3
+            return fLvl >= 3;
+          },
+        },
       };
 
       const requirements = pageRequirements[page];
+
+      // Se existe uma verificação personalizada, use-a
+      if (requirements.customCheck) {
+        return requirements.customCheck(userFunctionalLevel, sectorGroups);
+      }
 
       // Verificar nível funcional
       if (userFunctionalLevel < requirements.minLevel) return false;
