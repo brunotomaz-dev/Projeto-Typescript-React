@@ -108,6 +108,11 @@ const Sidebar: React.FC = () => {
       icon: 'bi bi-file-earmark-text',
       href: '/manusis',
     },
+    hasPageAccess('preventive') && {
+      label: 'Preventivas',
+      icon: 'bi bi-wrench-adjustable-circle',
+      href: '/preventive',
+    },
   ];
 
   const hasMaintananceAccess = manusisItems.some((item) => item !== false);

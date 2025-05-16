@@ -171,12 +171,15 @@ $transition-timing: ease-in-out;
         display: none;
         background-color: v.$light-bootstrap;
         border-radius: 10px;
+        width: auto;
+        max-width: 250px;
 
         a.sidebar-link {
           span {
             display: inline-block;
             margin-left: 0.5rem;
             font-size: 1rem;
+            width: 100%;
           }
         }
       }
@@ -184,8 +187,11 @@ $transition-timing: ease-in-out;
       &:hover .has-dropdown + .sidebar-dropdown {
         display: block;
         max-height: 15em;
-        width: 100%;
+        width: auto;
+        min-width: 10rem;
+        max-width: 250px;
         opacity: 1;
+        
       }
     }
 
