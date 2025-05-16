@@ -7,12 +7,14 @@ interface SegmentedButtonTurnoProps {
   turnos: TurnoOption[];
   onTurnoChange: (turno: string) => void;
   onByLineChange: (show: boolean) => void;
+  key?: string;
 }
 
 const SegmentedButtonTurno: React.FC<SegmentedButtonTurnoProps> = ({
   turnos,
   onTurnoChange,
   onByLineChange,
+  key,
 }) => {
   /* ---------------------------------------------------------------------------------------- Local State - */
   const [viewMode, setViewMode] = useState<string>('byTurn');
@@ -64,7 +66,7 @@ const SegmentedButtonTurno: React.FC<SegmentedButtonTurnoProps> = ({
       <>
         {viewOptions.map((option) => (
           <Nav.Item>
-            <Nav.Link key={option.value} eventKey={option.value} className='rounded-5'>
+            <Nav.Link key={option.value + key} eventKey={option.value} className='rounded-5'>
               {option.label}
             </Nav.Link>
           </Nav.Item>
@@ -118,7 +120,10 @@ const SegmentedButtonTurno: React.FC<SegmentedButtonTurnoProps> = ({
           </Dropdown.Toggle>
           <Dropdown.Menu className='rounded-2 shadow border-0 bg-light-grey-sfm'>
             {turnoDropdownOptions.map((option) => (
-              <Dropdown.Item key={option.value} onClick={() => handleTurnoChange(option.value)}>
+              <Dropdown.Item
+                key={option.value + key}
+                onClick={() => handleTurnoChange(option.value)}
+              >
                 {option.label}
               </Dropdown.Item>
             ))}

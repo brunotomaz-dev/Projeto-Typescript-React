@@ -3,10 +3,7 @@ import { useAppSelector } from '../redux/store/hooks';
 
 export type PermissionAction = 'view' | 'create' | 'update' | 'delete' | 'flag';
 export type PermissionResource = 'absence' | 'presence' | 'action_plan' | 'ihm_appointments';
-export type PermissionElement =
-  | 'btn_pin_action'
-  | 'post_it_action'
-  | 'btn_OS_preventive_history';
+export type PermissionElement = 'btn_pin_action' | 'post_it_action' | 'btn_OS_preventive_history';
 
 export type PermissionPage =
   | 'supervision'
@@ -14,6 +11,7 @@ export type PermissionPage =
   | 'hour_production'
   | 'live_lines'
   | 'management'
+  | 'preventive'
   | 'manusis';
 
 // Contexto funcional (cargos)
@@ -29,14 +27,7 @@ type FunctionalRole =
   | 'Dev';
 
 // Contexto setorial
-type SectorRole =
-  | 'Produção'
-  | 'Manutenção'
-  | 'Qualidade'
-  | 'PCP'
-  | 'TI'
-  | 'Basic'
-  | 'Almoxarifado';
+type SectorRole = 'Produção' | 'Manutenção' | 'Qualidade' | 'PCP' | 'TI' | 'Basic' | 'Almoxarifado';
 
 // Mapear níveis para cada contexto
 export const functionalLevelMap: Record<FunctionalRole, number> = {
@@ -54,7 +45,7 @@ export const functionalLevelMap: Record<FunctionalRole, number> = {
 export const sectorAccessMap: Record<SectorRole, string[]> = {
   Basic: ['shop_floor', 'live_lines'],
   Produção: ['supervision', 'hour_production', 'management'],
-  Manutenção: ['manusis', 'management'],
+  Manutenção: ['manusis', 'management', 'preventive'],
   Qualidade: [''],
   PCP: [''],
   Almoxarifado: [''],
@@ -165,6 +156,7 @@ export function usePermissions() {
         live_lines: { minLevel: 0.5 },
         management: { minLevel: 3 },
         manusis: { minLevel: 1, requiredSectors: ['Manutenção'] },
+        preventive: { minLevel: 1, requiredSectors: ['Manutenção'] },
       };
 
       const requirements = pageRequirements[page];

@@ -129,10 +129,7 @@ export const getInfoIHM = async <T extends DateParam | (iBaseParams & { data: Da
   }
 };
 
-export const getMaquinaInfo = async (
-  { data, turno, maquina_id, status }: iParams,
-  fields?: string[]
-) => {
+export const getMaquinaInfo = async ({ data, turno, maquina_id, status }: iParams, fields?: string[]) => {
   // Cria o filtro de data
   const dateFilter = createDateFilter(data);
   // Define os parâmetros caso a data possua 2 valores
@@ -291,7 +288,6 @@ export const getActionPlan = async (data: DateParam, conclusao?: number) => {
 
   try {
     const response = await api.get('api/action_plan/', { params: params });
-    console.log('Response:', response.data);
     return response.data;
   } catch (error) {
     console.error('Erro ao buscar dados de plano de ação', error);
@@ -429,24 +425,24 @@ export const updateHistoricalAppointmentRecord = async (data: iMaquinaIHM) => {
 // Função formatadora de data que lida com datas inválidas ou nulas
 const formatarData = (dataOriginal: string | null): { data: string; hora: string } => {
   if (!dataOriginal) {
-    return { data: '-', hora: '-' };
+    return { data: '', hora: '' };
   }
 
   try {
     const dataObj = new Date(dataOriginal);
     // Verifica se a data é válida (não é NaN)
     if (isNaN(dataObj.getTime())) {
-      return { data: '-', hora: '-' };
+      return { data: '', hora: '' };
     }
 
     const dataBR = addHours(dataObj, -3); // Ajustar para o horário de Brasília
     return {
-      data: format(dataBR, 'dd/MM/yyyy'),
+      data: format(dataBR, 'yyyy-MM-dd'),
       hora: format(dataBR, 'HH:mm:ss'),
     };
   } catch (error) {
     console.error(`Erro ao formatar data: ${dataOriginal}`, error);
-    return { data: '-', hora: '-' };
+    return { data: '', hora: '' };
   }
 };
 
@@ -496,7 +492,14 @@ interface iOrdemServico {
 }
 
 export const getOrdemServico = async (data: iOrdemServico) => {
-  const params = { ...data };
+  let params = {};
+  if (data.data_criacao) {
+    const { data_criacao, ...rest } = data;
+    const dateFilter = createDateFilterManusis(data_criacao);
+    params = { ...dateFilter, ...rest };
+  } else {
+    params = { ...data };
+  }
   try {
     const response = await api.get('api/service_order/', { params });
     // Ajuste nas datas de criação e conclusão e inicio de atendimento
@@ -522,6 +525,16 @@ export const getOrdemServico = async (data: iOrdemServico) => {
     return data_adjusted;
   } catch (error) {
     console.error('Erro ao buscar ordens de serviço', error);
+    throw error;
+  }
+};
+
+export const getAssetsPreventive = async () => {
+  try {
+    const response = await api.get('api/assets_preventive/');
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao buscar ativos para preventivas', error);
     throw error;
   }
 };

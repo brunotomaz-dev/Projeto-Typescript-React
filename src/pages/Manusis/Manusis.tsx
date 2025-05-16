@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Badge, Card, Col, Container, Row, Spinner } from 'react-bootstrap';
 import { getOrdemServico, getSolicitacaoServico } from '../../api/apiRequests';
 import DatePickerComponent from './components/DatePickerComponent';
+import OrderServiceCards from './components/orderServiceCards';
 import { formatHourDecimal } from './functions/formatHourDecimal';
 import { iMaintenanceOrders, OS_Status } from './interfaces/MaintenanceOrders';
 import { iServiceRequirement, SR_Status } from './interfaces/ServiceRequirement.interface';
@@ -164,7 +165,7 @@ const Manusis: React.FC = () => {
   /* -------------------------------------------------------------------------------------------- */
   return (
     <>
-      <h1 className='text-center fs-1'>Manusis</h1>
+      <h1 className='text-center fs-1'>Solicitações e Ordens de Serviço "Ao Vivo"</h1>
       <Col className='mb-2'>
         <DatePickerComponent onDateChange={handleDateChange} selectedDate={selectedDate} />
         {ssLoading && <Spinner animation='border' role='status' className='ms-2 align-middle' />}
@@ -194,7 +195,7 @@ const Manusis: React.FC = () => {
                 {serviceRequirements.map((sr) => (
                   <Card
                     key={sr.id}
-                    className={`${sr.maquina_parada ? 'border-danger shadow bg-danger-subtle' : 'border-light shadow-sm'}`}
+                    className={`${sr.maquina_parada ? 'border-danger shadow bg-danger-subtle' : 'border-light shadow-sm bg-transparent'}`}
                   >
                     <Card.Header
                       className={`${
@@ -202,7 +203,7 @@ const Manusis: React.FC = () => {
                           ? 'border-danger shadow bg-danger-subtle'
                           : getHoursDifference(sr.data_criacao, sr.hora_criacao) >= 1
                             ? 'border-warning shadow bg-warning-subtle'
-                            : 'border-light shadow-sm'
+                            : 'border-light shadow-sm bg-light'
                       }`}
                     >
                       SS {sr.numero_ss} - {sr.descricao_localizacao_nivel1} /{sr.assunto_principal}
@@ -250,72 +251,11 @@ const Manusis: React.FC = () => {
             )}
             {hasOrders &&
               orderByAppointment.map((os) => (
-                <Card
+                <OrderServiceCards
                   key={os.id}
-                  className={`${os.fim_atendimento !== '-' ? 'border-success shadow bg-success-subtle' : 'border-light shadow-sm'}`}
-                >
-                  <Card.Header
-                    className={`${os.fim_atendimento !== '-' && 'bg-success text-light'}`}
-                  >
-                    OS {os.numero_os} - {os.descricao_localizacao_nivel1} /{os.assunto_principal}
-                  </Card.Header>
-                  <Card.Body>
-                    <Card.Title>{os.ativo}</Card.Title>
-                    <Card.Text>
-                      <strong>Solicitante:</strong> {os.solicitante_ss || '-'}
-                      <br />
-                      <strong>Número SS:</strong> {os.numero_ss || '-'}
-                      <br />
-                      <strong>Localização:</strong> {os.descricao_localizacao_nivel3} -{' '}
-                      {os.descricao_localizacao_nivel2}
-                      <br />
-                      <strong>Assunto:</strong> {os.assunto_secundario || '-'}
-                      <br />
-                      <strong>Tipo de Manutenção</strong> {os.tipo_manutencao || '-'}
-                      <br />
-                      <strong>Descrição:</strong>{' '}
-                      <span
-                        dangerouslySetInnerHTML={{
-                          __html: DOMPurify.sanitize(os.descricao),
-                        }}
-                      />
-                      <br />
-                      <strong>Status:</strong>{' '}
-                      {os.fim_atendimento !== '-' ? (
-                        <Badge bg='success'>Aberta</Badge>
-                      ) : (
-                        os.fim_atendimento === '-' && <Badge bg='warning'>Em Atendimento</Badge>
-                      )}
-                      <br />
-                      <strong>Data da Abertura</strong> {os.data_criacao}
-                      <br />
-                      <strong>Hora da Abertura</strong> {os.hora_criacao}
-                      <br />
-                      <strong>Responsável:</strong> {os.responsavel_manutencao || '-'}
-                      <br />
-                      <strong>Início do Atendimento:</strong> {os.inicio_atendimento || '-'} -{' '}
-                      {os.hora_inicio_atendimento || '-'}
-                      <br />
-                      <strong>Conclusão do Atendimento:</strong> {os.fim_atendimento || '-'} -{' '}
-                      {os.hora_fim_atendimento || '-'}
-                      <br />
-                      <strong>Histórico:</strong>{' '}
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: DOMPurify.sanitize(os.historico_servico_executado),
-                        }}
-                      />
-                      <br />
-                    </Card.Text>
-                  </Card.Body>
-                  <Card.Footer className='text-center'>
-                    <strong>Tempo Estimado:</strong> {formatHourDecimal(os.tempo_estimado_trabalho)}
-                    <br />
-                    <strong>Tempo Realizado:</strong>{' '}
-                    {formatHourDecimal(os.tempo_trabalho_realizado)}
-                    <br />
-                  </Card.Footer>
-                </Card>
+                  os={os}
+                  className='border-light shadow bg-transparent'
+                />
               ))}
           </Col>
           <Col xs={12} xl={4} className='bg-warning-subtle p-2 rounded-3 d-flex flex-column gap-2'>
@@ -334,8 +274,8 @@ const Manusis: React.FC = () => {
             )}
             {hasClosedOrders &&
               closedOrdersByDate.map((os) => (
-                <Card key={os.id} className='border-light shadow-sm'>
-                  <Card.Header className=''>
+                <Card key={os.id} className='border-light shadow-sm bg-transparent'>
+                  <Card.Header className='bg-light'>
                     OS {os.numero_os} - {os.descricao_localizacao_nivel1} /{os.assunto_principal}
                   </Card.Header>
                   <Card.Body>

@@ -11,6 +11,7 @@ import LiveLines from './pages/LiveLines/liveLines';
 import LoginPage from './pages/Login/login';
 import Management from './pages/Management/management';
 import Manusis from './pages/Manusis/Manusis';
+import Preventivas from './pages/Preventivas/Preventivas';
 import ProductionLive from './pages/ProductionLive/productionLive';
 import ShopFloor from './pages/ShopFloor/sfm';
 import SupervisionPage from './pages/Supervision/supervision';
@@ -49,6 +50,10 @@ function App() {
         <Route
           path='manusis'
           element={<PrivateRoute element={<Manusis />} requiredPage='manusis' />}
+        />
+        <Route
+          path='preventive'
+          element={<PrivateRoute element={<Preventivas />} requiredPage='preventive' />}
         />
       </Routes>
     </PageLayout>
