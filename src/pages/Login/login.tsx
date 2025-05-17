@@ -71,7 +71,7 @@ const LoginPage = () => {
               onClick={togglePasswordVisibility}
               aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
             >
-              {!showPassword ? <FaEyeSlash /> : <FaEye />}
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
             </Button>
           </InputGroup>
           <Button variant='primary' type='submit' className='mt-3 w-100' size='lg'>
