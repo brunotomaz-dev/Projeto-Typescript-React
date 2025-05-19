@@ -16,7 +16,7 @@ export const getTurnoName = (turno: TurnoID) => {
 };
 
 export const superTurns: Record<string, TurnoID> = {
-  ['Cláudia Antunes']: 'MAT',
+  // ['Cláudia Antunes']: 'MAT',
   ['Rogério Inácio']: 'MAT',
   ['Renan Oliveira']: 'VES',
   ['Leandro Moraes']: 'NOT',
