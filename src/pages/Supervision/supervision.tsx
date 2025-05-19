@@ -37,12 +37,9 @@ const SupervisionPage: React.FC = () => {
   /* -------------------------------------------- REDUX ------------------------------------------- */
   // User
   const userName = useAppSelector((state: RootState) => state.user.fullName);
-  const userGroup = useAppSelector((state) => state.user.groups);
-  const isSupervisor = userGroup.some((group) => group.includes('Supervisores'));
-  const isLeadership = userGroup.some((group) => group.includes('Liderança'));
 
   /* -------------------------------------------- HOOK -------------------------------------------- */
-  const { isSuperUser } = usePermissions();
+  const { isSuperUser, userFunctionalLevel } = usePermissions();
   const { pinnedCards } = usePinnedCards();
 
   /* ----------------------------------------- LOCAL STATE ---------------------------------------- */
@@ -56,6 +53,8 @@ const SupervisionPage: React.FC = () => {
   const [actionPlanData, setActionPlanData] = useState<iActionPlanCards[]>([]);
   const [actionPlanToShow, setActionPlanToShow] = useState<iActionToShow[]>([]);
 
+  const isLeadership = userFunctionalLevel === 1;
+  const isSupervisor = userFunctionalLevel === 2;
   /* ------------------------------------------- HANDLES ------------------------------------------ */
   const handleTurnChange = (turn: TurnoID) => {
     setSuperTurn(turn);
@@ -84,21 +83,26 @@ const SupervisionPage: React.FC = () => {
     // Primeiro passo: aplicar o ajuste de nível aos dados
     const adjustedData = levelAdjust(actionPlanData);
 
-    // Segundo passo: filtrar por critérios de nível mínimo e pinados
+    // Segundo passo: filtrar por critérios de nível mínimo, pins e nível inicial máximo
     const filteredByRules = adjustedData.filter(
       (plan) =>
-        plan.isPinned ||
-        ((isSupervisor || isSuperUser) && plan.nivelExibicao >= 2) ||
-        (isLeadership && plan.nivelExibicao >= 1)
+        // Superusuários veem todos os cards
+        isSuperUser ||
+        // Condições normais para outros usuários:
+        plan.isPinned || // Sempre mostra os pinados
+        (plan.lvl <= userFunctionalLevel && // Nível inicial do plano <= nível do usuário
+          plan.nivelExibicao >= userFunctionalLevel) // Nível de exibição >= nível do usuário
     );
 
-    // Terceiro passo: filtrar por turno se necessário
-    if (isLeadership || isSupervisor) {
+    // Terceiro passo: filtrar por turno se necessário (exceto para superusuários)
+    if (userFunctionalLevel < 3 && !isSuperUser) {
+      // Líderes (1) e supervisores (2) só veem seu próprio turno, a menos que sejam superusers
       setActionPlanToShow(filteredByRules.filter((plan) => plan.turno === superTurns[userName]));
     } else {
+      // Coordenadores (3) e acima, e superusers, veem todos os turnos
       setActionPlanToShow(filteredByRules);
     }
-  }, [actionPlanData, pinnedCards]);
+  }, [actionPlanData, pinnedCards, userFunctionalLevel, userName, isSuperUser]); // Adicionando isSuperUser nas dependências
 
   /* ------------------------------------------ FUNCTIONS ----------------------------------------- */
   const levelAdjust = (data: iActionPlanCards[]): iActionToShow[] => {
@@ -127,7 +131,7 @@ const SupervisionPage: React.FC = () => {
       return {
         ...plan,
         nivelExibicao: nivelFinal,
-        isPinned, // Adicionada a informação para possível uso futuro
+        isPinned,
       };
     });
   };
@@ -167,6 +171,15 @@ const SupervisionPage: React.FC = () => {
   const handlePresentesTotal = (total: number) => {
     setTotalPresentes(total);
   };
+
+  const validRecnos = actionPlanData
+    .filter((plan) => plan.conclusao === ActionPlanStatus.Aberto)
+    .map((plan) => plan.recno);
+
+  usePinnedCards(3, 'supervActionPinnedCards', {
+    enabled: validRecnos.length > 0,
+    validRecnos,
+  });
 
   /* ---------------------------------------------------------------------------------------------- */
   /*                                             Layout                                             */

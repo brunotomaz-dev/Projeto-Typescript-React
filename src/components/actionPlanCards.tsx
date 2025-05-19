@@ -18,12 +18,13 @@ interface iActionPlanTableProps {
 }
 
 const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDataChange }) => {
-  /* --------------------------------------------- ROOK -------------------------------------------- */
+  /* --------------------------------------------- HOOK -------------------------------------------- */
   const {
     hasResourcePermission,
     userFunctionalLevel: userLvl,
     hasElementAccess,
-  } = usePermissions();
+    isSuperUser,
+  } = usePermissions(); // Adicionando isSuperUser
   const { ToastDisplay, showToast } = useToast();
   const { isPinned, togglePin, pinnedCards } = usePinnedCards();
 
@@ -50,14 +51,21 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
 
       onDataChange(adjustedData);
 
-      const sortedData = sortActionPlans(
-        adjustedData.filter(
-          (item: iActionPlanCards) => item.turno === shift && item.lvl <= userLvl
-        )
-      );
+      // Aplicar filtro por nível e turno
+      const filteredData = adjustedData.filter((item: iActionPlanCards) => {
+        // Superusuários veem todos os cartões do turno selecionado
+        if (isSuperUser) {
+          return item.turno === shift;
+        }
+
+        // Usuários normais só veem cartões com nível <= seu nível e do turno selecionado
+        return item.turno === shift && item.lvl <= userLvl;
+      });
+
+      const sortedData = sortActionPlans(filteredData);
       setActionPlanFiltered(sortedData);
     });
-  }, [dayStartString, shift]);
+  }, [dayStartString, shift, userLvl, isSuperUser]);
 
   /* ------------------------------------------- FUNÇÕES ------------------------------------------ */
   const sortActionPlans = (planos: iActionPlanCards[]): iActionPlanCards[] => {
@@ -91,6 +99,37 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
     return dias >= 0 ? dias : 0; // Evita números negativos
   };
 
+  // Função para calcular quantos dias até ficar vermelho (conforme o nível)
+  const calcularDiasParaVermelho = (nivelUsuario: number, nivelCartao: number): number => {
+    // Diferença de nível entre o usuário e o cartão
+    const diferenca = nivelUsuario - nivelCartao;
+
+    // Base de dias para vermelho
+    if (diferenca <= 0) {
+      // Se o cartão tem nível igual ou maior que o usuário, fica vermelho em 3 dias
+      return 3;
+    } else if (diferenca === 1) {
+      // Se o cartão tem nível 1 abaixo do usuário, fica vermelho em 6 dias
+      return 6;
+    } else if (diferenca === 2) {
+      // Se o cartão tem nível 2 abaixo do usuário, fica vermelho em 9 dias
+      return 9;
+    } else {
+      // Para diferenças maiores, aumenta proporcionalmente
+      return 3 + diferenca * 3;
+    }
+  };
+
+  // Função para verificar se o cartão está em estado de alerta (amarelo)
+  const isCartaoEmAlerta = (nivelUsuario: number, nivelCartao: number, diasAberto: number): boolean => {
+    // Calcular quando o cartão ficará vermelho
+    const diasParaVermelho = calcularDiasParaVermelho(nivelUsuario, nivelCartao);
+
+    // Cartão fica amarelo 2 dias antes de ficar vermelho
+    // Garantimos que não ficará amarelo com menos de 1 dia
+    return diasAberto >= Math.max(1, diasParaVermelho - 2) && diasAberto < diasParaVermelho;
+  };
+
   /* ------------------------------------------- HANDLES ------------------------------------------ */
   // Handler para clique no botão de edição
   const handleEditClick = (actionPlan: iActionPlanCards) => {
@@ -114,9 +153,7 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
       await deleteActionPlan(selectedActionPlan.recno);
 
       // Atualizar a lista sem o item excluído
-      const updatedList = actionPlanFiltered.filter(
-        (item) => item.recno !== selectedActionPlan.recno
-      );
+      const updatedList = actionPlanFiltered.filter((item) => item.recno !== selectedActionPlan.recno);
 
       setActionPlanFiltered(updatedList);
       onDataChange(updatedList);
@@ -165,6 +202,17 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
     togglePin(recno);
   };
 
+  // Ajustando as variantes dos botões de editar e excluir para garantir visibilidade
+  const getButtonVariant = (isUrgente: boolean, isAlerta: boolean) => {
+    if (isUrgente) {
+      return 'outline-light'; // Bom contraste com fundo vermelho
+    } else if (isAlerta) {
+      return 'outline-dark'; // Bom contraste com fundo amarelo
+    } else {
+      return 'outline-secondary'; // Azul outline para fundos claros (alta visibilidade)
+    }
+  };
+
   /* ---------------------------------------------------------------------------------------------- */
   /*                                             Layout                                             */
   /* ---------------------------------------------------------------------------------------------- */
@@ -182,27 +230,39 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
         </Card.Header>
         <Card.Body className='d-flex flex-row flex-wrap justify-content-around gap-2'>
           {actionPlanFiltered.map((actionPlan) => {
-            const headerColor =
-              actionPlan.dias_aberto > 2
-                ? 'bg-danger text-light'
-                : actionPlan.dias_aberto > 1
-                  ? 'bg-warning'
-                  : 'bg-light';
-            const borderStyle =
-              actionPlan.dias_aberto > 2
-                ? 'border-danger border border-1'
-                : actionPlan.dias_aberto > 1
-                  ? 'border-warning border border-1'
-                  : 'border-0';
-            const btnVariant =
-              isPinned(actionPlan.recno) && actionPlan.dias_aberto > 2
-                ? 'light'
-                : isPinned(actionPlan.recno)
-                  ? 'secondary'
-                  : actionPlan.dias_aberto > 2
-                    ? 'outline-light'
-                    : 'outline-secondary';
+            // Calcular dias para vermelho com base no nível
+            const diasParaVermelho = calcularDiasParaVermelho(userLvl, actionPlan.lvl);
+
+            // Verificar se está em estado de urgência (vermelho)
+            const isUrgente = actionPlan.dias_aberto >= diasParaVermelho;
+
+            // Verificar se está em estado de alerta (amarelo)
+            const isAlerta = isCartaoEmAlerta(userLvl, actionPlan.lvl, actionPlan.dias_aberto);
+
+            // Definir cores com base no estado
+            let headerColor, borderStyle, btnVariant;
+
+            if (isUrgente) {
+              // Cartão urgente (vermelho)
+              headerColor = 'bg-danger text-light';
+              borderStyle = 'border-danger border border-1';
+              btnVariant = isPinned(actionPlan.recno) ? 'light' : 'outline-light';
+            } else if (isAlerta) {
+              // Cartão em alerta (amarelo)
+              headerColor = 'bg-warning';
+              borderStyle = 'border-warning border border-1';
+              btnVariant = isPinned(actionPlan.recno) ? 'light' : 'outline-secondary';
+            } else {
+              // Cartão normal (cinza)
+              headerColor = 'bg-light';
+              borderStyle = 'border-secondary border border-0';
+              btnVariant = 'outline-secondary';
+            }
+
             const pinIcon = isPinned(actionPlan.recno) ? 'bi-pin-fill' : 'bi-pin-angle-fill';
+
+            const editBtnVariant = getButtonVariant(isUrgente, isAlerta);
+            const deleteBtnVariant = getButtonVariant(isUrgente, isAlerta);
 
             return (
               <Card
@@ -216,9 +276,7 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
                     <i className='bi bi-star-fill'></i>
                   </div>
                 )}
-                <Card.Header
-                  className={`d-flex justify-content-between align-items-center ${headerColor}`}
-                >
+                <Card.Header className={`d-flex justify-content-between align-items-center ${headerColor}`}>
                   <span className='fw-bold'>Dias em Aberto: {actionPlan.dias_aberto}</span>
                   <div>
                     {hasElementAccess('btn_pin_action') && (
@@ -233,7 +291,7 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
                     )}
                     {hasResourcePermission('action_plan', 'update') && (
                       <Button
-                        variant={`${actionPlan.dias_aberto > 2 ? 'outline-light' : 'outline-secondary'}`}
+                        variant={editBtnVariant}
                         size='sm'
                         className='me-2'
                         onClick={() => handleEditClick(actionPlan)}
@@ -243,7 +301,7 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
                     )}
                     {hasResourcePermission('action_plan', 'delete') && (
                       <Button
-                        variant={`${actionPlan.dias_aberto > 2 ? 'outline-light' : 'outline-secondary'}`}
+                        variant={deleteBtnVariant}
                         size='sm'
                         onClick={() => handleDeleteClick(actionPlan)}
                       >
@@ -322,11 +380,7 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
           </p>
         </Modal.Body>
         <Modal.Footer>
-          <Button
-            variant='secondary'
-            onClick={() => setShowDeleteModal(false)}
-            disabled={isDeleting}
-          >
+          <Button variant='secondary' onClick={() => setShowDeleteModal(false)} disabled={isDeleting}>
             Cancelar
           </Button>
           <Button variant='danger' onClick={handleConfirmDelete} disabled={isDeleting}>

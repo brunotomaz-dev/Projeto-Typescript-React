@@ -28,11 +28,39 @@ export const usePinnedCards = (
   // Acompanha se os dados já foram carregados pelo menos uma vez
   const dataLoaded = useRef(false);
 
-  // Estado para controlar os pins (carregando do localStorage)
+  // Estado para controlar os pins (carregando do localStorage com validação)
   const [pinnedCards, setPinnedCards] = useState<number[]>(() => {
-    const savedPins = localStorage.getItem(storageKey);
-    return savedPins ? JSON.parse(savedPins) : [];
+    try {
+      const savedPins = localStorage.getItem(storageKey);
+      // Garantir que temos um array de números válido
+      const parsed = savedPins ? JSON.parse(savedPins) : [];
+      return Array.isArray(parsed) ? parsed.filter((pin) => typeof pin === 'number') : [];
+    } catch (error) {
+      console.error('Erro ao carregar pins salvos:', error);
+      return [];
+    }
   });
+
+  // Efeito para limpeza inicial se tivermos recnos válidos na inicialização
+  useEffect(() => {
+    // Se temos dados válidos e limpeza habilitada, executar limpeza inicial
+    if (
+      cleanupOptions.enabled &&
+      cleanupOptions.validRecnos &&
+      cleanupOptions.validRecnos.length > 0 &&
+      pinnedCards.length > 0
+    ) {
+      // Agora que validamos que validRecnos não é undefined, podemos usá-lo com segurança
+      const validRecnos = cleanupOptions.validRecnos;
+      const validPins = pinnedCards.filter((pin) => validRecnos.includes(pin));
+
+      // Se a limpeza vai remover algum pin, atualizar state
+      if (validPins.length !== pinnedCards.length) {
+        // Atualizar o estado com os pins válidos
+        setPinnedCards(validPins);
+      }
+    }
+  }, []); // Executa apenas na montagem inicial
 
   // Salvar os pins no localStorage quando mudam
   useEffect(() => {
@@ -55,11 +83,7 @@ export const usePinnedCards = (
   // Limpar pins de cards que não existem mais
   useEffect(() => {
     // Só executar limpeza quando temos dados válidos E já carregamos dados pelo menos uma vez
-    if (
-      cleanupOptions.enabled &&
-      cleanupOptions.validRecnos &&
-      cleanupOptions.validRecnos.length > 0
-    ) {
+    if (cleanupOptions.enabled && cleanupOptions.validRecnos && cleanupOptions.validRecnos.length > 0) {
       // Marcar que já carregamos dados válidos pelo menos uma vez
       dataLoaded.current = true;
 

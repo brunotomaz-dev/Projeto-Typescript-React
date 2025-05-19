@@ -19,9 +19,9 @@ interface iSupervActionCardsProps {
 const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }) => {
   /* -------------------------------------------- HOOK -------------------------------------------- */
   const { ToastDisplay, showToast } = useToast();
-  const { hasElementAccess } = usePermissions();
+  const { hasElementAccess, userFunctionalLevel } = usePermissions(); // Adicionar userFunctionalLevel aqui
 
-  // Extrair recnos válidos dos dados atuais (apenas se os dados não estiverem vazios)
+  // Extrair recnos válidos dos dados atuais (apenas se os dados não estiver vazios)
   const validRecnos = useMemo(
     () => (actionPlanData.length > 0 ? actionPlanData.map((action) => action.recno) : []),
     [actionPlanData]
@@ -88,9 +88,7 @@ const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }
                   <Badge bg='secondary' className='fs-6 d-flex align-items-center gap-1'>
                     <i className='bi bi-grid'></i>
                     Mostrando todos os cartões
-                    {pinnedCards.length > 0 && (
-                      <span className='ms-2'>({pinnedCards.length}/3 fixados)</span>
-                    )}
+                    {pinnedCards.length > 0 && <span className='ms-2'>({pinnedCards.length}/3 fixados)</span>}
                   </Badge>
                 )}
               </div>
@@ -100,17 +98,37 @@ const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }
           {/* Cartões de ação */}
           <Row className='row-wrap gap-3 justify-content-center cards-container'>
             {processedActionData.map((action) => {
-              const headerColor = action.dias_aberto > 6 ? 'bg-danger text-light' : 'bg-warning';
-              const borderStyle =
-                action.dias_aberto > 6
-                  ? 'border-danger border border-1'
-                  : 'border-warning border border-1';
-              const btnVariant = isPinned(action.recno)
-                ? 'light'
-                : action.dias_aberto > 6
-                  ? 'outline-light'
-                  : 'outline-secondary';
+              // Calcular dias para vermelho
+              const diasParaVermelho = calcularDiasParaVermelho(userFunctionalLevel, action.lvl);
+
+              // Verificar se está em estado de urgência (vermelho)
+              const isUrgente = action.dias_aberto >= diasParaVermelho;
+
+              // Verificar se está em estado de alerta (amarelo)
+              const isAlerta = isCartaoEmAlerta(userFunctionalLevel, action.lvl, action.dias_aberto);
+
+              // Definir cores com base no estado
+              let headerColor, borderStyle, btnVariant;
+
+              if (isUrgente) {
+                // Cartão urgente (vermelho)
+                headerColor = 'bg-danger text-light';
+                borderStyle = 'border-danger border border-1';
+                btnVariant = isPinned(action.recno) ? 'light' : 'outline-light';
+              } else if (isAlerta) {
+                // Cartão em alerta (amarelo)
+                headerColor = 'bg-warning';
+                borderStyle = 'border-warning border border-1';
+                btnVariant = isPinned(action.recno) ? 'light' : 'outline-secondary';
+              } else {
+                // Cartão normal (cinza ou outra cor de sua preferência)
+                headerColor = 'bg-light';
+                borderStyle = 'border-secondary border border-1';
+                btnVariant = 'outline-secondary';
+              }
+
               const pinIcon = isPinned(action.recno) ? 'bi-pin-fill' : 'bi-pin-angle-fill';
+
               return (
                 <Card
                   key={action.recno}
@@ -123,17 +141,11 @@ const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }
                       <i className='bi bi-star-fill'></i>
                     </div>
                   )}
-                  <Card.Header
-                    className={`d-flex justify-content-between align-items-center ${headerColor}`}
-                  >
+                  <Card.Header className={`d-flex justify-content-between align-items-center ${headerColor}`}>
                     <span>
                       <strong>Dias em Aberto:</strong> {action.dias_aberto}
                     </span>
-                    <Button
-                      variant={btnVariant}
-                      size='sm'
-                      onClick={() => handleTogglePin(action.recno)}
-                    >
+                    <Button variant={btnVariant} size='sm' onClick={() => handleTogglePin(action.recno)}>
                       <i className={pinIcon}></i>
                     </Button>
                   </Card.Header>
@@ -165,5 +177,37 @@ const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }
     </>
   );
 };
+
+// Função auxiliar para calcular quantos dias são necessários para um cartão ficar vermelho
+function calcularDiasParaVermelho(nivelUsuario: number, nivelCartao: number): number {
+  // Diferença de nível entre o usuário e o cartão
+  const diferenca = nivelUsuario - nivelCartao;
+
+  // Base de dias para vermelho (pode ajustar estes valores conforme necessário)
+  if (diferenca <= 0) {
+    // Se o cartão tem nível igual ou maior que o usuário, fica vermelho em 3 dias
+    return 3;
+  } else if (diferenca === 1) {
+    // Se o cartão tem nível 1 abaixo do usuário, fica vermelho em 6 dias
+    return 6;
+  } else if (diferenca === 2) {
+    // Se o cartão tem nível 2 abaixo do usuário, fica vermelho em 9 dias
+    return 9;
+  } else {
+    // Para diferenças maiores, aumenta proporcionalmente
+    return 3 + diferenca * 3;
+  }
+}
+
+// Nova função para determinar se o cartão deve estar em amarelo (warning)
+// Agora mostra amarelo 2 dias antes de ficar vermelho
+function isCartaoEmAlerta(nivelUsuario: number, nivelCartao: number, diasAberto: number): boolean {
+  // Calcular quando o cartão ficará vermelho
+  const diasParaVermelho = calcularDiasParaVermelho(nivelUsuario, nivelCartao);
+
+  // Cartão fica amarelo 2 dias antes de ficar vermelho
+  // Garantimos que não ficará amarelo com menos de 1 dia
+  return diasAberto >= Math.max(1, diasParaVermelho - 2) && diasAberto < diasParaVermelho;
+}
 
 export default SupervActionCards;
