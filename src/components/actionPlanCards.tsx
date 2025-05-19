@@ -53,13 +53,21 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
 
       // Aplicar filtro por nível e turno
       const filteredData = adjustedData.filter((item: iActionPlanCards) => {
-        // Superusuários veem todos os cartões do turno selecionado
+        // Verificação de nível: usuário só vê cartões com nível <= seu nível
+        const passesLevelCheck = item.lvl <= userLvl;
+
+        // Superusuários veem todos os cartões independente do turno
         if (isSuperUser) {
-          return item.turno === shift;
+          return passesLevelCheck;
         }
 
-        // Usuários normais só veem cartões com nível <= seu nível e do turno selecionado
-        return item.turno === shift && item.lvl <= userLvl;
+        // Usuários com nível 3+ (acima de supervisão) veem todos os turnos
+        if (userLvl >= 3) {
+          return passesLevelCheck;
+        }
+
+        // Líderes (1) e supervisores (2) só veem seu próprio turno
+        return passesLevelCheck && item.turno === shift;
       });
 
       const sortedData = sortActionPlans(filteredData);
