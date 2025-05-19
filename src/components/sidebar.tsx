@@ -123,10 +123,7 @@ const Sidebar: React.FC = () => {
       <aside id='sidebar' className={`${!isCollapsed ? 'expand' : ''}`}>
         {/* -------------------------------------------- Header -------------------------------------------- */}
         <section className='sidebar-header'>
-          <Link
-            to='/init'
-            className='text-black mx-auto mt-3 logo-container d-flex justify-content-center'
-          >
+          <Link to='/init' className='text-black mx-auto mt-3 logo-container d-flex justify-content-center'>
             <div className='logo-wrapper'>
               <img src={STMLogo} alt='Logo Colorido Santa Massa' className='logo-square' />
               <img src={STMLogoH} alt='Logo Colorido Santa Massa' className='logo-horizontal' />
@@ -141,17 +138,13 @@ const Sidebar: React.FC = () => {
               item && (
                 <li key={item.label} className='nav-item side-pill-h'>
                   <Link to={item.href} className='sidebar-link nav-link text-black'>
-                    {typeof item.icon === 'string' ? (
-                      <i className={`${item.icon}`}></i>
-                    ) : (
-                      <i>{item.icon}</i>
-                    )}
+                    {typeof item.icon === 'string' ? <i className={`${item.icon}`}></i> : <i>{item.icon}</i>}
                     <span>{item.label}</span>
                   </Link>
                 </li>
               )
           )}
-          {/* ----------------------------------------- Adicionais ----------------------------------------- */}
+          {/* ----------------------------------------- Manutenção ----------------------------------------- */}
           {hasMaintananceAccess && (
             <>
               <hr />
@@ -204,13 +197,7 @@ const Sidebar: React.FC = () => {
             data-bs-toggle='dropdown'
             aria-expanded='false'
           >
-            <img
-              src={STMLogoPxB}
-              alt=''
-              width='32'
-              height='32'
-              className='rounded-circle me-2'
-            ></img>
+            <img src={STMLogoPxB} alt='' width='32' height='32' className='rounded-circle me-2'></img>
             {!isCollapsed && <strong>{userName.length > 0 ? userName : 'Entrar'}</strong>}
           </Link>
           <ul className='dropdown-menu dropdown-menu-light text-small shadow'>
