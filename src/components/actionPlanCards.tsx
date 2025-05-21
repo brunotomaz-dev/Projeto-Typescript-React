@@ -86,7 +86,7 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
       const dataB = format(parseISO(b.data_registro), 'yyyy-MM-dd');
 
       // Verificar prioridade por data para turno VES
-      if (shift === Turno.VES) {
+      if (a.turno === Turno.VES) {
         // Para VES, ontem tem prioridade sobre hoje
         if (dataA === ontem && dataB !== ontem) return -1;
         if (dataB === ontem && dataA !== ontem) return 1;
