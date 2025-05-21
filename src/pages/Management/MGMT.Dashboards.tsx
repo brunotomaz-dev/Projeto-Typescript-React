@@ -2,15 +2,15 @@
 import { format, startOfDay } from 'date-fns';
 import React, { useEffect, useState } from 'react';
 import { Card, Col, Container, Form, Row, Stack } from 'react-bootstrap';
-import { getInfoIHM } from '../../../api/apiRequests';
-import SegmentedTurnBtn from '../../../components/SegmentedTurnBtn';
-import { TurnoID } from '../../../helpers/constants';
-import { iInfoIHM } from '../../../interfaces/InfoIHM.interface';
-import DashBar from './Dash.Bar';
-import DashTimeline from './Dash.Timeline';
-import DashYamazumi from './Dash.Yamazumi';
-import DashboardDatePicker from './management.d.datepicker';
-import ManagementLinePicker from './management.d.linepicker';
+import { getInfoIHM } from '../../api/apiRequests';
+import SegmentedTurnBtn from '../../components/SegmentedTurnBtn';
+import { TurnoID } from '../../helpers/constants';
+import { iInfoIHM } from '../../interfaces/InfoIHM.interface';
+import DashBar from './components/Dash.Bar';
+import DashTimeline from './components/Dash.Timeline';
+import DashYamazumi from './components/Dash.Yamazumi';
+import DashboardDatePicker from './components/management.d.datepicker';
+import ManagementLinePicker from './components/management.d.linepicker';
 
 // Interface para o range de datas
 interface DateRange {
@@ -21,9 +21,7 @@ interface DateRange {
 const ManagementDashboards: React.FC = () => {
   /* ----------------------------------------- Local State ---------------------------------------- */
   const [dateMode, setDateMode] = useState<'single' | 'range'>('single');
-  const [selectedDate, setSelectedDate] = useState<string>(
-    format(startOfDay(new Date()), 'yyyy-MM-dd')
-  );
+  const [selectedDate, setSelectedDate] = useState<string>(format(startOfDay(new Date()), 'yyyy-MM-dd'));
   const [dateRange, setDateRange] = useState<DateRange>({
     startDate: format(startOfDay(new Date()), 'yyyy-MM-dd'),
     endDate: format(startOfDay(new Date()), 'yyyy-MM-dd'),
@@ -35,8 +33,7 @@ const ManagementDashboards: React.FC = () => {
 
   /* ------------------------------------------- Effect ------------------------------------------- */
   useEffect(() => {
-    const dateChoice =
-      dateMode === 'single' ? selectedDate : [dateRange.startDate, dateRange.endDate];
+    const dateChoice = dateMode === 'single' ? selectedDate : [dateRange.startDate, dateRange.endDate];
 
     void getInfoIHM(dateChoice).then((res: iInfoIHM[]) => {
       // Filtrar dados pela linha, se não for [] ou length = 14

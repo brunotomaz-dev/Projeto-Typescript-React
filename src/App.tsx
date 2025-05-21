@@ -9,8 +9,9 @@ import HomeFake from './pages/example';
 import Home from './pages/Home/home';
 import LiveLines from './pages/LiveLines/liveLines';
 import LoginPage from './pages/Login/login';
-import ManagementDashboards from './pages/Management/components/management.dashboards';
-import ManagementProduction from './pages/Management/components/management.Production';
+import ActionPlanMGMT from './pages/Management/MGMT.ActionPlan';
+import ManagementDashboards from './pages/Management/MGMT.Dashboards';
+import ManagementProduction from './pages/Management/MGMT.Production';
 import Manusis from './pages/Manusis/Manusis';
 import Preventivas from './pages/Preventivas/Preventivas';
 import ProductionLive from './pages/ProductionLive/productionLive';
@@ -42,6 +43,10 @@ function App() {
           <Route
             path='production'
             element={<PrivateRoute element={<ManagementProduction />} requiredPage='management' />}
+          />
+          <Route
+            path='action-plan'
+            element={<PrivateRoute element={<ActionPlanMGMT />} requiredPage='action_plan_management' />}
           />
         </Route>
         <Route

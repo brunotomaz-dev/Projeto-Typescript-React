@@ -194,7 +194,7 @@ const Heatmap: React.FC<iHeatmapProps> = ({ indicator }) => {
         turnos={TurnosObj}
         onTurnoChange={handleTurnoChange}
         onByLineChange={handleLineTurnChange}
-        key={indicator}
+        id={indicator}
       />
       <EChartsReact option={options} opts={{ renderer: 'canvas' }} />
     </>

@@ -15,6 +15,7 @@ interface iSegmentedButtonProps {
   rounded?: 'full' | 'small' | 'medium';
   fullWidth?: boolean;
   small?: boolean;
+  id?: string;
 }
 
 const SegmentedButton: React.FC<iSegmentedButtonProps> = ({
@@ -24,6 +25,7 @@ const SegmentedButton: React.FC<iSegmentedButtonProps> = ({
   rounded = 'medium',
   fullWidth = false,
   small = false,
+  id = 'segmented-button',
 }) => {
   const isFirstRender = useRef(true);
 
@@ -68,8 +70,7 @@ const SegmentedButton: React.FC<iSegmentedButtonProps> = ({
     .navbar-pill-active {
       background-color: var(--bs-light-grey) !important;
       color: var(--bs-secondary) !important;
-    }
-  `;
+    }`;
 
   /* ------------------------------------------------------------------------------------------------------ */
   /*                                                 LAYOUT                                                 */
@@ -78,6 +79,7 @@ const SegmentedButton: React.FC<iSegmentedButtonProps> = ({
     <>
       <style>{customStyles}</style>
       <Nav
+        key={id}
         variant='pills'
         className={`gap-1 p-1 bg-white ${roundStyle} shadow-sm ${fullWidthStyle} ${small ? 'small' : ''}`}
         activeKey={value}
@@ -92,11 +94,12 @@ const SegmentedButton: React.FC<iSegmentedButtonProps> = ({
         }
       >
         {options.map((option) => (
-          <Nav.Item key={option.value}>
+          <Nav.Item key={`item-${option.value}-${id}`}>
             <Nav.Link
               eventKey={option.value}
               className={`${roundStyle} ${option.value === value ? 'navbar-pill-active' : ''}`}
               disabled={option.disabled}
+              key={`link-${option.value}-${id}`}
             >
               {option.icon && option.icon}
               {option.label}

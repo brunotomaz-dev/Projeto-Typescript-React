@@ -4,7 +4,7 @@ import { differenceInDays, format, parseISO, startOfDay } from 'date-fns';
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Col, Modal } from 'react-bootstrap';
 import { deleteActionPlan, getActionPlan } from '../api/apiRequests';
-import { ActionPlanStatus, getTurnoName, TurnoID } from '../helpers/constants';
+import { ActionPlanStatus, getTurnoName, Turno, TurnoID } from '../helpers/constants';
 import { usePermissions } from '../hooks/usePermissions';
 import { usePinnedCards } from '../hooks/usePinnedCards';
 import { useToast } from '../hooks/useToast';
@@ -77,12 +77,29 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
 
   /* ------------------------------------------- FUNÇÕES ------------------------------------------ */
   const sortActionPlans = (planos: iActionPlanCards[]): iActionPlanCards[] => {
-    return [...planos].sort((a, b) => {
-      // Definir pesos para cada fator
-      const PESO_PRIORIDADE = 5; // Peso da prioridade na pontuação final
-      const PESO_DIAS = 1; // Peso dos dias em aberto na pontuação final
+    // Obter a data atual e a data de ontem (formato yyyy-MM-dd)
+    const hoje = format(startOfDay(new Date()), 'yyyy-MM-dd');
+    const ontem = format(startOfDay(new Date(new Date().setDate(new Date().getDate() - 1))), 'yyyy-MM-dd');
 
-      // Calcular pontuação de cada plano (prioridade * peso + dias * peso)
+    return [...planos].sort((a, b) => {
+      const dataA = format(parseISO(a.data_registro), 'yyyy-MM-dd');
+      const dataB = format(parseISO(b.data_registro), 'yyyy-MM-dd');
+
+      // Verificar prioridade por data para turno VES
+      if (shift === Turno.VES) {
+        // Para VES, ontem tem prioridade sobre hoje
+        if (dataA === ontem && dataB !== ontem) return -1;
+        if (dataB === ontem && dataA !== ontem) return 1;
+      } else {
+        // Para outros turnos, hoje tem prioridade
+        if (dataA === hoje && dataB !== hoje) return -1;
+        if (dataB === hoje && dataA !== hoje) return 1;
+      }
+
+      // Após a ordenação por data atual/ontem, continuar com a lógica existente de pontuação
+      const PESO_PRIORIDADE = 5;
+      const PESO_DIAS = 1;
+
       const pontuacaoA = a.prioridade * PESO_PRIORIDADE + a.dias_aberto * PESO_DIAS;
       const pontuacaoB = b.prioridade * PESO_PRIORIDADE + b.dias_aberto * PESO_DIAS;
 
@@ -92,9 +109,9 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
       }
 
       // Em caso de empate na pontuação, ordenar pelo mais antigo primeiro
-      const dateA = new Date(a.data_registro).getTime();
-      const dateB = new Date(b.data_registro).getTime();
-      return dateA - dateB;
+      const timestampA = new Date(a.data_registro).getTime();
+      const timestampB = new Date(b.data_registro).getTime();
+      return timestampA - timestampB;
     });
   };
 

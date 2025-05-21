@@ -11,6 +11,7 @@ export type PermissionPage =
   | 'hour_production'
   | 'live_lines'
   | 'management'
+  | 'action_plan_management'
   | 'preventive'
   | 'manusis';
 
@@ -153,7 +154,18 @@ export function usePermissions() {
         hour_production: { minLevel: 1 },
         live_lines: { minLevel: 0.5 },
         management: { minLevel: 3 },
-        manusis: { minLevel: 1, requiredSectors: ['Manutenção'] },
+        action_plan_management: { minLevel: 3 },
+        manusis: {
+          minLevel: 1,
+          customCheck: (fLvl, sectors) => {
+            // Se for do setor de Manutenção, nível mínimo é 2
+            if (sectors.includes('Manutenção')) {
+              return fLvl >= 1;
+            }
+            // Se for de outro setor, nível mínimo é 3
+            return fLvl >= 3;
+          },
+        },
         preventive: {
           minLevel: 3, // Nível padrão para outros setores
           customCheck: (fLvl, sectors) => {

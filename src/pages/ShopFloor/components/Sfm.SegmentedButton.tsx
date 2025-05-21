@@ -65,7 +65,7 @@ const SegmentedButtonTurno: React.FC<SegmentedButtonTurnoProps> = ({
     return (
       <>
         {viewOptions.map((option) => (
-          <Nav.Item>
+          <Nav.Item key={`Item - ${option.value} + ${key}`}>
             <Nav.Link key={option.value + key} eventKey={option.value} className='rounded-5'>
               {option.label}
             </Nav.Link>
@@ -120,10 +120,7 @@ const SegmentedButtonTurno: React.FC<SegmentedButtonTurnoProps> = ({
           </Dropdown.Toggle>
           <Dropdown.Menu className='rounded-2 shadow border-0 bg-light-grey-sfm'>
             {turnoDropdownOptions.map((option) => (
-              <Dropdown.Item
-                key={option.value + key}
-                onClick={() => handleTurnoChange(option.value)}
-              >
+              <Dropdown.Item key={option.value + key} onClick={() => handleTurnoChange(option.value)}>
                 {option.label}
               </Dropdown.Item>
             ))}

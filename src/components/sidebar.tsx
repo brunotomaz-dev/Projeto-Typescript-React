@@ -3,6 +3,7 @@ import { Button } from 'react-bootstrap';
 import { FaTools } from 'react-icons/fa';
 import { GiGears } from 'react-icons/gi';
 import { GoSidebarCollapse, GoSidebarExpand } from 'react-icons/go';
+import { VscGithubAction } from 'react-icons/vsc';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { logout } from '../api/auth';
 import STMLogoPxB from '../assets/Login_pxb.png';
@@ -150,6 +151,12 @@ const Sidebar: React.FC = () => {
           icon: 'bi bi-box',
           href: '/management/production',
           hasAccess: hasPageAccess('management'),
+        },
+        {
+          label: 'Planos de Ação',
+          icon: <VscGithubAction />,
+          href: '/management/action-plan',
+          hasAccess: hasPageAccess('action_plan_management'),
         },
       ],
     },

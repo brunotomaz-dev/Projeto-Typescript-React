@@ -10,13 +10,19 @@ export const TurnosObj = [
   { id: 2, name: 'Vespertino', turno: 'VES' },
 ];
 
+export enum Turno {
+  MAT = 'MAT',
+  VES = 'VES',
+  NOT = 'NOT',
+}
+
 export const getTurnoName = (turno: TurnoID) => {
   const turnoObj = TurnosObj.find((t) => t.turno === turno);
   return turnoObj ? turnoObj.name : turno;
 };
 
 export const superTurns: Record<string, TurnoID> = {
-  ['Cláudia Antunes']: 'MAT',
+  // ['Cláudia Antunes']: 'MAT',
   ['Rogério Inácio']: 'MAT',
   ['Renan Oliveira']: 'VES',
   ['Leandro Moraes']: 'NOT',
