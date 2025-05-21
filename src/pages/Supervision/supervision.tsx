@@ -91,7 +91,7 @@ const SupervisionPage: React.FC = () => {
         // Condições normais para outros usuários:
         plan.isPinned || // Sempre mostra os pinados
         (plan.lvl <= userFunctionalLevel && // Nível inicial do plano <= nível do usuário
-          plan.nivelExibicao >= userFunctionalLevel) // Nível de exibição >= nível do usuário
+          plan.nivelExibicao === userFunctionalLevel) // Nível de exibição === nível do usuário
     );
 
     // Terceiro passo: filtrar por turno se necessário (exceto para superusuários)
