@@ -1,9 +1,9 @@
-import React, { useMemo } from 'react';
-import ReactECharts from 'echarts-for-react';
-import { Card, Row, Col, Form } from 'react-bootstrap';
+import { ActionPlanStatus, BSColors } from '@helpers/constants';
+import { iActionPlan } from '@interfaces/ActionPlan.interface';
 import { differenceInDays, parseISO, startOfDay } from 'date-fns';
-import { iActionPlan } from '../../../interfaces/ActionPlan.interface';
-import { ActionPlanStatus, BSColors } from '../../../helpers/constants';
+import ReactECharts from 'echarts-for-react';
+import React, { useMemo } from 'react';
+import { Card, Col, Form, Row } from 'react-bootstrap';
 
 interface ActionPlanLevelChartProps {
   actionPlanData: iActionPlan[];
@@ -163,7 +163,7 @@ const ActionPlanLevelChart: React.FC<ActionPlanLevelChartProps> = ({ actionPlanD
         fontFamily: 'Poppins',
         interval: 0,
         rotate: 30,
-        margin: 10,
+        margin: 15,
       },
       show: true,
     },
@@ -197,7 +197,7 @@ const ActionPlanLevelChart: React.FC<ActionPlanLevelChartProps> = ({ actionPlanD
   const totalPlanosAbertos = Object.values(levelData).reduce((sum, val) => sum + val, 0);
 
   return (
-    <Card className='shadow border-0 p-3 mb-4'>
+    <Card className='shadow border-0 p-3 h-100'>
       <Card.Body>
         <Row className='mb-3'>
           <Col>
@@ -231,7 +231,7 @@ const ActionPlanLevelChart: React.FC<ActionPlanLevelChartProps> = ({ actionPlanD
                 {Object.entries(levelData).map(([nivel, quantidade]) => (
                   <div key={nivel}>
                     <span
-                      className='badge me-1'
+                      className={`badge me-1 ${Number(nivel) === 3 ? 'text-dark' : ''}`}
                       style={{ backgroundColor: levelColors[Number(nivel) as keyof typeof levelColors] }}
                     >
                       {quantidade}
@@ -240,6 +240,18 @@ const ActionPlanLevelChart: React.FC<ActionPlanLevelChartProps> = ({ actionPlanD
                   </div>
                 ))}
               </div>
+            </div>
+          </Col>
+        </Row>
+
+        {/* Adicionando a nota informativa */}
+        <Row className='mt-3'>
+          <Col>
+            <div className='alert alert-info mt-2 small'>
+              <strong>Níveis de escalação:</strong> Este gráfico mostra apenas planos abertos, classificados
+              pelo nível atual.
+              <br />
+              Os planos de ação sobem de nível a cada 3 dias em aberto, partindo do nível inicial.
             </div>
           </Col>
         </Row>

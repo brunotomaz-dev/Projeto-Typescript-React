@@ -3,8 +3,10 @@ import { format, startOfDay } from 'date-fns';
 import React, { useEffect, useState } from 'react';
 import { Col, Container, Row } from 'react-bootstrap';
 import { iActionPlan } from '../../interfaces/ActionPlan.interface';
-import ActionPlanStatusChart from './components/ActionPlanStatusChart';
+import ActionPlanCompletionTimeChart from './components/ActionPlanCompletionTimeChart';
 import ActionPlanLevelChart from './components/ActionPlanLevelChart';
+import ActionPlanOpeningLevelChart from './components/ActionPlanOpeningLevelChart';
+import ActionPlanStatusChart from './components/ActionPlanStatusChart';
 
 const ActionPlanMGMT: React.FC = () => {
   /* -------------------------------------------------- Local State ------------------------------------------------- */
@@ -48,11 +50,20 @@ const ActionPlanMGMT: React.FC = () => {
       ) : (
         <>
           <Row>
-            <Col lg={6} className='mb-4'>
+            <Col lg={6} className='mb-3'>
               <ActionPlanStatusChart actionPlanData={actionPlan} />
             </Col>
-            <Col lg={6} className='mb-4'>
+            <Col lg={6} className='mb-3'>
               <ActionPlanLevelChart actionPlanData={actionPlan} />
+            </Col>
+          </Row>
+
+          <Row>
+            <Col lg={6} className='mb-3'>
+              <ActionPlanCompletionTimeChart actionPlanData={actionPlan} />
+            </Col>
+            <Col lg={6} className='mb-3'>
+              <ActionPlanOpeningLevelChart actionPlanData={actionPlan} />
             </Col>
           </Row>
 

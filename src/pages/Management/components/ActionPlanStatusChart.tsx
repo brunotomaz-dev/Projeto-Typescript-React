@@ -168,7 +168,7 @@ const ActionPlanStatusChart: React.FC<ActionPlanStatusChartProps> = ({ actionPla
   };
 
   return (
-    <Card className='shadow border-0 p-3 mb-4'>
+    <Card className='shadow border-0 p-3 h-100'>
       <Card.Body>
         <Row className='mb-3'>
           <Col>
@@ -196,7 +196,9 @@ const ActionPlanStatusChart: React.FC<ActionPlanStatusChartProps> = ({ actionPla
               </div>
               <div className='d-flex gap-3'>
                 <div>
-                  <span className='badge bg-warning me-1'>{statusCounts[ActionPlanStatus.Aberto]}</span>{' '}
+                  <span className='badge bg-warning text-dark me-1'>
+                    {statusCounts[ActionPlanStatus.Aberto]}
+                  </span>{' '}
                   Abertos
                 </div>
                 <div>
@@ -208,6 +210,21 @@ const ActionPlanStatusChart: React.FC<ActionPlanStatusChartProps> = ({ actionPla
                   Cancelados
                 </div>
               </div>
+            </div>
+          </Col>
+        </Row>
+
+        {/* Adicionando a nota informativa */}
+        <Row className='mt-3'>
+          <Col>
+            <div className='alert alert-info mt-2 small'>
+              <strong>Status dos planos:</strong> Este gráfico mostra a distribuição atual dos planos de ação
+              por status.
+              <br />
+              <span className='fw-bold text-warning'>Aberto:</span> Planos ainda em andamento que requerem
+              ação |<span className='fw-bold text-success'> Concluído:</span> Planos finalizados com sucesso |
+              <span className='fw-bold text-danger'> Cancelado:</span> Planos que foram encerrados sem
+              implementação
             </div>
           </Col>
         </Row>
