@@ -1,7 +1,7 @@
-import { getActionPlan } from '@api/apiRequests';
 import { format, startOfDay } from 'date-fns';
 import React, { useEffect, useState } from 'react';
 import { Col, Container, Row } from 'react-bootstrap';
+import { getActionPlan } from '../../api/apiRequests';
 import { iActionPlan } from '../../interfaces/ActionPlan.interface';
 import ActionPlanCompletionTimeChart from './components/ActionPlanCompletionTimeChart';
 import ActionPlanLevelChart from './components/ActionPlanLevelChart';

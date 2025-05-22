@@ -1,9 +1,9 @@
-import { ActionPlanStatus, BSColors } from '@helpers/constants';
-import { iActionPlan } from '@interfaces/ActionPlan.interface';
 import { differenceInDays, parseISO, startOfDay } from 'date-fns';
 import ReactECharts from 'echarts-for-react';
 import React, { useMemo } from 'react';
 import { Card, Col, Form, Row } from 'react-bootstrap';
+import { ActionPlanStatus, BSColors } from '../../../helpers/constants';
+import { iActionPlan } from '../../../interfaces/ActionPlan.interface';
 
 interface ActionPlanLevelChartProps {
   actionPlanData: iActionPlan[];

@@ -7,11 +7,7 @@ import { Button, Col, Form, Modal, Row, Stack } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 import { createActionPlan, updateActionPlan } from '../api/apiRequests';
 import { TurnoID } from '../helpers/constants';
-import {
-  iActionPlan,
-  iActionPlanCards,
-  iActionPlanFormData,
-} from '../interfaces/ActionPlan.interface';
+import { iActionPlan, iActionPlanCards, iActionPlanFormData } from '../interfaces/ActionPlan.interface';
 import { useAppSelector } from '../redux/store/hooks';
 
 interface iActionPlanFormModalProps {
@@ -61,6 +57,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
     data_conclusao: null,
     conclusao: 0,
     lvl: userLevel,
+    prazo: null,
   };
 
   // Se for edição, usar os valores do plano fornecido, senão usar o form vazio
@@ -104,9 +101,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
 
   /* ------------------------------------------- HANDLERS ----------------------------------------- */
   // Handler para mudanças nos campos do formulário
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
     // Tratamento especial para o campo numérico (converter para número)
@@ -152,12 +147,16 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
     const statusFinal = formData.conclusao === novoStatus && novoStatus !== 0 ? 0 : novoStatus;
 
     // Define a data de conclusão quando o status for 1 ou 2, ou limpa quando for 0
-    const novaDataConclusao = statusFinal > 0 ? new Date() : null;
+    const novaDataConclusao = statusFinal > 0 && statusFinal !== 3 ? new Date() : null;
+
+    // Se estamos saindo de PDCA (3) para qualquer outro status, limpa o prazo PDCA
+    const novoPrazo = formData.conclusao === 3 && statusFinal !== 3 ? null : formData.prazo;
 
     setFormData({
       ...formData,
       conclusao: statusFinal,
       data_conclusao: novaDataConclusao,
+      prazo: novoPrazo, // Atualiza o prazo conforme a lógica acima
     });
   };
 
@@ -184,9 +183,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
       const apiData = {
         ...formData,
         data_registro: formatDateForAPI(formData.data_registro as Date),
-        data_conclusao: formData.data_conclusao
-          ? formatDateForAPI(formData.data_conclusao as Date)
-          : null,
+        data_conclusao: formData.data_conclusao ? formatDateForAPI(formData.data_conclusao as Date) : null,
       };
 
       let result;
@@ -212,10 +209,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
       // Calcular dias em aberto
       const hoje = new Date();
       const dataRegistro = responseWithDates.data_registro;
-      const dias = Math.max(
-        0,
-        Math.floor((hoje.getTime() - dataRegistro.getTime()) / (1000 * 60 * 60 * 24))
-      );
+      const dias = Math.max(0, Math.floor((hoje.getTime() - dataRegistro.getTime()) / (1000 * 60 * 60 * 24)));
 
       // Chamar callback com o resultado
       onSubmit({
@@ -252,12 +246,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
           <Row className='mb-3'>
             <Form.Group as={Col} md='3'>
               <Form.Label>Turno</Form.Label>
-              <Form.Select
-                name='turno'
-                value={formData.turno || 'MAT'}
-                onChange={handleChange}
-                required
-              >
+              <Form.Select name='turno' value={formData.turno || 'MAT'} onChange={handleChange} required>
                 <option value='MAT'>Matutino</option>
                 <option value='VES'>Vespertino</option>
                 <option value='NOT'>Noturno</option>
@@ -338,6 +327,15 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
                       Em Andamento
                     </Button>
                     <Button
+                      variant={formData.conclusao === 3 ? 'warning' : 'outline-warning'}
+                      className='flex-grow-1 d-flex align-items-center justify-content-center gap-2'
+                      onClick={() => handleConclusaoChange(3)}
+                      type='button'
+                    >
+                      <i className='bi bi-pause-circle-fill'></i>
+                      PDCA
+                    </Button>
+                    <Button
                       variant={formData.conclusao === 1 ? 'success' : 'outline-success'}
                       className='flex-grow-1 d-flex align-items-center justify-content-center gap-2'
                       onClick={() => handleConclusaoChange(1)}
@@ -360,6 +358,21 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
               )}
             </Stack>
           </Row>
+          {formData.conclusao === 3 && (
+            <div className='mb-3 d-flex justify-content-center'>
+              <Form.Group>
+                <Form.Label>Prazo PDCA</Form.Label>
+                <Form.Control
+                  type='date'
+                  name='prazo'
+                  value={formData.prazo || ''}
+                  onChange={handleChange}
+                  required
+                />
+                <Form.Control.Feedback type='invalid'>Informe o prazo do plano PDCA.</Form.Control.Feedback>
+              </Form.Group>
+            </div>
+          )}
           <Form.Group className='mb-3'>
             <Form.Label>Descrição</Form.Label>
             <Form.Control
@@ -371,9 +384,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
               onChange={handleChange}
               required
             />
-            <Form.Control.Feedback type='invalid'>
-              Informe a descrição do plano.
-            </Form.Control.Feedback>
+            <Form.Control.Feedback type='invalid'>Informe a descrição do plano.</Form.Control.Feedback>
             <Row className='d-flex justify-content-between mt-1'>
               {descriptionCharsLeft < 256 && (
                 <small className={`text-muted ${descriptionCharsLeft < 20 ? 'text-danger' : ''}`}>
@@ -419,9 +430,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
               onChange={handleChange}
               required
             />
-            <Form.Control.Feedback type='invalid'>
-              Informe a solução proposta.
-            </Form.Control.Feedback>
+            <Form.Control.Feedback type='invalid'>Informe a solução proposta.</Form.Control.Feedback>
           </Form.Group>
 
           <Row className='mb-3'>
@@ -449,9 +458,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
                 onChange={handleChange}
                 required
               />
-              <Form.Control.Feedback type='invalid'>
-                Informe o responsável pelo plano.
-              </Form.Control.Feedback>
+              <Form.Control.Feedback type='invalid'>Informe o responsável pelo plano.</Form.Control.Feedback>
             </Form.Group>
           </Row>
         </Modal.Body>

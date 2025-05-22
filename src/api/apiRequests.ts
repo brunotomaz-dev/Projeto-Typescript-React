@@ -279,12 +279,22 @@ export const updatePresenceData = async (data: iPresence) => {
 /* ---------------------------------------------------------------------------------------------- */
 /*                                          PLANO DE AÇÃO                                         */
 /* ---------------------------------------------------------------------------------------------- */
-export const getActionPlan = async (data: DateParam, conclusao?: number) => {
-  const dateFilter = createDateFilter(data);
-  const params = {
-    ...dateFilter,
-    ...(conclusao !== undefined && { conclusao }),
-  };
+export const getActionPlan = async (data?: DateParam, conclusao?: number | number[]) => {
+  // Se data não for fornecida, não aplicamos filtro de data
+  const dateFilter = data ? createDateFilter(data) : {};
+
+  let params: any = { ...dateFilter };
+
+  // Tratamento para conclusao como número único ou array de números
+  if (conclusao !== undefined) {
+    if (Array.isArray(conclusao)) {
+      // Se for um array, construímos uma string separada por vírgulas para a API
+      params.conclusao = conclusao.join(',');
+    } else {
+      // Se for um número único, usamos diretamente
+      params.conclusao = conclusao;
+    }
+  }
 
   try {
     const response = await api.get('api/action_plan/', { params: params });

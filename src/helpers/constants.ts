@@ -48,6 +48,7 @@ export enum ActionPlanStatus {
   Aberto = 0,
   Concluído = 1,
   Cancelado = 2,
+  PDCA = 3,
 }
 
 export enum IndicatorType {
