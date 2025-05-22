@@ -1,4 +1,4 @@
-import { differenceInDays, parseISO, startOfDay } from 'date-fns';
+import { differenceInDays, isPast, parseISO, startOfDay } from 'date-fns';
 import ReactECharts from 'echarts-for-react';
 import React, { useMemo } from 'react';
 import { Card, Col, Form, Row } from 'react-bootstrap';
@@ -31,23 +31,52 @@ const ActionPlanLevelChart: React.FC<ActionPlanLevelChartProps> = ({ actionPlanD
     5: BSColors.DANGER_COLOR, // Vermelho
   };
 
-  // Calcular o nível atual com base nos dias em aberto
-  const calcularNivelAtual = (dataRegistro: string, nivelInicial: number): number => {
-    const dataInicial = parseISO(dataRegistro);
+  // Calcular o nível atual com base nos dias em aberto e status
+  const calcularNivelAtual = (plano: iActionPlan): number => {
+    // Verificar se o plano está em PDCA
+    if (plano.conclusao === ActionPlanStatus.PDCA) {
+      // Se tem data de conclusão e ela ainda não passou, manter no nível 3 ou no nível inicial (o que for maior)
+      if (plano.data_conclusao) {
+        const dataConclusao = parseISO(plano.data_conclusao);
+        
+        // Se a data de conclusão ainda não passou, manter no nível 3 ou no nível inicial (o que for maior)
+        if (!isPast(dataConclusao)) {
+          return Math.max(3, plano.lvl); // Mínimo nível 3 (coordenação) ou o nível inicial se for maior
+        }
+        
+        // Se a data de conclusão já passou, calcular nível baseado em dias desde a data_registro
+        // e considerar pelo menos nível 3 (coordenação)
+        const dataInicial = parseISO(plano.data_registro);
+        const hoje = startOfDay(new Date());
+        const diasAbertos = differenceInDays(hoje, dataInicial);
+        const niveisAdicionais = Math.floor(diasAbertos / 3);
+        
+        // Calcular o nível atual (limitado a 5), considerando o mínimo como nível 3
+        return Math.min(5, Math.max(3, plano.lvl + niveisAdicionais));
+      } 
+      
+      // Se não tem data de conclusão, considerar como nível 3 ou superior
+      return Math.max(3, plano.lvl);
+    }
+    
+    // Para planos em aberto normal (não PDCA), manter o cálculo original
+    const dataInicial = parseISO(plano.data_registro);
     const hoje = startOfDay(new Date());
     const diasAbertos = differenceInDays(hoje, dataInicial);
-
+    
     // A cada 3 dias, o nível sobe em 1
     const niveisAdicionais = Math.floor(diasAbertos / 3);
-
+    
     // Calcular o nível atual (limitado a 5)
-    return Math.min(5, nivelInicial + niveisAdicionais);
+    return Math.min(5, plano.lvl + niveisAdicionais);
   };
 
   // Processar os dados para o gráfico
   const levelData = useMemo(() => {
-    // Filtrar apenas os planos em aberto
-    const planosAbertos = actionPlanData.filter((plan) => plan.conclusao === ActionPlanStatus.Aberto);
+    // Filtrar apenas os planos em aberto ou PDCA
+    const planosAbertos = actionPlanData.filter(
+      (plan) => plan.conclusao === ActionPlanStatus.Aberto || plan.conclusao === ActionPlanStatus.PDCA
+    );
 
     // Inicializar contagem por nível
     const contagemPorNivel: Record<number, number> = {
@@ -60,7 +89,7 @@ const ActionPlanLevelChart: React.FC<ActionPlanLevelChartProps> = ({ actionPlanD
 
     // Calcular o nível atual de cada plano
     planosAbertos.forEach((plan) => {
-      const nivelAtual = calcularNivelAtual(plan.data_registro, plan.lvl);
+      const nivelAtual = calcularNivelAtual(plan);
       contagemPorNivel[nivelAtual] = (contagemPorNivel[nivelAtual] || 0) + 1;
     });
 
@@ -196,6 +225,9 @@ const ActionPlanLevelChart: React.FC<ActionPlanLevelChartProps> = ({ actionPlanD
   // Calcular o total de planos abertos
   const totalPlanosAbertos = Object.values(levelData).reduce((sum, val) => sum + val, 0);
 
+  // Contar quantos planos estão em PDCA
+  const totalPlanosPDCA = actionPlanData.filter(plan => plan.conclusao === ActionPlanStatus.PDCA).length;
+
   return (
     <Card className='shadow border-0 p-3 h-100'>
       <Card.Body>
@@ -225,7 +257,7 @@ const ActionPlanLevelChart: React.FC<ActionPlanLevelChartProps> = ({ actionPlanD
           <Col>
             <div className='d-flex justify-content-between'>
               <div>
-                <strong>Total de Planos Abertos:</strong> {totalPlanosAbertos}
+                <strong>Total de Planos Abertos:</strong> {totalPlanosAbertos}    
               </div>
               <div className='d-flex gap-3'>
                 {Object.entries(levelData).map(([nivel, quantidade]) => (
@@ -241,6 +273,11 @@ const ActionPlanLevelChart: React.FC<ActionPlanLevelChartProps> = ({ actionPlanD
                 ))}
               </div>
             </div>
+            {totalPlanosPDCA > 0 && 
+                  <span className="ms-2">
+                    (<span className="text-info">{totalPlanosPDCA} em PDCA</span>)
+                  </span>
+                }
           </Col>
         </Row>
 
@@ -248,10 +285,12 @@ const ActionPlanLevelChart: React.FC<ActionPlanLevelChartProps> = ({ actionPlanD
         <Row className='mt-3'>
           <Col>
             <div className='alert alert-info mt-2 small'>
-              <strong>Níveis de escalação:</strong> Este gráfico mostra apenas planos abertos, classificados
+              <strong>Níveis de escalação:</strong> Este gráfico mostra planos abertos e em PDCA, classificados
               pelo nível atual.
               <br />
-              Os planos de ação sobem de nível a cada 3 dias em aberto, partindo do nível inicial.
+              Planos regulares sobem de nível a cada 3 dias em aberto, partindo do nível inicial.
+              <br />
+              <span className="text-info"><strong>Planos em PDCA</strong></span> são mantidos no mínimo no nível 3 (Coordenação) até sua data de conclusão.
             </div>
           </Col>
         </Row>

@@ -17,6 +17,7 @@ const ActionPlanStatusChart: React.FC<ActionPlanStatusChartProps> = ({ actionPla
       [ActionPlanStatus.Aberto]: 0,
       [ActionPlanStatus.Concluído]: 0,
       [ActionPlanStatus.Cancelado]: 0,
+      [ActionPlanStatus.PDCA]: 0,
     };
 
     actionPlanData.forEach((plan) => {
@@ -42,7 +43,7 @@ const ActionPlanStatusChart: React.FC<ActionPlanStatusChartProps> = ({ actionPla
     legend: {
       orient: 'vertical',
       left: 'left',
-      data: ['Aberto', 'Concluído', 'Cancelado'],
+      data: ['Aberto', 'Concluído', 'Cancelado', 'PDCA'],
       textStyle: {
         fontFamily: 'Poppins',
       },
@@ -79,7 +80,7 @@ const ActionPlanStatusChart: React.FC<ActionPlanStatusChartProps> = ({ actionPla
           {
             value: statusCounts[ActionPlanStatus.Aberto],
             name: 'Aberto',
-            itemStyle: { color: BSColors.WARNING_COLOR },
+            itemStyle: { color: BSColors.INFO_COLOR },
           },
           {
             value: statusCounts[ActionPlanStatus.Concluído],
@@ -90,6 +91,11 @@ const ActionPlanStatusChart: React.FC<ActionPlanStatusChartProps> = ({ actionPla
             value: statusCounts[ActionPlanStatus.Cancelado],
             name: 'Cancelado',
             itemStyle: { color: BSColors.DANGER_COLOR },
+          },
+          {
+            value: statusCounts[ActionPlanStatus.PDCA],
+            name: 'PDCA',
+            itemStyle: { color: BSColors.WARNING_COLOR },
           },
         ],
       },
@@ -122,7 +128,7 @@ const ActionPlanStatusChart: React.FC<ActionPlanStatusChartProps> = ({ actionPla
     },
     xAxis: {
       type: 'category',
-      data: ['Aberto', 'Concluído', 'Cancelado'],
+      data: ['Aberto', 'Concluído', 'Cancelado', 'PDCA'],
       axisTick: {
         alignWithLabel: true,
       },
@@ -147,7 +153,7 @@ const ActionPlanStatusChart: React.FC<ActionPlanStatusChartProps> = ({ actionPla
         data: [
           {
             value: statusCounts[ActionPlanStatus.Aberto],
-            itemStyle: { color: BSColors.WARNING_COLOR },
+            itemStyle: { color: BSColors.INFO_COLOR },
           },
           {
             value: statusCounts[ActionPlanStatus.Concluído],
@@ -156,6 +162,10 @@ const ActionPlanStatusChart: React.FC<ActionPlanStatusChartProps> = ({ actionPla
           {
             value: statusCounts[ActionPlanStatus.Cancelado],
             itemStyle: { color: BSColors.DANGER_COLOR },
+          },
+          {
+            value: statusCounts[ActionPlanStatus.PDCA],
+            itemStyle: { color: BSColors.WARNING_COLOR },
           },
         ],
         label: {
@@ -196,10 +206,13 @@ const ActionPlanStatusChart: React.FC<ActionPlanStatusChartProps> = ({ actionPla
               </div>
               <div className='d-flex gap-3'>
                 <div>
+                  <span className='badge bg-info me-1'>{statusCounts[ActionPlanStatus.Aberto]}</span> Abertos
+                </div>
+                <div>
                   <span className='badge bg-warning text-dark me-1'>
-                    {statusCounts[ActionPlanStatus.Aberto]}
+                    {statusCounts[ActionPlanStatus.PDCA]}
                   </span>{' '}
-                  Abertos
+                  PDCA
                 </div>
                 <div>
                   <span className='badge bg-success me-1'>{statusCounts[ActionPlanStatus.Concluído]}</span>{' '}
@@ -221,8 +234,10 @@ const ActionPlanStatusChart: React.FC<ActionPlanStatusChartProps> = ({ actionPla
               <strong>Status dos planos:</strong> Este gráfico mostra a distribuição atual dos planos de ação
               por status.
               <br />
-              <span className='fw-bold text-warning'>Aberto:</span> Planos ainda em andamento que requerem
-              ação |<span className='fw-bold text-success'> Concluído:</span> Planos finalizados com sucesso |
+              <span className='fw-bold text-info'>Aberto:</span> Planos ainda em andamento que requerem
+              ação |
+              <span className='fw-bold text-warning'> PDCA:</span> Planos que estão em fase de execução |
+              <span className='fw-bold text-success'> Concluído:</span> Planos finalizados com sucesso |
               <span className='fw-bold text-danger'> Cancelado:</span> Planos que foram encerrados sem
               implementação
             </div>
