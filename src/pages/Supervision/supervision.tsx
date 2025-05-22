@@ -1,6 +1,6 @@
 // cspell:words superv nivel exibicao
 
-import { format, parseISO, startOfDay } from 'date-fns';
+import { differenceInDays, format, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import React, { useEffect, useState } from 'react';
 import { Card, Col, Container, Row, Stack } from 'react-bootstrap';
@@ -8,7 +8,7 @@ import DatePicker from 'react-datepicker';
 import { getAbsenceData, getPresenceData } from '../../api/apiRequests';
 import ActionPlanCards from '../../components/actionPlanCards';
 import SegmentedTurnBtn from '../../components/SegmentedTurnBtn';
-import { ActionPlanStatus, superTurns, TurnoID } from '../../helpers/constants';
+import { ActionPlanStatus, TurnoID, superTurns } from '../../helpers/constants';
 import { getShift } from '../../helpers/turn';
 import { usePermissions } from '../../hooks/usePermissions';
 import { usePinnedCards } from '../../hooks/usePinnedCards';
@@ -91,7 +91,7 @@ const SupervisionPage: React.FC = () => {
         // Condições normais para outros usuários:
         plan.isPinned || // Sempre mostra os pinados
         (plan.lvl <= userFunctionalLevel && // Nível inicial do plano <= nível do usuário
-          plan.nivelExibicao >= userFunctionalLevel) // Nível de exibição >= nível do usuário
+          plan.nivelExibicao === userFunctionalLevel) // Nível de exibição === nível do usuário
     );
 
     // Terceiro passo: filtrar por turno se necessário (exceto para superusuários)
@@ -110,6 +110,33 @@ const SupervisionPage: React.FC = () => {
       const diasAberto = plan.dias_aberto;
       const isPinned = pinnedCards.includes(plan.recno);
 
+      // Verificar se é um plano em PDCA
+      const isPDCA = plan.conclusao === 3;
+
+      // Verificar se o plano PDCA está dentro do prazo
+      const isPDCAComPrazo = isPDCA && plan.prazo;
+      const estaDentroDoPrazo =
+        isPDCAComPrazo && plan.prazo
+          ? differenceInDays(parseISO(plan.prazo), startOfDay(new Date())) >= 0
+          : false;
+
+      // Ajuste para planos em PDCA
+      if (isPDCA && estaDentroDoPrazo) {
+        // Planos em PDCA dentro do prazo têm nível mínimo 3 (coordenação)
+        // ou mantêm o nível inicial se for maior que 3
+        const nivelPDCA = Math.max(3, plan.lvl);
+
+        // Se estiver pinado, garantir nível mínimo 5
+        const nivelFinal = isPinned ? Math.max(5, nivelPDCA) : nivelPDCA;
+
+        return {
+          ...plan,
+          nivelExibicao: nivelFinal,
+          isPinned,
+        };
+      }
+
+      // Lógica original para outros casos
       const nivelBaseadoEmDias =
         diasAberto >= 15
           ? 5
@@ -255,7 +282,7 @@ const SupervisionPage: React.FC = () => {
 
         <Row>
           <ActionPlanCards
-            status={ActionPlanStatus.Aberto}
+            status={[ActionPlanStatus.Aberto, ActionPlanStatus.PDCA]}
             shift={superTurn}
             onDataChange={setActionPlanData}
           />

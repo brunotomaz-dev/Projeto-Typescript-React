@@ -10,6 +10,12 @@ export const TurnosObj = [
   { id: 2, name: 'Vespertino', turno: 'VES' },
 ];
 
+export enum Turno {
+  MAT = 'MAT',
+  VES = 'VES',
+  NOT = 'NOT',
+}
+
 export const getTurnoName = (turno: TurnoID) => {
   const turnoObj = TurnosObj.find((t) => t.turno === turno);
   return turnoObj ? turnoObj.name : turno;
@@ -42,6 +48,7 @@ export enum ActionPlanStatus {
   Aberto = 0,
   Concluído = 1,
   Cancelado = 2,
+  PDCA = 3,
 }
 
 export enum IndicatorType {

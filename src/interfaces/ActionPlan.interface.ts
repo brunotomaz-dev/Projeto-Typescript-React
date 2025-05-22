@@ -1,4 +1,4 @@
-import { TurnoID } from "../helpers/constants";
+import { TurnoID } from '../helpers/constants';
 
 // cSpell:words descricao contencao solucao responsavel conclusao
 
@@ -18,6 +18,7 @@ export interface iActionPlan {
   data_conclusao: string | null;
   conclusao: number;
   lvl: number;
+  prazo: string | null;
 }
 
 export interface iActionPlanFormData extends Omit<iActionPlan, 'data_registro' | 'data_conclusao'> {

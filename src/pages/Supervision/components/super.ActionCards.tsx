@@ -5,6 +5,8 @@ import { usePermissions } from '../../../hooks/usePermissions';
 import { usePinnedCards } from '../../../hooks/usePinnedCards';
 import { useToast } from '../../../hooks/useToast';
 import { iActionPlanCards } from '../../../interfaces/ActionPlan.interface';
+import { differenceInDays, format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 //cSpell: words nivel exibicao superv responsavel solucao
 
@@ -37,6 +39,23 @@ const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }
   /* ------------------------------------------- Funções ------------------------------------------ */
   // Determina automaticamente se devemos mostrar apenas os pinados ou todos
   const showOnlyPinned = useMemo(() => pinnedCards.length >= 3, [pinnedCards]);
+
+  // Verificar se um plano está em PDCA e se está dentro do prazo
+  const verificarPrazoPDCA = (plan: iActionToShow) => {
+    if (plan.conclusao !== 3 || !plan.prazo) return { isPDCA: false, diasRestantes: 0, estaNoPrazo: false };
+    
+    const hoje = new Date();
+    const dataPrazo = parseISO(plan.prazo);
+    const diasRestantes = differenceInDays(dataPrazo, hoje);
+    
+    return {
+      isPDCA: true,
+      diasRestantes,
+      estaNoPrazo: diasRestantes >= 0,
+      // Se estiver a 2 dias ou menos do prazo, destacar como próximo
+      estaPróximo: diasRestantes >= 0 && diasRestantes <= 2
+    };
+  };
 
   // Filtrar e ordenar os dados
   const processedActionData = useMemo(() => {
@@ -98,19 +117,28 @@ const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }
           {/* Cartões de ação */}
           <Row className='row-wrap gap-3 justify-content-center cards-container'>
             {processedActionData.map((action) => {
-              // Calcular dias para vermelho
+              // Verificar status PDCA
+              const { isPDCA, diasRestantes, estaNoPrazo, estaPróximo } = verificarPrazoPDCA(action);
+              
+              // Calcular dias para vermelho (não aplicável em PDCA com prazo válido)
               const diasParaVermelho = calcularDiasParaVermelho(userFunctionalLevel, action.lvl);
 
-              // Verificar se está em estado de urgência (vermelho)
-              const isUrgente = action.dias_aberto >= diasParaVermelho;
+              // Verificar se está em estado de urgência (vermelho) - não se aplica a PDCA dentro do prazo
+              const isUrgente = !isPDCA && action.dias_aberto >= diasParaVermelho;
 
-              // Verificar se está em estado de alerta (amarelo)
-              const isAlerta = isCartaoEmAlerta(userFunctionalLevel, action.lvl, action.dias_aberto);
+              // Verificar se está em estado de alerta (amarelo) - não se aplica a PDCA dentro do prazo
+              const isAlerta = !isPDCA && isCartaoEmAlerta(userFunctionalLevel, action.lvl, action.dias_aberto);
 
               // Definir cores com base no estado
-              let headerColor, borderStyle, btnVariant;
+              let headerColor, borderStyle, btnVariant, cardClass = '';
 
-              if (isUrgente) {
+              if (isPDCA && estaNoPrazo) {
+                // Cartão em PDCA dentro do prazo (dourado)
+                headerColor = 'bg-warning text-dark';
+                borderStyle = 'border-warning border border-2';
+                btnVariant = isPinned(action.recno) ? 'dark' : 'outline-dark';
+                cardClass = 'pdca-card';
+              } else if (isUrgente) {
                 // Cartão urgente (vermelho)
                 headerColor = 'bg-danger text-light';
                 borderStyle = 'border-danger border border-1';
@@ -133,7 +161,7 @@ const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }
                 <Card
                   key={action.recno}
                   style={{ width: '18rem', height: '18rem' }}
-                  className={`p-0 shadow ${borderStyle} ${isPinned(action.recno) ? 'card-pinned' : ''} action-card`}
+                  className={`p-0 shadow ${borderStyle} ${isPinned(action.recno) ? 'card-pinned' : ''} action-card ${cardClass}`}
                 >
                   {/* Indicador visual de card pinado */}
                   {isPinned(action.recno) && (
@@ -142,14 +170,38 @@ const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }
                     </div>
                   )}
                   <Card.Header className={`d-flex justify-content-between align-items-center ${headerColor}`}>
-                    <span>
-                      <strong>Dias em Aberto:</strong> {action.dias_aberto}
-                    </span>
+                    <div className="d-flex align-items-center">
+                      {isPDCA && estaNoPrazo ? (
+                        <span className="d-flex align-items-center">
+                          <Badge className="pdca-badge me-2">
+                            <i className="bi bi-arrow-repeat me-1"></i>
+                            PDCA
+                          </Badge>
+                          {diasRestantes > 0 && (
+                            <span className={estaPróximo ? 'prazo-proximo' : 'prazo-destaque'}>
+                              ({diasRestantes} {diasRestantes === 1 ? 'dia' : 'dias'})
+                            </span>
+                          )}
+                        </span>
+                      ) : (
+                        <span>
+                          <strong>Dias em Aberto:</strong> {action.dias_aberto}
+                        </span>
+                      )}
+                    </div>
                     <Button variant={btnVariant} size='sm' onClick={() => handleTogglePin(action.recno)}>
                       <i className={pinIcon}></i>
                     </Button>
                   </Card.Header>
                   <Card.Body className='overflow-auto pb-1'>
+                    {isPDCA && action.prazo && (
+                      <Card.Text className="mb-2">
+                        <strong>Prazo:</strong>{' '}
+                        <span className={estaPróximo ? 'prazo-proximo' : ''}>
+                          {format(parseISO(action.prazo), 'dd/MM/yyyy', { locale: ptBR })}
+                        </span>
+                      </Card.Text>
+                    )}
                     <Card.Text>
                       <strong>Responsável: </strong>
                       {action.responsavel}

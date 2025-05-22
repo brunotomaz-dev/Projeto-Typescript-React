@@ -3,8 +3,8 @@
 import { differenceInDays, format, parseISO, startOfDay } from 'date-fns';
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Col, Modal } from 'react-bootstrap';
-import { deleteActionPlan, getActionPlan } from '../api/apiRequests';
-import { ActionPlanStatus, getTurnoName, TurnoID } from '../helpers/constants';
+import { deleteActionPlan, getActionPlan, updateActionPlan } from '../api/apiRequests';
+import { ActionPlanStatus, getTurnoName, Turno, TurnoID } from '../helpers/constants';
 import { usePermissions } from '../hooks/usePermissions';
 import { usePinnedCards } from '../hooks/usePinnedCards';
 import { useToast } from '../hooks/useToast';
@@ -12,7 +12,7 @@ import { iActionPlan, iActionPlanCards } from '../interfaces/ActionPlan.interfac
 import ActionPlanFormModal from './actionPlanFormModal';
 
 interface iActionPlanTableProps {
-  status: ActionPlanStatus;
+  status: ActionPlanStatus | ActionPlanStatus[];
   shift: TurnoID;
   onDataChange: (actionPlan: iActionPlanCards[]) => void;
 }
@@ -46,7 +46,8 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
     void getActionPlan([dayStartString], status).then((data) => {
       const adjustedData = data.map((item: iActionPlan) => ({
         ...item,
-        dias_aberto: calcularDiasEmAberto(item.data_registro),
+        // Passando todos os parâmetros necessários
+        dias_aberto: calcularDiasEmAberto(item.data_registro, item.conclusao, item.prazo),
       }));
 
       onDataChange(adjustedData);
@@ -73,16 +74,127 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
       const sortedData = sortActionPlans(filteredData);
       setActionPlanFiltered(sortedData);
     });
-  }, [dayStartString, shift, userLvl, isSuperUser]);
+  }, [dayStartString, shift, userLvl, isSuperUser, status]); // Garantir que todas as dependências estejam aqui
+
+  // Adicionar este useEffect dentro do componente ActionPlanCards
+  useEffect(() => {
+    // Verificar planos com prazos PDCA vencidos
+    const verificarPrazosPDCA = async () => {
+      const hoje = startOfDay(new Date());
+
+      // Filtrar planos em PDCA com prazo vencido
+      const planosPDCAVencidos = actionPlanFiltered.filter(
+        (plan) =>
+          plan.conclusao === 3 && // É PDCA
+          plan.prazo && // Tem prazo definido
+          differenceInDays(hoje, parseISO(plan.prazo)) > 0 // Prazo já passou
+      );
+
+      // Se encontrou planos vencidos, atualizá-los
+      if (planosPDCAVencidos.length > 0) {
+        // Atualizar cada plano vencido
+        for (const plan of planosPDCAVencidos) {
+          try {
+            // Preparar dados atualizados - garantindo que data_registro seja uma string
+            const planUpdated = {
+              ...plan,
+              conclusao: 0, // Muda para Aberto
+              data_registro: plan.prazo || new Date().toISOString(), // Nova data = prazo antigo ou data atual se for nulo
+              prazo: null, // Remove o prazo
+            };
+
+            // Chamar API para atualizar o plano
+            await updateActionPlan(planUpdated as iActionPlan);
+
+            // Mostrar notificação para o usuário
+            showToast(`Plano #${plan.recno} saiu de PDCA por prazo vencido`, 'warning');
+          } catch (error) {
+            console.error('Erro ao atualizar plano PDCA vencido:', error);
+            showToast(`Erro ao atualizar plano PDCA #${plan.recno}`, 'danger');
+          }
+        }
+
+        // Recarregar os dados para refletir as mudanças
+        void loadActionPlanData();
+      }
+    };
+
+    // Executar a verificação
+    void verificarPrazosPDCA();
+
+    // Configurar intervalo para verificar periodicamente
+    const intervalId = setInterval(
+      () => {
+        void verificarPrazosPDCA();
+      },
+      60 * 60 * 1000
+    ); // Verificar a cada 1 hora
+
+    // Limpar intervalo ao desmontar
+    return () => clearInterval(intervalId);
+  }, [actionPlanFiltered]); // Adicionando actionPlanFiltered como dependência para reagir às mudanças
+
+  // Função para carregar dados dos planos de ação
+  const loadActionPlanData = async () => {
+    try {
+      // Passando os mesmos parâmetros usados no useEffect
+      const data = await getActionPlan([dayStartString], status);
+
+      if (data) {
+        // Processar os dados e calcular dias em aberto
+        const processedData: iActionPlanCards[] = data
+          .filter((plan: iActionPlan) => {
+            // Lidar com status como array ou valor único
+            if (Array.isArray(status)) {
+              return status.includes(plan.conclusao);
+            }
+            // Lidar com status como valor único
+            return plan.conclusao === status;
+          })
+          .map((plan: iActionPlan) => {
+            // Calcular dias em aberto
+            const diasAberto = calcularDiasEmAberto(plan.data_registro, plan.conclusao, plan.prazo);
+            return { ...plan, dias_aberto: diasAberto };
+          });
+
+        setActionPlanFiltered(processedData);
+
+        // Notificar componente pai sobre mudança nos dados
+        if (onDataChange) {
+          onDataChange(processedData);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching action plan data:', error);
+      showToast('Erro ao carregar os planos de ação', 'danger');
+    }
+  };
 
   /* ------------------------------------------- FUNÇÕES ------------------------------------------ */
   const sortActionPlans = (planos: iActionPlanCards[]): iActionPlanCards[] => {
-    return [...planos].sort((a, b) => {
-      // Definir pesos para cada fator
-      const PESO_PRIORIDADE = 5; // Peso da prioridade na pontuação final
-      const PESO_DIAS = 1; // Peso dos dias em aberto na pontuação final
+    // Obter a data atual e a data de ontem (formato yyyy-MM-dd)
+    const hoje = format(startOfDay(new Date()), 'yyyy-MM-dd');
+    const ontem = format(startOfDay(new Date(new Date().setDate(new Date().getDate() - 1))), 'yyyy-MM-dd');
 
-      // Calcular pontuação de cada plano (prioridade * peso + dias * peso)
+    return [...planos].sort((a, b) => {
+      const dataA = format(parseISO(a.data_registro), 'yyyy-MM-dd');
+      const dataB = format(parseISO(b.data_registro), 'yyyy-MM-dd');
+
+      // Verificar prioridade por data para turno VES
+      if (a.turno === Turno.VES) {
+        // Para VES, ontem tem prioridade sobre hoje
+        if (dataA === ontem && dataB !== ontem) return -1;
+        if (dataB === ontem && dataA !== ontem) return 1;
+      } else {
+        // Para outros turnos, hoje tem prioridade
+        if (dataA === hoje && dataB !== hoje) return -1;
+        if (dataB === hoje && dataA !== hoje) return 1;
+      }
+
+      // Após a ordenação por data atual/ontem, continuar com a lógica existente de pontuação
+      const PESO_PRIORIDADE = 5;
+      const PESO_DIAS = 1;
+
       const pontuacaoA = a.prioridade * PESO_PRIORIDADE + a.dias_aberto * PESO_DIAS;
       const pontuacaoB = b.prioridade * PESO_PRIORIDADE + b.dias_aberto * PESO_DIAS;
 
@@ -92,18 +204,30 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
       }
 
       // Em caso de empate na pontuação, ordenar pelo mais antigo primeiro
-      const dateA = new Date(a.data_registro).getTime();
-      const dateB = new Date(b.data_registro).getTime();
-      return dateA - dateB;
+      const timestampA = new Date(a.data_registro).getTime();
+      const timestampB = new Date(b.data_registro).getTime();
+      return timestampA - timestampB;
     });
   };
 
-  const calcularDiasEmAberto = (dataRegistro: Date | string) => {
+  const calcularDiasEmAberto = (dataRegistro: Date | string, conclusao?: number, prazo?: string | null) => {
     const dataInicial = dataRegistro instanceof Date ? dataRegistro : parseISO(dataRegistro);
-
     const hoje = startOfDay(new Date());
-    const dias = differenceInDays(hoje, dataInicial);
 
+    // Para planos em PDCA, considerar os dias até o prazo
+    if (conclusao === 3 && prazo) {
+      const dataPrazo = parseISO(prazo);
+      // Se ainda estiver dentro do prazo, mostrar dias desde registro
+      if (differenceInDays(dataPrazo, hoje) >= 0) {
+        return differenceInDays(hoje, dataInicial);
+      } else {
+        // Se o prazo já passou, mostrar dias desde o prazo
+        return differenceInDays(hoje, dataPrazo);
+      }
+    }
+
+    // Lógica normal para outros casos
+    const dias = differenceInDays(hoje, dataInicial);
     return dias >= 0 ? dias : 0; // Evita números negativos
   };
 
@@ -210,14 +334,16 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
     togglePin(recno);
   };
 
-  // Ajustando as variantes dos botões de editar e excluir para garantir visibilidade
-  const getButtonVariant = (isUrgente: boolean, isAlerta: boolean) => {
-    if (isUrgente) {
+  // Ajustando as variantes dos botões para incluir o caso PDCA
+  const getButtonVariant = (isUrgente: boolean, isAlerta: boolean, isPDCA: boolean = false) => {
+    if (isPDCA) {
+      return 'outline-dark'; // Bom contraste com fundo dourado/amarelo
+    } else if (isUrgente) {
       return 'outline-light'; // Bom contraste com fundo vermelho
     } else if (isAlerta) {
       return 'outline-dark'; // Bom contraste com fundo amarelo
     } else {
-      return 'outline-secondary'; // Azul outline para fundos claros (alta visibilidade)
+      return 'outline-secondary'; // Para fundos claros
     }
   };
 
@@ -247,10 +373,18 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
             // Verificar se está em estado de alerta (amarelo)
             const isAlerta = isCartaoEmAlerta(userLvl, actionPlan.lvl, actionPlan.dias_aberto);
 
+            // Verificar se está em PDCA
+            const isPDCA = actionPlan.conclusao === 3;
+
             // Definir cores com base no estado
             let headerColor, borderStyle, btnVariant;
 
-            if (isUrgente) {
+            if (isPDCA) {
+              // Cartão em estado PDCA (dourado)
+              headerColor = 'bg-warning text-dark';
+              borderStyle = 'border-warning border border-2';
+              btnVariant = isPinned(actionPlan.recno) ? 'dark' : 'outline-dark';
+            } else if (isUrgente) {
               // Cartão urgente (vermelho)
               headerColor = 'bg-danger text-light';
               borderStyle = 'border-danger border border-1';
@@ -267,15 +401,21 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
               btnVariant = 'outline-secondary';
             }
 
+            // Adicionar uma classe personalizada para dar um tom dourado ao cartão PDCA
+            const cardClass = isPDCA ? 'pdca-card' : '';
+
             const pinIcon = isPinned(actionPlan.recno) ? 'bi-pin-fill' : 'bi-pin-angle-fill';
 
-            const editBtnVariant = getButtonVariant(isUrgente, isAlerta);
-            const deleteBtnVariant = getButtonVariant(isUrgente, isAlerta);
+            const editBtnVariant = getButtonVariant(isUrgente, isAlerta, isPDCA);
+            const deleteBtnVariant = getButtonVariant(isUrgente, isAlerta, isPDCA);
 
             return (
               <Card
-                className={`shadow ${borderStyle} mb-2 ${isPinned(actionPlan.recno) ? 'card-pinned' : ''} action-card`}
-                style={{ width: '24vw', height: '670px' }}
+                className={`shadow ${borderStyle} mb-2 ${isPinned(actionPlan.recno) ? 'card-pinned' : ''} action-card ${cardClass}`}
+                style={{
+                  width: '24vw',
+                  height: '670px',
+                }}
                 key={actionPlan.recno}
               >
                 {/* Indicador visual de card pinado */}
@@ -285,7 +425,14 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
                   </div>
                 )}
                 <Card.Header className={`d-flex justify-content-between align-items-center ${headerColor}`}>
-                  <span className='fw-bold'>Dias em Aberto: {actionPlan.dias_aberto}</span>
+                  <div className='d-flex align-items-center'>
+                    <span className='fw-bold me-2'>Dias em Aberto: {actionPlan.dias_aberto}</span>
+                    {isPDCA && (
+                      <span className='pdca-badge ms-2'>
+                        <i className='bi bi-arrow-repeat me-1'></i>PDCA
+                      </span>
+                    )}
+                  </div>
                   <div>
                     {hasElementAccess('btn_pin_action') && (
                       <Button

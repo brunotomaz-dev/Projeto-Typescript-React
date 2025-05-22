@@ -9,7 +9,9 @@ import HomeFake from './pages/example';
 import Home from './pages/Home/home';
 import LiveLines from './pages/LiveLines/liveLines';
 import LoginPage from './pages/Login/login';
-import Management from './pages/Management/management';
+import ActionPlanMGMT from './pages/Management/MGMT.ActionPlan';
+import ManagementDashboards from './pages/Management/MGMT.Dashboards';
+import ManagementProduction from './pages/Management/MGMT.Production';
 import Manusis from './pages/Manusis/Manusis';
 import Preventivas from './pages/Preventivas/Preventivas';
 import ProductionLive from './pages/ProductionLive/productionLive';
@@ -27,30 +29,31 @@ function App() {
         <Route path='init' element={<HomeFake />} />
         <Route path='/' element={<Home />} />
         <Route path='login' element={<LoginPage />} />
-        <Route
-          path='sfm'
-          element={<PrivateRoute element={<ShopFloor />} requiredPage='shop_floor' />}
-        />
+        <Route path='sfm' element={<PrivateRoute element={<ShopFloor />} requiredPage='shop_floor' />} />
         <Route
           path='p-live'
           element={<PrivateRoute element={<ProductionLive />} requiredPage='hour_production' />}
         />
-        <Route
-          path='live'
-          element={<PrivateRoute element={<LiveLines />} requiredPage='live_lines' />}
-        />
-        <Route
-          path='management'
-          element={<PrivateRoute element={<Management />} requiredPage='management' />}
-        />
+        <Route path='live' element={<PrivateRoute element={<LiveLines />} requiredPage='live_lines' />} />
+        <Route path='management'>
+          <Route
+            path='dashboards'
+            element={<PrivateRoute element={<ManagementDashboards />} requiredPage='management' />}
+          />
+          <Route
+            path='production'
+            element={<PrivateRoute element={<ManagementProduction />} requiredPage='management' />}
+          />
+          <Route
+            path='action-plan'
+            element={<PrivateRoute element={<ActionPlanMGMT />} requiredPage='action_plan_management' />}
+          />
+        </Route>
         <Route
           path='supervision'
           element={<PrivateRoute element={<SupervisionPage />} requiredPage='supervision' />}
         />
-        <Route
-          path='manusis'
-          element={<PrivateRoute element={<Manusis />} requiredPage='manusis' />}
-        />
+        <Route path='manusis' element={<PrivateRoute element={<Manusis />} requiredPage='manusis' />} />
         <Route
           path='preventive'
           element={<PrivateRoute element={<Preventivas />} requiredPage='preventive' />}
