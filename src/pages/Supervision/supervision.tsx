@@ -2,7 +2,7 @@
 
 import { differenceInDays, format, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, Col, Container, Row, Stack } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 import { getAbsenceData, getPresenceData } from '../../api/apiRequests';
@@ -55,6 +55,9 @@ const SupervisionPage: React.FC = () => {
 
   const isLeadership = userFunctionalLevel === 1;
   const isSupervisor = userFunctionalLevel === 2;
+
+  const statusFilter = useMemo(() => [ActionPlanStatus.Aberto, ActionPlanStatus.PDCA], []);
+
   /* ------------------------------------------- HANDLES ------------------------------------------ */
   const handleTurnChange = (turn: TurnoID) => {
     setSuperTurn(turn);
@@ -281,11 +284,7 @@ const SupervisionPage: React.FC = () => {
         </Row>
 
         <Row>
-          <ActionPlanCards
-            status={[ActionPlanStatus.Aberto, ActionPlanStatus.PDCA]}
-            shift={superTurn}
-            onDataChange={setActionPlanData}
-          />
+          <ActionPlanCards status={statusFilter} shift={superTurn} onDataChange={setActionPlanData} />
         </Row>
       </Container>
       {ToastDisplay && <ToastDisplay />}

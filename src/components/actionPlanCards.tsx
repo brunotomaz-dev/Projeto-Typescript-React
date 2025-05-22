@@ -43,6 +43,13 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
 
   /* ------------------------------------------- EFFECTS ------------------------------------------ */
   useEffect(() => {
+    console.log('ActionPlanCards useEffect executando com:', {
+      status,
+      shift,
+      userLvl,
+      isSuperUser,
+      dayStartString,
+    });
     void getActionPlan([dayStartString], status).then((data) => {
       const adjustedData = data.map((item: iActionPlan) => ({
         ...item,
@@ -74,7 +81,7 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
       const sortedData = sortActionPlans(filteredData);
       setActionPlanFiltered(sortedData);
     });
-  }, [dayStartString, shift, userLvl, isSuperUser, status]); // Garantir que todas as dependências estejam aqui
+  }, [dayStartString, shift, userLvl, isSuperUser, status]);
 
   // Adicionar este useEffect dentro do componente ActionPlanCards
   useEffect(() => {
