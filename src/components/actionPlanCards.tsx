@@ -35,8 +35,6 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  // Adicione um estado para controlar se estamos atualizando
-  const [isUpdatingPlans, setIsUpdatingPlans] = useState(false);
 
   /* -------------------------------------------- DATAS ------------------------------------------- */
   const today = new Date();
@@ -80,9 +78,6 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
 
   // Adicionar este useEffect dentro do componente ActionPlanCards
   useEffect(() => {
-    // Se estamos atualizando os planos, não fazer nada
-    if (isUpdatingPlans) return;
-
     // Verificar planos com prazos PDCA vencidos
     const verificarPrazosPDCA = async () => {
       const hoje = startOfDay(new Date());
@@ -97,37 +92,30 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
 
       // Se encontrou planos vencidos, atualizá-los
       if (planosPDCAVencidos.length > 0) {
-        setIsUpdatingPlans(true); // Marcamos que estamos atualizando
+        // Atualizar cada plano vencido
+        for (const plan of planosPDCAVencidos) {
+          try {
+            // Preparar dados atualizados - garantindo que data_registro seja uma string
+            const planUpdated = {
+              ...plan,
+              conclusao: 0, // Muda para Aberto
+              data_registro: plan.prazo || new Date().toISOString(), // Nova data = prazo antigo ou data atual se for nulo
+              prazo: null, // Remove o prazo
+            };
 
-        try {
-          // Atualizar cada plano vencido
-          for (const plan of planosPDCAVencidos) {
-            try {
-              // Preparar dados atualizados - garantindo que data_registro seja uma string
-              const planUpdated = {
-                ...plan,
-                conclusao: 0, // Muda para Aberto
-                data_registro: plan.prazo || new Date().toISOString(), // Nova data = prazo antigo ou data atual se for nulo
-                prazo: null, // Remove o prazo
-              };
+            // Chamar API para atualizar o plano
+            await updateActionPlan(planUpdated as iActionPlan);
 
-              // Chamar API para atualizar o plano
-              await updateActionPlan(planUpdated as iActionPlan);
-
-              // Mostrar notificação para o usuário
-              showToast(`Plano #${plan.recno} saiu de PDCA por prazo vencido`, 'warning');
-            } catch (error) {
-              console.error('Erro ao atualizar plano PDCA vencido:', error);
-              showToast(`Erro ao atualizar plano PDCA #${plan.recno}`, 'danger');
-            }
+            // Mostrar notificação para o usuário
+            showToast(`Plano #${plan.recno} saiu de PDCA por prazo vencido`, 'warning');
+          } catch (error) {
+            console.error('Erro ao atualizar plano PDCA vencido:', error);
+            showToast(`Erro ao atualizar plano PDCA #${plan.recno}`, 'danger');
           }
-
-          // Recarregar os dados para refletir as mudanças
-          await loadActionPlanData();
-        } finally {
-          // Independentemente do resultado, marcamos que não estamos mais atualizando
-          setIsUpdatingPlans(false);
         }
+
+        // Recarregar os dados para refletir as mudanças
+        void loadActionPlanData();
       }
     };
 
@@ -144,7 +132,7 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
 
     // Limpar intervalo ao desmontar
     return () => clearInterval(intervalId);
-  }, [actionPlanFiltered, isUpdatingPlans]); // Adicione a flag como dependência
+  }, []);
 
   // Função para carregar dados dos planos de ação
   const loadActionPlanData = async () => {
