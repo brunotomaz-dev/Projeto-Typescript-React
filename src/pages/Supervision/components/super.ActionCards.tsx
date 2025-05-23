@@ -1,3 +1,5 @@
+import { differenceInDays, format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import React, { useMemo } from 'react';
 import { Badge, Button, Card, Row } from 'react-bootstrap';
 import { getTurnoName } from '../../../helpers/constants';
@@ -5,8 +7,6 @@ import { usePermissions } from '../../../hooks/usePermissions';
 import { usePinnedCards } from '../../../hooks/usePinnedCards';
 import { useToast } from '../../../hooks/useToast';
 import { iActionPlanCards } from '../../../interfaces/ActionPlan.interface';
-import { differenceInDays, format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 //cSpell: words nivel exibicao superv responsavel solucao
 
@@ -43,17 +43,17 @@ const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }
   // Verificar se um plano está em PDCA e se está dentro do prazo
   const verificarPrazoPDCA = (plan: iActionToShow) => {
     if (plan.conclusao !== 3 || !plan.prazo) return { isPDCA: false, diasRestantes: 0, estaNoPrazo: false };
-    
+
     const hoje = new Date();
     const dataPrazo = parseISO(plan.prazo);
     const diasRestantes = differenceInDays(dataPrazo, hoje);
-    
+
     return {
       isPDCA: true,
       diasRestantes,
       estaNoPrazo: diasRestantes >= 0,
       // Se estiver a 2 dias ou menos do prazo, destacar como próximo
-      estaPróximo: diasRestantes >= 0 && diasRestantes <= 2
+      estaPróximo: diasRestantes >= 0 && diasRestantes <= 2,
     };
   };
 
@@ -119,7 +119,7 @@ const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }
             {processedActionData.map((action) => {
               // Verificar status PDCA
               const { isPDCA, diasRestantes, estaNoPrazo, estaPróximo } = verificarPrazoPDCA(action);
-              
+
               // Calcular dias para vermelho (não aplicável em PDCA com prazo válido)
               const diasParaVermelho = calcularDiasParaVermelho(userFunctionalLevel, action.lvl);
 
@@ -127,10 +127,14 @@ const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }
               const isUrgente = !isPDCA && action.dias_aberto >= diasParaVermelho;
 
               // Verificar se está em estado de alerta (amarelo) - não se aplica a PDCA dentro do prazo
-              const isAlerta = !isPDCA && isCartaoEmAlerta(userFunctionalLevel, action.lvl, action.dias_aberto);
+              const isAlerta =
+                !isPDCA && isCartaoEmAlerta(userFunctionalLevel, action.lvl, action.dias_aberto);
 
               // Definir cores com base no estado
-              let headerColor, borderStyle, btnVariant, cardClass = '';
+              let headerColor,
+                borderStyle,
+                btnVariant,
+                cardClass = '';
 
               if (isPDCA && estaNoPrazo) {
                 // Cartão em PDCA dentro do prazo (dourado)
@@ -170,11 +174,11 @@ const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }
                     </div>
                   )}
                   <Card.Header className={`d-flex justify-content-between align-items-center ${headerColor}`}>
-                    <div className="d-flex align-items-center">
+                    <div className='d-flex align-items-center'>
                       {isPDCA && estaNoPrazo ? (
-                        <span className="d-flex align-items-center">
-                          <Badge className="pdca-badge me-2">
-                            <i className="bi bi-arrow-repeat me-1"></i>
+                        <span className='d-flex align-items-center'>
+                          <Badge className='pdca-badge me-2'>
+                            <i className='bi bi-arrow-repeat me-1'></i>
                             PDCA
                           </Badge>
                           {diasRestantes > 0 && (
@@ -195,7 +199,7 @@ const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }
                   </Card.Header>
                   <Card.Body className='overflow-auto pb-1'>
                     {isPDCA && action.prazo && (
-                      <Card.Text className="mb-2">
+                      <Card.Text className='mb-2'>
                         <strong>Prazo:</strong>{' '}
                         <span className={estaPróximo ? 'prazo-proximo' : ''}>
                           {format(parseISO(action.prazo), 'dd/MM/yyyy', { locale: ptBR })}
