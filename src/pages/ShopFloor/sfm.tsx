@@ -111,15 +111,13 @@ const ShopFloor: React.FC = () => {
     });
 
     // Indicador de reparo
-    void getIndicator(
-      'repair',
-      [currentMonthBeginningDateString],
-      ['data_registro', 'reparo']
-    ).then((data: iRep[]) => {
-      // Obter a média de reparo
-      const average = getAverage(data, 'reparo') || 0;
-      setCurrentRepairs(average);
-    });
+    void getIndicator('repair', [currentMonthBeginningDateString], ['data_registro', 'reparo']).then(
+      (data: iRep[]) => {
+        // Obter a média de reparo
+        const average = getAverage(data, 'reparo') || 0;
+        setCurrentRepairs(average);
+      }
+    );
   }, [currentMonthBeginningDateString]);
 
   /* ------------------------------------------------ Layout ------------------------------------------------ */
@@ -201,6 +199,7 @@ const ShopFloor: React.FC = () => {
           </Col>
         </Row>
       </Card>
+      {/* <HeatmapBxPeople /> */}
     </>
   );
 };
