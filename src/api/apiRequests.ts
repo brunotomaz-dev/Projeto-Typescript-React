@@ -195,8 +195,12 @@ export const getCarrinhosCount = async (data_inicial: string, data_final: string
 /* ---------------------------------------------------------------------------------------------- */
 /*                                           ABSENTEÍSMO                                          */
 /* ---------------------------------------------------------------------------------------------- */
-export const getAbsenceData = async (data: DateParam) => {
-  const params = { data_occ: data };
+export const getAbsenceData = async (data: DateParam, isDaysOut: boolean = false) => {
+  // Cria um filtor de data
+  const dateFilter = isDaysOut ? { data_occ__lte: data, data_retorno__gte: data } : { data_occ: data };
+
+  // Define os parâmetros
+  const params = { ...dateFilter };
 
   try {
     const response = await api.get('api/absenteismo/', { params: params });
@@ -221,14 +225,42 @@ export const getAbsenceNames = async (nome: string, fields?: string[]) => {
 
 export const createAbsenceData = async (formData: iAbsenceForm) => {
   try {
-    const response = await api.post('api/absenteismo/', {
+    // Preparar os dados para envio
+    const requestData = {
       ...formData,
+      // Tratar data_retorno: Se não existir ou for vazia, enviar null
+      data_retorno:
+        formData.data_retorno && formData.data_retorno.trim() !== '' ? formData.data_retorno : null,
+      // Adicionar campos automáticos
       data_registro: format(startOfDay(new Date()), 'yyyy-MM-dd'),
       hora_registro: new Date().toLocaleTimeString(),
-    });
+    };
+
+    const response = await api.post('api/absenteismo/', requestData);
     return response.data;
   } catch (error) {
-    console.error('Erro ao criar registro de ausência', error);
+    console.error('Erro ao salvar dados de ausência', error);
+    throw error;
+  }
+};
+
+export const updateAbsenceData = async (formData: iAbsenceForm & { recno: number }) => {
+  try {
+    // Preparar os dados para envio
+    const requestData = {
+      ...formData,
+      // Tratar data_retorno: Se não existir ou for vazia, enviar null
+      data_retorno:
+        formData.data_retorno && formData.data_retorno.trim() !== '' ? formData.data_retorno : null,
+      // Campos obrigatórios
+      data_registro: format(startOfDay(new Date()), 'yyyy-MM-dd'),
+      hora_registro: new Date().toLocaleTimeString(),
+    };
+
+    const response = await api.put(`api/absenteismo/${formData.recno}/`, requestData);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao atualizar registro de ausência', error);
     throw error;
   }
 };

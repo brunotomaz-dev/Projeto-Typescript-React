@@ -19,11 +19,9 @@ import { useAppSelector } from '../../redux/store/hooks';
 import { RootState } from '../../redux/store/store';
 import SupervActionCards from './components/super.ActionCards';
 import SupervAbsence from './components/superv.Absence';
-import AbsenceTable from './components/superv.AbsTable';
 import CardGauges from './components/Superv.CardGauges';
 import CaixasPessoa from './components/superv.CxsPessoa';
 import SupervDiscardsTable from './components/Superv.DiscardsTable';
-import PresenceTable from './components/superv.PresenceTable';
 import ProductionTable from './components/superv.prodTable';
 
 interface iActionToShow extends iActionPlanCards {
@@ -168,13 +166,33 @@ const SupervisionPage: React.FC = () => {
 
   // Função para carregar dados de ausência
   const loadAbsenceData = async () => {
-    try {
-      const data: iAbsence[] = await getAbsenceData(selectedDate);
-      setAbsenceData(data.filter((absence) => absence.turno === superTurn));
-    } catch (error) {
-      console.error('Erro ao carregar dados de ausência:', error);
-      showToast('Erro ao carregar dados de ausência', 'danger');
-    }
+    Promise.allSettled([getAbsenceData(selectedDate), getAbsenceData(selectedDate, true)])
+      .then((results: PromiseSettledResult<iAbsence[]>[]) => {
+        const [absData, absDaysOff] = results.map((result) => {
+          if (result.status === 'fulfilled') {
+            return result.value;
+          } else {
+            console.error('Erro ao carregar dados de ausência:', result.reason);
+            showToast('Erro ao carregar dados de ausência', 'danger');
+            return [];
+          }
+        });
+
+        // Une os dados de ausência e dias de ausencia, evitando duplicatas
+        const combinedData = [...absData, ...absDaysOff].reduce((acc: iAbsence[], curr: iAbsence) => {
+          const exists = acc.find((item) => item.recno === curr.recno);
+          if (!exists) {
+            acc.push(curr);
+          }
+          return acc;
+        }, []);
+
+        setAbsenceData(combinedData.filter((absence) => absence.turno === superTurn));
+      })
+      .catch((error) => {
+        console.error('Erro ao carregar dados de ausência:', error);
+        showToast('Erro ao carregar dados de ausência', 'danger');
+      });
   };
 
   // Função para carregar dados de presença
@@ -273,15 +291,6 @@ const SupervisionPage: React.FC = () => {
           onDataChange={refreshData}
           onPresenceChange={handlePresentesTotal}
         />
-
-        <Row className='g-1 mb-3'>
-          <Col xs={12} xl={9}>
-            <AbsenceTable absenceData={absenceData} onDataChange={refreshData} />
-          </Col>
-          <Col xs={12} xl>
-            <PresenceTable presenceData={presenceData} onDataChange={refreshData} />
-          </Col>
-        </Row>
 
         <Row>
           <ActionPlanCards status={statusFilter} shift={superTurn} onDataChange={setActionPlanData} />

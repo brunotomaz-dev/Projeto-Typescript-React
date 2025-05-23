@@ -43,13 +43,6 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
 
   /* ------------------------------------------- EFFECTS ------------------------------------------ */
   useEffect(() => {
-    console.log('ActionPlanCards useEffect executando com:', {
-      status,
-      shift,
-      userLvl,
-      isSuperUser,
-      dayStartString,
-    });
     void getActionPlan([dayStartString], status).then((data) => {
       const adjustedData = data.map((item: iActionPlan) => ({
         ...item,

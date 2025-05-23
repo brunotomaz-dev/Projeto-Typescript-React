@@ -11,11 +11,12 @@ export interface iAbsence {
   tipo: string;
   usuario: string;
   data_occ: string;
+  data_retorno: string;
 }
 
 export interface iPresence extends iPresenceSectors {
   recno?: number;
-  
+
   data_registro: string;
   hora_registro: string;
   turno: string;

@@ -1,3 +1,5 @@
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import React, { useState } from 'react';
 import { Button, Card, Modal } from 'react-bootstrap';
 import { deleteAbsenceData } from '../../../api/apiRequests';
@@ -8,9 +10,10 @@ import { iAbsence } from '../../../interfaces/Absence.interface';
 interface iAbsenceTableProps {
   absenceData: iAbsence[];
   onDataChange: () => void;
+  onEdit: (absence: iAbsence) => void; // Nova prop para lidar com edição
 }
 
-const AbsenceTable: React.FC<iAbsenceTableProps> = ({ absenceData, onDataChange }) => {
+const AbsenceTable: React.FC<iAbsenceTableProps> = ({ absenceData, onDataChange, onEdit }) => {
   /* -------------------------------------------- ROOK -------------------------------------------- */
   const { hasResourcePermission } = usePermissions();
 
@@ -20,7 +23,22 @@ const AbsenceTable: React.FC<iAbsenceTableProps> = ({ absenceData, onDataChange 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const { showToast, ToastDisplay } = useToast();
 
-  /* ------------------------------------------- EFFECTS ------------------------------------------ */
+  /* ------------------------------------------- HELPERS ------------------------------------------ */
+  // Formatar data de retorno
+  const formatReturnDate = (dateString?: string) => {
+    if (!dateString) return '';
+    try {
+      return format(parseISO(dateString), 'dd/MM/yyyy', { locale: ptBR });
+    } catch (error) {
+      console.error('Erro ao formatar data:', error);
+      return dateString;
+    }
+  };
+
+  // Verificar se o tipo requer exibição da data de retorno
+  const needsReturnDate = (tipo: string) => {
+    return ['Férias', 'Afastamento'].includes(tipo);
+  };
 
   /* ------------------------------------------- HANDLES ------------------------------------------ */
   // Abrir modal de confirmação
@@ -33,6 +51,11 @@ const AbsenceTable: React.FC<iAbsenceTableProps> = ({ absenceData, onDataChange 
   const handleCloseModal = () => {
     setShowConfirmModal(false);
     setSelectedAbsence(null);
+  };
+
+  // Abrir modal de edição - Agora apenas repassa para o componente pai
+  const handleEditClick = (absence: iAbsence) => {
+    onEdit(absence);
   };
 
   // Confirmar exclusão
@@ -75,8 +98,10 @@ const AbsenceTable: React.FC<iAbsenceTableProps> = ({ absenceData, onDataChange 
               <th>Nome</th>
               <th>Turno</th>
               <th>Ocorrência</th>
+              <th>Data</th>
+              <th>Retorno</th>
               <th>Justificativa</th>
-              {hasResourcePermission('absence', 'delete') && (
+              {(hasResourcePermission('absence', 'delete') || hasResourcePermission('absence', 'update')) && (
                 <th className='text-center'>Ações</th>
               )}
             </tr>
@@ -88,30 +113,58 @@ const AbsenceTable: React.FC<iAbsenceTableProps> = ({ absenceData, onDataChange 
                 <td>{absence.nome}</td>
                 <td>{absence.turno}</td>
                 <td>{absence.tipo}</td>
+                <td>{formatReturnDate(absence.data_occ)}</td>
+                <td>
+                  {/* Exibir data de retorno somente para tipos relevantes */}
+                  {needsReturnDate(absence.tipo) ? formatReturnDate(absence.data_retorno) : ''}
+                </td>
                 <td>{absence.motivo}</td>
-                {hasResourcePermission('absence', 'delete') && (
+                {(hasResourcePermission('absence', 'delete') ||
+                  hasResourcePermission('absence', 'update')) && (
                   <td className='text-center'>
-                    <Button
-                      variant='link'
-                      className='text-danger p-0'
-                      size='lg'
-                      onClick={() => handleDeleteClick(absence)}
-                    >
-                      <i className='bi bi-trash-fill'></i> {/* Bootstrap icon */}
-                    </Button>
+                    <div className='d-flex justify-content-center gap-2'>
+                      {hasResourcePermission('absence', 'update') && (
+                        <Button
+                          variant='link'
+                          className='text-primary p-0'
+                          size='lg'
+                          onClick={() => handleEditClick(absence)}
+                        >
+                          <i className='bi bi-pencil-square'></i>
+                        </Button>
+                      )}
+                      {hasResourcePermission('absence', 'delete') && (
+                        <Button
+                          variant='link'
+                          className='text-danger p-0'
+                          size='lg'
+                          onClick={() => handleDeleteClick(absence)}
+                        >
+                          <i className='bi bi-trash-fill'></i>
+                        </Button>
+                      )}
+                    </div>
                   </td>
                 )}
               </tr>
             ))}
             {absenceData.length === 0 && (
               <tr>
-                <td colSpan={6} className='text-center py-3 text-muted'>
+                <td
+                  colSpan={
+                    hasResourcePermission('absence', 'delete') || hasResourcePermission('absence', 'update')
+                      ? 8
+                      : 7
+                  }
+                  className='text-center py-3 text-muted'
+                >
                   Nenhum registro encontrado para este turno.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+
         {/* Modal de Confirmação de Exclusão */}
         <Modal show={showConfirmModal} onHide={handleCloseModal} centered>
           <Modal.Header closeButton>
@@ -144,6 +197,7 @@ const AbsenceTable: React.FC<iAbsenceTableProps> = ({ absenceData, onDataChange 
             </Button>
           </Modal.Footer>
         </Modal>
+
         {ToastDisplay && <ToastDisplay />}
       </Card>
     </Card>

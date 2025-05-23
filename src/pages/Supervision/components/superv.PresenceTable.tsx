@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Card, Form, Table } from 'react-bootstrap';
-import { BsCheck2, BsFillPeopleFill, BsPencilFill, BsX } from 'react-icons/bs';
+import { BsCheck2, BsFillPeopleFill, BsX } from 'react-icons/bs';
 
 import { updatePresenceData } from '../../../api/apiRequests';
 import { useToast } from '../../../hooks/useToast';
@@ -136,7 +136,7 @@ const PresenceTable: React.FC<iPresenceTableProps> = ({ presenceData, onDataChan
                       onClick={handleEdit}
                       className='d-flex align-items-center'
                     >
-                      <BsPencilFill className='me-1' />
+                      <i className='me-1 bi bi-pencil-square' />
                     </Button>
                   </div>
                 ) : (

@@ -10,6 +10,9 @@ import { getAbsenceNames } from '../../../api/apiRequests';
 import { TurnosObj } from '../../../helpers/constants';
 import { iAbsenceForm } from '../interface/AbsenceForm.interface';
 
+// Tipos que precisam de data de retorno
+const typesRequiringReturnDate = ['Férias', 'Afastamento'];
+
 // Normalizador de nomes
 // const normalizarNome = (nome: string): string => {
 //   // Remove aspas e espaços extras no início e fim
@@ -69,10 +72,7 @@ const normalizarNomeCompleto = (nome: string): string => {
       if (parte.includes('-')) {
         return parte
           .split('-')
-          .map(
-            (subParte) =>
-              subParte.charAt(0).toUpperCase() + subParte.slice(1).toLowerCase()
-          )
+          .map((subParte) => subParte.charAt(0).toUpperCase() + subParte.slice(1).toLowerCase())
           .join('-');
       }
 
@@ -88,22 +88,8 @@ const normalizarNomeCompleto = (nome: string): string => {
 };
 
 // Tipos de Absenteísmo
-const absenceTypes = [
-  'Falta',
-  'Atraso',
-  'Afastamento',
-  'Saída Antecipada',
-  'Remanejamento',
-];
-const absenceSetores = [
-  'Recheio',
-  'Panificação',
-  'Embalagem',
-  'Pasta',
-  'Forno',
-  'Farofa',
-  'Liderança',
-];
+const absenceTypes = ['Atraso', 'Saída Antecipada', 'Falta', 'Afastamento', 'Férias', 'Remanejamento'];
+const absenceSetores = ['Recheio', 'Panificação', 'Embalagem', 'Pasta', 'Forno', 'Farofa', 'Liderança'];
 
 // Interface de Props
 interface iModalAbsProps {
@@ -113,6 +99,8 @@ interface iModalAbsProps {
   inicialTurno: string;
   inicialType: string;
   onSubmit: (FormData: iAbsenceForm) => void;
+  isEdit?: boolean;
+  absenceData?: Partial<iAbsenceForm & { recno?: number }>;
 }
 
 const AbsenceFormModal: React.FC<iModalAbsProps> = ({
@@ -122,34 +110,73 @@ const AbsenceFormModal: React.FC<iModalAbsProps> = ({
   inicialTurno,
   inicialType,
   onSubmit,
+  isEdit = false,
+  absenceData = {},
 }) => {
   /* ---------------------------------------- ESTADO LOCAL ---------------------------------------- */
   const [formData, setFormData] = useState<iAbsenceForm>({
     data_occ: inicialDate,
     turno: inicialTurno,
     tipo: inicialType,
-    nome: '',
-    motivo: '',
-    setor: 'Recheio',
+    nome: absenceData.nome || '',
+    motivo: absenceData.motivo || '',
+    setor: absenceData.setor || 'Recheio',
+    data_retorno: absenceData.data_retorno || '', // Adicionando o campo de data de retorno
   });
   const [nomesSuggestions, setNomesSuggestions] = useState<string[]>([]);
-  const [showSuggestion, setShowSuggestion] = useState<boolean>(true);
+  const [showSuggestion, setShowSuggestion] = useState<boolean>(!isEdit);
   const [validated, setValidated] = useState<boolean>(false);
 
-  /* ------------------------------------------- EFFECTS ------------------------------------------ */
-  // Valores iniciais conforme card selecionado
-  useEffect(() => {
-    setFormData({
-      ...formData,
-      data_occ: inicialDate,
-      turno: inicialTurno,
-      tipo: inicialType,
-    });
-  }, [inicialDate, inicialTurno, inicialType]);
+  // Estado para controlar se o campo de data de retorno é necessário
+  const [needReturnDate, setNeedReturnDate] = useState<boolean>(
+    typesRequiringReturnDate.includes(inicialType)
+  );
 
+  /* ------------------------------------------- EFFECTS ------------------------------------------ */
+  // Valores iniciais conforme card selecionado ou dados de edição
   useEffect(() => {
-    // Se não for para mostrar sugestões, não fazer nada
-    if (!showSuggestion) return;
+    if (isEdit) {
+      // Se estivermos editando, use os dados fornecidos
+      setFormData({
+        data_occ: absenceData.data_occ || inicialDate,
+        turno: absenceData.turno || inicialTurno,
+        tipo: absenceData.tipo || inicialType,
+        nome: absenceData.nome || '',
+        motivo: absenceData.motivo || '',
+        setor: absenceData.setor || 'Recheio',
+        data_retorno: absenceData.data_retorno || '',
+      });
+    } else {
+      // Se estivermos criando, use os dados iniciais
+      setFormData({
+        data_occ: inicialDate,
+        turno: inicialTurno,
+        tipo: inicialType,
+        nome: '',
+        motivo: '',
+        setor: 'Recheio',
+        data_retorno: '',
+      });
+    }
+
+    // Verifica se o tipo selecionado requer data de retorno
+    setNeedReturnDate(typesRequiringReturnDate.includes(inicialType));
+  }, [inicialDate, inicialTurno, inicialType, isEdit, absenceData, show]);
+
+  // Effect para monitorar mudanças no tipo e atualizar a necessidade de data de retorno
+  useEffect(() => {
+    setNeedReturnDate(typesRequiringReturnDate.includes(formData.tipo));
+
+    // Se mudou para um tipo que não precisa de data de retorno, limpar o campo
+    if (!typesRequiringReturnDate.includes(formData.tipo)) {
+      setFormData((prev) => ({ ...prev, data_retorno: '' }));
+    }
+  }, [formData.tipo]);
+
+  // Effect para sugestões de nome (apenas ao criar, não ao editar)
+  useEffect(() => {
+    // Se estiver editando ou não for para mostrar sugestões, não fazer nada
+    if (isEdit || !showSuggestion) return;
 
     const timeoutId = setTimeout(() => {
       if (formData.nome.length > 2) {
@@ -161,9 +188,7 @@ const AbsenceFormModal: React.FC<iModalAbsProps> = ({
           const uniqueNames = Array.from(
             new Set(nomeNormalizado.map((item: { nome: string }) => item.nome))
           ).map((uniqueName) => {
-            return nomeNormalizado.find(
-              (item: { nome: string }) => item.nome === uniqueName
-            );
+            return nomeNormalizado.find((item: { nome: string }) => item.nome === uniqueName);
           });
           const uniqueNamesArray = uniqueNames.map((item: { nome: string }) => item.nome);
 
@@ -175,27 +200,29 @@ const AbsenceFormModal: React.FC<iModalAbsProps> = ({
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [formData.nome, showSuggestion]);
+  }, [formData.nome, showSuggestion, isEdit]);
 
   /* ------------------------------------------- HANDLES ------------------------------------------ */
 
   // Ajuste da data
-  const selectedDate = formData.data_occ
-    ? parse(formData.data_occ, 'yyyy-MM-dd', new Date())
-    : new Date();
+  const selectedDate = formData.data_occ ? parse(formData.data_occ, 'yyyy-MM-dd', new Date()) : new Date();
 
   // Reset do formulário e estados
   const resetModalState = () => {
-    setFormData({
-      data_occ: inicialDate,
-      turno: inicialTurno,
-      tipo: inicialType,
-      nome: '',
-      motivo: '',
-      setor: 'Recheio',
-    });
-    setShowSuggestion(true);
+    if (!isEdit) {
+      setFormData({
+        data_occ: inicialDate,
+        turno: inicialTurno,
+        tipo: inicialType,
+        nome: '',
+        motivo: '',
+        setor: 'Recheio',
+        data_retorno: '',
+      });
+      setShowSuggestion(true);
+    }
     setNomesSuggestions([]);
+    setNeedReturnDate(typesRequiringReturnDate.includes(inicialType));
   };
 
   // Lidar com mudança de data
@@ -206,23 +233,37 @@ const AbsenceFormModal: React.FC<iModalAbsProps> = ({
     });
   };
 
-  // Lidar com inputs
+  // Função de tratamento de inputs
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
 
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    // Se for o campo de data de retorno, garantir que esteja no formato correto
+    if (name === 'data_retorno') {
+      // Se estiver vazio, use undefined internamente (mas o componente mostra '')
+      setFormData({
+        ...formData,
+        [name]: value.trim() === '' ? undefined : value,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
   // Lidar com Submit
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     const form = e.currentTarget;
+
+    // Se o tipo requer data de retorno, valide se está preenchida
+    if (needReturnDate && !formData.data_retorno) {
+      setValidated(true);
+      return;
+    }
 
     if (!form.checkValidity()) {
       e.stopPropagation();
@@ -230,7 +271,15 @@ const AbsenceFormModal: React.FC<iModalAbsProps> = ({
       return;
     }
 
-    onSubmit(formData);
+    // Prepare os dados para envio
+    const formDataToSubmit = {
+      ...formData,
+      // Se não precisar de data_retorno ou estiver vazia, enviar undefined
+      data_retorno: needReturnDate && formData.data_retorno ? formData.data_retorno : undefined,
+    };
+
+    // Encaminhe os dados para o componente pai
+    onSubmit(formDataToSubmit);
     resetModalState();
     onHide();
   };
@@ -248,7 +297,9 @@ const AbsenceFormModal: React.FC<iModalAbsProps> = ({
   return (
     <Modal show={show} onHide={handleClose} centered size='lg'>
       <Modal.Header closeButton>
-        <Modal.Title>Registro de {inicialType}</Modal.Title>
+        <Modal.Title>
+          {isEdit ? 'Editar' : 'Registro de'} {formData.tipo}
+        </Modal.Title>
       </Modal.Header>
       <Form onSubmit={handleSubmit} validated={validated} noValidate>
         <ModalBody>
@@ -270,12 +321,7 @@ const AbsenceFormModal: React.FC<iModalAbsProps> = ({
             </FormGroup>
             <FormGroup className='mb-3 w-25'>
               <Form.Label>Tipo</Form.Label>
-              <Form.Select
-                name='tipo'
-                value={formData.tipo}
-                onChange={handleInputChange}
-                required
-              >
+              <Form.Select name='tipo' value={formData.tipo} onChange={handleInputChange} required>
                 {absenceTypes.map((type) => (
                   <option key={type} value={type}>
                     {type}
@@ -285,12 +331,7 @@ const AbsenceFormModal: React.FC<iModalAbsProps> = ({
             </FormGroup>
             <FormGroup className='mb-3 w-25'>
               <Form.Label>Setor</Form.Label>
-              <Form.Select
-                name='setor'
-                value={formData.setor}
-                onChange={handleInputChange}
-                required
-              >
+              <Form.Select name='setor' value={formData.setor} onChange={handleInputChange} required>
                 {absenceSetores.map((setor) => (
                   <option key={setor} value={setor}>
                     {setor}
@@ -300,12 +341,7 @@ const AbsenceFormModal: React.FC<iModalAbsProps> = ({
             </FormGroup>
             <FormGroup className='mb-3 w-25'>
               <Form.Label>Turno</Form.Label>
-              <Form.Control
-                as='select'
-                name='turno'
-                value={formData.turno}
-                onChange={handleInputChange}
-              >
+              <Form.Control as='select' name='turno' value={formData.turno} onChange={handleInputChange}>
                 {TurnosObj.map((turno) => (
                   <option key={turno.id + turno.name} value={turno.turno}>
                     {turno.name}
@@ -314,7 +350,32 @@ const AbsenceFormModal: React.FC<iModalAbsProps> = ({
               </Form.Control>
             </FormGroup>
           </Stack>
-          <Stack direction='horizontal' className='p-2'></Stack>
+
+          {/* Campo de data de retorno (mostrado apenas para Férias e Afastamento) */}
+          {needReturnDate && (
+            <FormGroup className='mb-3'>
+              <Form.Label>
+                Data de Retorno <span className='text-danger'>*</span>
+              </Form.Label>
+              <Form.Control
+                type='date'
+                name='data_retorno'
+                value={formData.data_retorno || ''} // Use '' como fallback para null
+                onChange={handleInputChange}
+                min={formData.data_occ} // Não permitir data anterior à data de início
+                required
+                isInvalid={validated && !formData.data_retorno}
+                className='text-center w-25'
+              />
+              <Form.Control.Feedback type='invalid'>
+                A data de retorno é obrigatória para {formData.tipo}.
+              </Form.Control.Feedback>
+              <Form.Text className='text-muted'>
+                A data de retorno deve ser igual ou posterior à data de início.
+              </Form.Text>
+            </FormGroup>
+          )}
+
           <Form.Group className='mb-3'>
             <Form.Label>Nome</Form.Label>
             <div className='position-relative'>
@@ -335,15 +396,12 @@ const AbsenceFormModal: React.FC<iModalAbsProps> = ({
                 }}
                 required
                 isInvalid={validated && !formData.nome}
+                readOnly={isEdit} // Nome não editável durante edição
               />
-              <Form.Control.Feedback type='invalid'>
-                O nome é obrigatório.
-              </Form.Control.Feedback>
-              {nomesSuggestions.length > 0 && (
+              <Form.Control.Feedback type='invalid'>O nome é obrigatório.</Form.Control.Feedback>
+              {!isEdit && nomesSuggestions.length > 0 && (
                 <div className='suggestion-container border rounded mt-1 shadow p-2'>
-                  <div className='small text-muted mb-2'>
-                    Nomes registrados anteriormente:
-                  </div>
+                  <div className='small text-muted mb-2'>Nomes registrados anteriormente:</div>
                   <div className='row g-2'>
                     {nomesSuggestions.slice(0, 9).map((nome) => (
                       <div className='col-md-4' key={nome}>
@@ -371,45 +429,21 @@ const AbsenceFormModal: React.FC<iModalAbsProps> = ({
                 </div>
               )}
             </div>
-            {/* Sugestão com Chips */}
-            {/* {nomesSuggestions.length > 0 && (
-                <div className='suggestions-chips mt-2 pb-1'>
-                  <div className='small text-muted mb-1'>Sugestões:</div>
-                  <div className='d-flex flex-wrap gap-1'>
-                    {nomesSuggestions.slice(0, 20).map((nome) => (
-                      <span
-                        key={nome}
-                        className='badge rounded-pill bg-light text-dark border p-2'
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => {
-                          setShowSuggestion(false);
-                          setFormData({ ...formData, nome });
-                          setNomesSuggestions([]);
-                        }}
-                      >
-                        <i className='bi bi-person-fill me-1'></i>
-                        {nome}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div> */}
           </Form.Group>
           <FormGroup className='mb-3'>
             <Form.Label>Motivo</Form.Label>
             <Form.Control
               as='textarea'
-              placeholder='Motivo'
+              placeholder={
+                needReturnDate ? 'Descreva o motivo (férias programadas, atestado médico, etc.)' : 'Motivo'
+              }
               name='motivo'
               value={formData.motivo}
               onChange={handleInputChange}
               required
               isInvalid={validated && !formData.motivo}
             />
-            <Form.Control.Feedback type='invalid'>
-              O motivo é obrigatório.
-            </Form.Control.Feedback>
+            <Form.Control.Feedback type='invalid'>O motivo é obrigatório.</Form.Control.Feedback>
           </FormGroup>
         </ModalBody>
         <Modal.Footer>
@@ -417,7 +451,7 @@ const AbsenceFormModal: React.FC<iModalAbsProps> = ({
             Cancelar
           </Button>
           <Button variant='primary' type='submit'>
-            Salvar Registro
+            {isEdit ? 'Atualizar' : 'Salvar'} Registro
           </Button>
         </Modal.Footer>
       </Form>
