@@ -150,7 +150,7 @@ export function usePermissions() {
         shop_floor: { minLevel: 0.5 },
         hour_production: { minLevel: 1 },
         live_lines: { minLevel: 0.5 },
-        management: { minLevel: 3 },
+        management: { minLevel: 2 },
         action_plan_management: { minLevel: 3 },
         manusis: {
           minLevel: 1,
