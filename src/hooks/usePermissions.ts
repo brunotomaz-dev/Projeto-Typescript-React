@@ -100,14 +100,11 @@ const userExceptions: Record<string, UserException> = {
       ihm_appointments: ['view', 'update', 'create', 'flag'],
     },
   },
-  // Exemplo: Maria Oliveira tem acesso à página de supervisão e pode gerenciar ausências
-  'Maria Oliveira': {
+  'Bruno Rosa': {
     resources: {
-      absence: ['view', 'create', 'update'],
+      ihm_appointments: ['view', 'update', 'create'],
     },
-    pages: ['supervision'],
   },
-  // Adicione outros usuários com exceções aqui
 };
 
 export function usePermissions() {
