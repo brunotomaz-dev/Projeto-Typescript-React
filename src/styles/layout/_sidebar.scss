@@ -258,6 +258,21 @@ $transition-timing: ease-in-out;
   }
 }
 
+@keyframes pulse-float-sidebar {
+  0% {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    transform: translateY(-2.5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+  100% {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  }
+}
+
 // Botão de toggle
 #toggle-btn {
   float: right;
@@ -265,17 +280,26 @@ $transition-timing: ease-in-out;
   position: fixed;
   color: v.$dark-bootstrap;
   background-color: v.$light-bootstrap;
-  border-radius: 100%;
+  // border-radius: 100%;
+  border-radius: 50%;
   margin-left: $sidebar-width-collapsed + 5px;
   transition: all $transition-speed $transition-timing;
-  margin-top: 5px;
+  top: 10px;
   font-size: 1.5rem;
-  padding: 0.1rem 0.6rem 0.2rem 0.55rem;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
     color: black;
-    padding: 0.1rem 0.55rem 0.15rem 0.55rem;
-    font-size: 1.7rem;
+    padding: 0;
+    width: 50px;
+    height: 50px;
+    font-size: 1.8rem;
+    animation: pulse-float-sidebar 2s infinite;
   }
 }
 

@@ -58,3 +58,26 @@
     }
   }
 }
+
+// Animação para o botão flutuante
+@keyframes pulse-float {
+  0% {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+  100% {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  }
+}
+
+// Estilo para o botão quando visível
+.scroll-top-visible {
+  &:hover {
+    animation: pulse-float 1s infinite;
+  }
+}
