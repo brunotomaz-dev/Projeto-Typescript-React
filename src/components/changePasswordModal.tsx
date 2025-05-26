@@ -9,11 +9,13 @@ interface ChangePasswordModalProps {
 }
 
 const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ show, onHide }) => {
+  /* -------------------------------------------------- Local State ------------------------------------------------- */
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
 
+  /* ---------------------------------------------------- Handle ---------------------------------------------------- */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -34,6 +36,9 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ show, onHide 
     })();
   };
 
+  /* ---------------------------------------------------------------------------------------------------------------- */
+  /*                                                      LAYOUT                                                      */
+  /* ---------------------------------------------------------------------------------------------------------------- */
   return (
     <Modal show={show} onHide={onHide}>
       <Modal.Header closeButton>
@@ -41,43 +46,43 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ show, onHide 
       </Modal.Header>
       <Modal.Body>
         <Form onSubmit={handleSubmit}>
-          {error && <div className="alert alert-danger">{error}</div>}
+          {error && <div className='alert alert-danger'>{error}</div>}
 
-          <Form.Group className="mb-3">
+          <Form.Group className='mb-3'>
             <Form.Label>Senha Atual</Form.Label>
             <Form.Control
-              type="password"
+              type='password'
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
               required
             />
           </Form.Group>
 
-          <Form.Group className="mb-3">
+          <Form.Group className='mb-3'>
             <Form.Label>Nova Senha</Form.Label>
             <Form.Control
-              type="password"
+              type='password'
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
             />
           </Form.Group>
 
-          <Form.Group className="mb-3">
+          <Form.Group className='mb-3'>
             <Form.Label>Confirme a Nova Senha</Form.Label>
             <Form.Control
-              type="password"
+              type='password'
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
             />
           </Form.Group>
 
-          <div className="d-flex justify-content-end gap-2">
-            <Button variant="secondary" onClick={onHide}>
+          <div className='d-flex justify-content-end gap-2'>
+            <Button variant='secondary' onClick={onHide}>
               Cancelar
             </Button>
-            <Button variant="primary" type="submit">
+            <Button variant='primary' type='submit'>
               Alterar Senha
             </Button>
           </div>

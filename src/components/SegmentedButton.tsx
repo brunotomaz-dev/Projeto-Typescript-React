@@ -27,8 +27,10 @@ const SegmentedButton: React.FC<iSegmentedButtonProps> = ({
   small = false,
   id = 'segmented-button',
 }) => {
+  /* ---------------------------------------------------- Use Ref --------------------------------------------------- */
   const isFirstRender = useRef(true);
 
+  /* ---------------------------------------------------- Effect ---------------------------------------------------- */
   useEffect(() => {
     // Adicionar uma pequena demora artificial apenas na primeira renderização
     if (isFirstRender.current) {
@@ -45,6 +47,7 @@ const SegmentedButton: React.FC<iSegmentedButtonProps> = ({
     }
   }, []);
 
+  /* ---------------------------------------------------- Handles --------------------------------------------------- */
   // Estado vazio apenas para forçar re-renderização
   const [_state, setState] = React.useState({});
 

@@ -31,6 +31,7 @@ const SegmentedTurnBtn: React.FC<iSegmentedTurnBtnProps> = ({
     turnOptions.push({ value: 'ALL' as TurnoID, label: 'Total' });
   }
 
+  /* ---------------------------------------------------- Handle ---------------------------------------------------- */
   // Função para lidar com a mudança de turno
   const handleTurnChange = (value: string) => {
     if (onTurnChange) {
@@ -38,6 +39,9 @@ const SegmentedTurnBtn: React.FC<iSegmentedTurnBtnProps> = ({
     }
   };
 
+  /* ---------------------------------------------------------------------------------------------------------------- */
+  /*                                                      LAYOUT                                                      */
+  /* ---------------------------------------------------------------------------------------------------------------- */
   return (
     <SegmentedButton
       options={turnOptions}

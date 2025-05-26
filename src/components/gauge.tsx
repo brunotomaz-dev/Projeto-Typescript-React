@@ -47,7 +47,7 @@ const GaugeChart: React.FC<GaugeProps> = ({
   // Arredondar o valor de data para 2 casas decimais
   data = Math.round(data);
 
-  // Configurações do gauge
+  /* ---------------------------------------------------- Option ---------------------------------------------------- */
   const option = {
     textStyle: {
       fontFamily: 'Poppins',
@@ -135,6 +135,9 @@ const GaugeChart: React.FC<GaugeProps> = ({
     ? { height: '300px', width: '100%' }
     : { height: '200px', width: '100%' };
 
+  /* ---------------------------------------------------------------------------------------------------------------- */
+  /*                                                      LAYOUT                                                      */
+  /* ---------------------------------------------------------------------------------------------------------------- */
   return <ReactECharts option={option} style={size} opts={{ renderer: 'canvas' }} />;
 };
 
