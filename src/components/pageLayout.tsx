@@ -1,4 +1,5 @@
 import React from 'react';
+import ScrollToTop from './ScrollToTop';
 import Sidebar from './sidebar';
 
 interface PageLayoutProps {
@@ -13,6 +14,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({ children }) => {
     <main className='wrapper'>
       <Sidebar />
       <section className='main p-3'>{children}</section>
+      <ScrollToTop />
     </main>
   );
 };
