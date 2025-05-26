@@ -44,12 +44,13 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
   /* ------------------------------------------- EFFECTS ------------------------------------------ */
   useEffect(() => {
     void getActionPlan([dayStartString], status).then((data) => {
+      // Ajustando os dados para incluir dias em aberto
       const adjustedData = data.map((item: iActionPlan) => ({
         ...item,
-        // Passando todos os parâmetros necessários
         dias_aberto: calcularDiasEmAberto(item.data_registro, item.conclusao, item.prazo),
       }));
 
+      // Notificar componente pai sobre mudança nos dados
       onDataChange(adjustedData);
 
       // Aplicar filtro por nível e turno
@@ -71,12 +72,14 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
         return passesLevelCheck && item.turno === shift;
       });
 
+      // Ordenar os dados filtrados
       const sortedData = sortActionPlans(filteredData);
+      // Atualizar o estado com os dados filtrados e ordenados
       setActionPlanFiltered(sortedData);
     });
   }, [dayStartString, shift, userLvl, isSuperUser, status]);
 
-  // Adicionar este useEffect dentro do componente ActionPlanCards
+  // Efeito para verificar prazos PDCA vencidos periodicamente
   useEffect(() => {
     // Verificar planos com prazos PDCA vencidos
     const verificarPrazosPDCA = async () => {

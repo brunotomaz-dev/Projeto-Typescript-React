@@ -15,9 +15,9 @@ const ActionPlanStatusChart: React.FC<ActionPlanStatusChartProps> = ({ actionPla
   const statusCounts = useMemo(() => {
     const counts = {
       [ActionPlanStatus.Aberto]: 0,
+      [ActionPlanStatus.PDCA]: 0,
       [ActionPlanStatus.Concluído]: 0,
       [ActionPlanStatus.Cancelado]: 0,
-      [ActionPlanStatus.PDCA]: 0,
     };
 
     actionPlanData.forEach((plan) => {
@@ -43,7 +43,7 @@ const ActionPlanStatusChart: React.FC<ActionPlanStatusChartProps> = ({ actionPla
     legend: {
       orient: 'vertical',
       left: 'left',
-      data: ['Aberto', 'Concluído', 'Cancelado', 'PDCA'],
+      data: ['Aberto', 'PDCA', 'Concluído', 'Cancelado'],
       textStyle: {
         fontFamily: 'Poppins',
       },
@@ -83,6 +83,11 @@ const ActionPlanStatusChart: React.FC<ActionPlanStatusChartProps> = ({ actionPla
             itemStyle: { color: BSColors.INFO_COLOR },
           },
           {
+            value: statusCounts[ActionPlanStatus.PDCA],
+            name: 'PDCA',
+            itemStyle: { color: BSColors.WARNING_COLOR },
+          },
+          {
             value: statusCounts[ActionPlanStatus.Concluído],
             name: 'Concluído',
             itemStyle: { color: BSColors.SUCCESS_COLOR },
@@ -91,11 +96,6 @@ const ActionPlanStatusChart: React.FC<ActionPlanStatusChartProps> = ({ actionPla
             value: statusCounts[ActionPlanStatus.Cancelado],
             name: 'Cancelado',
             itemStyle: { color: BSColors.DANGER_COLOR },
-          },
-          {
-            value: statusCounts[ActionPlanStatus.PDCA],
-            name: 'PDCA',
-            itemStyle: { color: BSColors.WARNING_COLOR },
           },
         ],
       },
@@ -234,8 +234,7 @@ const ActionPlanStatusChart: React.FC<ActionPlanStatusChartProps> = ({ actionPla
               <strong>Status dos planos:</strong> Este gráfico mostra a distribuição atual dos planos de ação
               por status.
               <br />
-              <span className='fw-bold text-info'>Aberto:</span> Planos ainda em andamento que requerem
-              ação |
+              <span className='fw-bold text-info'>Aberto:</span> Planos ainda em andamento que requerem ação |
               <span className='fw-bold text-warning'> PDCA:</span> Planos que estão em fase de execução |
               <span className='fw-bold text-success'> Concluído:</span> Planos finalizados com sucesso |
               <span className='fw-bold text-danger'> Cancelado:</span> Planos que foram encerrados sem
