@@ -94,11 +94,13 @@ const userExceptions: Record<string, UserException> = {
     resources: {
       ihm_appointments: ['view', 'update', 'create', 'flag'],
     },
+    pages: ['management'],
   },
   'João Batista': {
     resources: {
       ihm_appointments: ['view', 'update', 'create', 'flag'],
     },
+    pages: ['management'],
   },
   'Bruno Rosa': {
     resources: {
