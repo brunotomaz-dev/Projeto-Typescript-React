@@ -3,6 +3,8 @@ import { format, startOfDay } from 'date-fns';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Card, Row } from 'react-bootstrap';
 import { getAbsenceData, getPresenceData } from '../../../api/apiRequests';
+import { Turno } from '../../../helpers/constants';
+import { getShift } from '../../../helpers/turn';
 import { useToast } from '../../../hooks/useToast';
 import { iAbsence, iPresence } from '../../../interfaces/Absence.interface';
 import HomeCardsAbsence from './home.cardsAbsence';
@@ -32,16 +34,27 @@ const HomeAbsence: React.FC = () => {
   /* -------------------------------------------- DATAS ------------------------------------------- */
   const now = new Date();
   const todayFetchString = format(startOfDay(now), 'yyyy-MM-dd');
-
+  const actualShift = getShift();
   /* ---------------------------------------- LOCAL STORAGE --------------------------------------- */
   const [absenceData, setAbsenceData] = useState<iAbsence[]>([]);
   const [presenceData, setPresenceData] = useState<iPresence[]>([]);
 
-  /* ---------------------------------------------------- HOOK's ---------------------------------------------------- */
+  /* ------------------------------------------------- Hook's ------------------------------------------------ */
   // Hook do Toast
   const { showToast, ToastDisplay } = useToast();
 
-  /* ------------------------------------------- FUNÇÕES ------------------------------------------ */
+  /* ------------------------------------------- FUNÇÕES ----------------------------------------- */
+  // Opções de turno
+  const shiftOptions = useMemo(() => {
+    const shifts: Record<Turno, string[]> = {
+      [Turno.NOT]: [Turno.NOT],
+      [Turno.MAT]: [Turno.MAT, Turno.NOT],
+      [Turno.VES]: [Turno.VES, Turno.MAT, Turno.NOT],
+    };
+
+    return shifts[actualShift as keyof typeof shifts];
+  }, [actualShift]);
+
   // Função para carregar dados de ausência
   const loadAbsenceData = async () => {
     Promise.allSettled([getAbsenceData(todayFetchString), getAbsenceData(todayFetchString, true)])
@@ -65,7 +78,10 @@ const HomeAbsence: React.FC = () => {
           return acc;
         }, []);
 
-        setAbsenceData(combinedData);
+        // Filtra os dados de ausência, precisa se de um dos turnos da array de turnos
+        const filteredData = combinedData.filter((absence) => shiftOptions.includes(absence.turno));
+
+        setAbsenceData(filteredData);
       })
       .catch((error) => {
         console.error('Erro ao carregar dados de ausência:', error);
