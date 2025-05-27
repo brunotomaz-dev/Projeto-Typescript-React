@@ -121,19 +121,14 @@ const GaugeChart: React.FC<GaugeProps> = ({
         data: [
           {
             value: data,
-            name:
-              indicator === IndicatorType.EFFICIENCY
-                ? 'EFICIÊNCIA'
-                : indicator.toUpperCase(),
+            name: indicator === IndicatorType.EFFICIENCY ? 'EFICIÊNCIA' : indicator.toUpperCase(),
           },
         ],
       },
     ],
   };
 
-  const size = large
-    ? { height: '300px', width: '100%' }
-    : { height: '200px', width: '100%' };
+  const size = large ? { height: '300px', width: '100%' } : { height: '200px', width: '100%' };
 
   /* ---------------------------------------------------------------------------------------------------------------- */
   /*                                                      LAYOUT                                                      */

@@ -147,6 +147,7 @@ export function usePermissions() {
         PermissionPage,
         {
           minLevel: number;
+          maxLevel?: number;
           requiredSectors?: string[];
           customCheck?: (userFunctionalLevel: number, sectorGroups: string[]) => boolean;
         }
@@ -190,6 +191,9 @@ export function usePermissions() {
 
       // Verificar nível funcional
       if (userFunctionalLevel < requirements.minLevel) return false;
+
+      // Verificar nível funcional máximo (se definido)
+      if (requirements.maxLevel && userFunctionalLevel > requirements.maxLevel) return false;
 
       // Verificar setores necessários (se definidos)
       if (

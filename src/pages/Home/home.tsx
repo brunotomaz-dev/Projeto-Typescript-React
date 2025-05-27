@@ -73,9 +73,9 @@ const Home: React.FC = () => {
       <section className='container-fluid'>
         <Row className='row'>
           <Col className='col-7 p-1'>
-            <Card className='bg-transparent shadow border-0 p-2 pb-4'>
+            <Card className='bg-transparent shadow border-0 p-2 pb-4 h-100'>
               <h4 className='card-title text-center p-2'>Indicadores de eficiência</h4>
-              <div className='d-flex flex-row justify-content-center align-items-center'>
+              <div className='d-flex flex-row justify-content-center align-items-center h-100'>
                 <GaugeChart
                   indicator={IndicatorType.EFFICIENCY}
                   data={eficienciaMedia * 100}

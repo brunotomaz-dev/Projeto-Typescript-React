@@ -1,5 +1,5 @@
 // cSpell: words superv recno usuario presencas lideranca panificacao saida autohide
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Col, Row, Stack } from 'react-bootstrap';
 import { createAbsenceData, createPresenceData, updateAbsenceData } from '../../../api/apiRequests';
 import { useToast } from '../../../hooks/useToast';
@@ -55,17 +55,6 @@ const SupervAbsence: React.FC<iAbsenceProps> = ({
   const userName = useAppSelector((state) => state.user.fullName);
 
   /* ----------------------------------------- LOCAL STATE ---------------------------------------- */
-  // Estado único para todos os contadores
-  const [counters, setCounters] = useState<AbsenceCounters>({
-    faltas: 0,
-    atrasos: 0,
-    afastamentos: 0,
-    saidaAntecipada: 0,
-    remanejados: 0,
-    ferias: 0, // Adicionando o contador de férias
-    presencas: 0,
-  });
-
   const [showModal, setShowModal] = useState<boolean>(false);
   const [showPresenceModal, setShowPresenceModal] = useState<boolean>(false);
   const [modalType, setModalType] = useState<string>('');
@@ -75,9 +64,8 @@ const SupervAbsence: React.FC<iAbsenceProps> = ({
 
   /* ------------------------------------------- EFFECTS ------------------------------------------ */
   // Contagem de faltas, atrasos, presenças, afastamentos, saídas antecipadas, remanejados e férias
-  useEffect(() => {
-    // Calcula contagens de cada tipo de ausência
-    const newCounters = {
+  const countersMemo = useMemo<AbsenceCounters>(() => {
+    const result = {
       faltas: absenceData.filter((absence) => absence.tipo === AbsenceTypes.FALTA).length,
       atrasos: absenceData.filter((absence) => absence.tipo === AbsenceTypes.ATRASO).length,
       afastamentos: absenceData.filter((absence) => absence.tipo === AbsenceTypes.AFASTAMENTO).length,
@@ -89,25 +77,22 @@ const SupervAbsence: React.FC<iAbsenceProps> = ({
 
     // Calcula o total de presenças se houver dados
     if (presenceData.length > 0) {
-      const presencasCount =
+      result.presencas =
         presenceData[0].embalagem +
         presenceData[0].forno +
         presenceData[0].lideranca +
         presenceData[0].panificacao +
         presenceData[0].pasta +
         presenceData[0].recheio;
-
-      newCounters.presencas = presencasCount;
     }
 
-    // Atualiza o estado com todas as contagens de uma vez
-    setCounters(newCounters);
+    return result;
   }, [absenceData, presenceData]);
 
   useEffect(() => {
     // Notifica o componente pai sobre a mudança no número de presenças
-    onPresenceChange(counters.presencas);
-  }, [counters.presencas, onPresenceChange]);
+    onPresenceChange(countersMemo.presencas);
+  }, [countersMemo.presencas, onPresenceChange]);
 
   /* ------------------------------------------- HANDLES ------------------------------------------ */
   // Abertura do modal para criação
@@ -193,35 +178,39 @@ const SupervAbsence: React.FC<iAbsenceProps> = ({
       <Stack direction='horizontal' className='mb-3'>
         <SuperCardsAbsence
           title='Atrasos'
-          value={counters.atrasos}
+          value={countersMemo.atrasos}
           onClick={() => handleModalOpen(AbsenceTypes.ATRASO)}
         />
         <SuperCardsAbsence
           title='Saída Antecipada'
-          value={counters.saidaAntecipada}
+          value={countersMemo.saidaAntecipada}
           onClick={() => handleModalOpen(AbsenceTypes.SAIDA_ANTECIPADA)}
         />
         <SuperCardsAbsence
           title='Faltas'
-          value={counters.faltas}
+          value={countersMemo.faltas}
           onClick={() => handleModalOpen(AbsenceTypes.FALTA)}
         />
         <SuperCardsAbsence
           title='Afastamentos'
-          value={counters.afastamentos}
+          value={countersMemo.afastamentos}
           onClick={() => handleModalOpen(AbsenceTypes.AFASTAMENTO)}
         />
         <SuperCardsAbsence
           title='Férias'
-          value={counters.ferias}
+          value={countersMemo.ferias}
           onClick={() => handleModalOpen(AbsenceTypes.FERIAS)}
         />
         <SuperCardsAbsence
           title='Remanejados'
-          value={counters.remanejados}
+          value={countersMemo.remanejados}
           onClick={() => handleModalOpen(AbsenceTypes.REMANEJAMENTO)}
         />
-        <SuperCardsAbsence title='Presenças' value={counters.presencas} onClick={handlePresenceModalOpen} />
+        <SuperCardsAbsence
+          title='Presenças'
+          value={countersMemo.presencas}
+          onClick={handlePresenceModalOpen}
+        />
       </Stack>
 
       <AbsenceFormModal
