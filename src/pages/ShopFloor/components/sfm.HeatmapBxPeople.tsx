@@ -1,11 +1,12 @@
-import { format } from 'date-fns';
+import { format, subMonths } from 'date-fns';
 import EChartsReact from 'echarts-for-react';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Card } from 'react-bootstrap';
+import { Card, Col, Row } from 'react-bootstrap';
 import { getPresenceData, getProduction } from '../../../api/apiRequests';
 import { ColorsSTM } from '../../../helpers/constants';
 import { iPresence } from '../../../interfaces/Absence.interface';
 import { iProduction } from '../../ProductionLive/interfaces/production.interface';
+import Gauge from './sfm.gaugeBoxes';
 
 interface iPresenceTotal {
   data_registro: string;
@@ -26,6 +27,12 @@ interface iHeatmapBxPeople {
 }
 
 const HeatmapBxPeople: React.FC = () => {
+  /* ------------------------------------------------- States ------------------------------------------------- */
+  const [presenceTotal, setPresenceTotal] = useState<iPresenceTotal[]>([]);
+  const [productionTotal, setProductionTotal] = useState<iProductionTotal[]>([]);
+  const [currentMonthAverage, setCurrentMonthAverage] = useState<number>(0);
+  const [lastMonthAverage, setLastMonthAverage] = useState<number>(0);
+
   /* ------------------------------------------------- Datas Do Mês ------------------------------------------------- */
   // Hoje
   const now = new Date();
@@ -33,13 +40,15 @@ const HeatmapBxPeople: React.FC = () => {
   const firstDateOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   // Último dia do mês atual
   const lastDateOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  // Primeiro dia do mês anterior
+  const firstDateOfLastMonth = new Date(subMonths(firstDateOfCurrentMonth, 1));
+  // Último dia do mês anterior
+  const lastDateOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
   // Ajustar para o formato yyyy-mm-dd
   const currentMonthBeginningDateString = format(firstDateOfCurrentMonth, 'yyyy-MM-dd');
   const currentMonthFinalDateString = format(lastDateOfCurrentMonth, 'yyyy-MM-dd');
-
-  /* -------------------------------------------------- Local State ------------------------------------------------- */
-  const [presenceTotal, setPresenceTotal] = useState<iPresenceTotal[]>([]);
-  const [productionTotal, setProductionTotal] = useState<iProductionTotal[]>([]);
+  const lastMonthBeginningDateString = format(firstDateOfLastMonth, 'yyyy-MM-dd');
+  const lastMonthFinalDateString = format(lastDateOfLastMonth, 'yyyy-MM-dd');
 
   /* ---------------------------------------------- Funções Auxiliares ---------------------------------------------- */
   // Mapa dos turnos para ordenação
@@ -48,6 +57,45 @@ const HeatmapBxPeople: React.FC = () => {
     NOT: 1,
     MAT: 2,
     VES: 3,
+  };
+
+  // Função para calcular a média de caixas por pessoa
+  const calculateAverage = (production: iProductionTotal[], presence: iPresenceTotal[]): number => {
+    if (!production.length || !presence.length) return 0;
+
+    // Mapeia os dados de produção em um objeto para acesso rápido
+    const productionMap: Record<string, number> = {};
+    production.forEach((item) => {
+      const key = `${item.data_registro}-${item.turno}`;
+      productionMap[key] = item.total_produzido;
+    });
+
+    // Mapeia os dados de presença em um objeto para acesso rápido
+    const presenceMap: Record<string, number> = {};
+    presence.forEach((item) => {
+      const key = `${item.data_registro}-${item.turno}`;
+      presenceMap[key] = item.quantidade;
+    });
+
+    // Calcula a média de caixas por pessoa
+    let totalBoxes = 0;
+    let totalPersons = 0;
+
+    // Para cada presença, verifica se há produção correspondente
+    presence.forEach((item) => {
+      const key = `${item.data_registro}-${item.turno}`;
+      const productionValue = productionMap[key] || 0;
+      const presenceValue = item.quantidade;
+
+      // Só considera se houver produção e presença
+      if (productionValue > 0 && presenceValue > 0) {
+        totalBoxes += productionValue / 10; // Converte para caixas
+        totalPersons += presenceValue;
+      }
+    });
+
+    // Retorna a média ou 0 se não houver dados
+    return totalPersons > 0 ? Math.round(totalBoxes / totalPersons) : 0;
   };
 
   // Ordena os dados de presença
@@ -155,7 +203,6 @@ const HeatmapBxPeople: React.FC = () => {
     );
 
     // Mapeia os dados de produção
-    // ({data_registro: '25', turno: 'MAT', total_produzido: 100} para {'25-MAT': 100})
     const productionMap: Record<string, number> = {};
     productionTotal.forEach((item) => {
       const key = `${item.data_registro}-${item.turno}`;
@@ -163,14 +210,13 @@ const HeatmapBxPeople: React.FC = () => {
     });
 
     // Mapeia os dados de presença
-    // ({data_registro: '25', turno: 'MAT', quantidade: 100} para {'25-MAT': 100})
     const presenceMap: Record<string, number> = {};
     presenceTotal.forEach((item) => {
       const key = `${item.data_registro}-${item.turno}`;
       presenceMap[key] = item.quantidade;
     });
 
-    // Arrey para os valores
+    // Array para os valores
     const values: (number | '-')[] = [];
 
     // Combinação de data e turno
@@ -204,46 +250,58 @@ const HeatmapBxPeople: React.FC = () => {
       y: shifts,
       z: values,
     };
-  }, [presenceTotal, productionTotal, now]);
+  }, [presenceTotal, productionTotal, lastDateOfCurrentMonth]);
 
-  /* ----------------------------------------------------- Fetch ---------------------------------------------------- */
-  const fetchData = async () => {
+  /* ---------------------------------------------------- Effect ---------------------------------------------------- */
+  // Requisita os dados de presença e produção do mês atual
+  useEffect(() => {
     Promise.all([
-      // Requisção de presença
+      // Requisição de presença
       getPresenceData([currentMonthBeginningDateString, currentMonthFinalDateString]),
-      // Requisção de produção
+      // Requisição de produção
       getProduction([currentMonthBeginningDateString, currentMonthFinalDateString]),
     ])
       .then(([presenceData, productionData]) => {
-        setPresenceTotal(sumPresence(orderPresence(presenceData)));
-        setProductionTotal(sumProduction(productionData));
+        const processedPresence = sumPresence(orderPresence(presenceData));
+        const processedProduction = sumProduction(productionData);
+
+        setPresenceTotal(processedPresence);
+        setProductionTotal(processedProduction);
+
+        // Calcular a média do mês atual
+        const average = calculateAverage(processedProduction, processedPresence);
+        setCurrentMonthAverage(average);
       })
       .catch((error) => {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching current month data:', error);
       });
-  };
+  }, [currentMonthBeginningDateString, currentMonthFinalDateString]);
 
-  /* ---------------------------------------------------- Effect ---------------------------------------------------- */
-  // Requisita os dados de presença e produção
+  // Requisita os dados de presença e produção do mês anterior
   useEffect(() => {
-    fetchData();
-  }, []);
+    Promise.all([
+      // Requisição de presença
+      getPresenceData([lastMonthBeginningDateString, lastMonthFinalDateString]),
+      // Requisição de produção
+      getProduction([lastMonthBeginningDateString, lastMonthFinalDateString]),
+    ])
+      .then(([presenceData, productionData]) => {
+        const processedPresence = sumPresence(orderPresence(presenceData));
+        const processedProduction = sumProduction(productionData);
 
-  /* ---------------------------------------------------------------------------------------------------------------- */
-  /*                                                   CHART-OPTION                                                   */
-  /* ---------------------------------------------------------------------------------------------------------------- */
-  const option = {
+        // Calcular a média do mês anterior
+        const average = calculateAverage(processedProduction, processedPresence);
+        setLastMonthAverage(average);
+      })
+      .catch((error) => {
+        console.error('Error fetching last month data:', error);
+      });
+  }, [lastMonthBeginningDateString, lastMonthFinalDateString]);
+
+  // Opção para o Heatmap
+  const heatmapOption = {
     textStyle: {
       fontFamily: 'Poppins',
-    },
-    title: {
-      text: 'Produção de Caixas por Pessoa - 50 cxs',
-      left: 'center',
-      top: '0%',
-      textStyle: {
-        fontSize: 24,
-        // fontWeight: 'bold',
-      },
     },
     tooltip: {
       position: 'top',
@@ -252,10 +310,10 @@ const HeatmapBxPeople: React.FC = () => {
       },
     },
     grid: {
-      height: '60%',
-      top: '15%',
+      y: '5%',
       left: '5%',
       right: '5%',
+      height: '70%',
     },
     xAxis: {
       type: 'category',
@@ -279,7 +337,6 @@ const HeatmapBxPeople: React.FC = () => {
       left: 'center',
       bottom: '0%',
       text: ['Alta Produtividade', 'Baixa Produtividade'],
-      // Escala de cores de vermelho para verde
       inRange: {
         color: [
           ColorsSTM.RED,
@@ -326,9 +383,29 @@ const HeatmapBxPeople: React.FC = () => {
   /*                                                      LAYOUT                                                      */
   /* ---------------------------------------------------------------------------------------------------------------- */
   return (
-    <Card className='shadow border-0 mb-3 bg-transparent align-items-center py-3'>
-      <EChartsReact option={option} style={{ height: '350px', width: '98%' }} />
-    </Card>
+    <>
+      {/* Layout que combina o heatmap com os gauges */}
+      <Row>
+        {/* Coluna para o gauge do mês anterior */}
+        <Col md={2} className='text-center'>
+          <p className='text-center mb-2'>Mês Anterior</p>
+          <Gauge data={lastMonthAverage} />
+        </Col>
+
+        {/* Coluna para o heatmap central */}
+        <Col md={8} className='mb-2'>
+          <Card className='border-0 bg-transparent'>
+            <EChartsReact option={heatmapOption} style={{ height: '350px', width: '100%' }} />
+          </Card>
+        </Col>
+
+        {/* Coluna para o gauge do mês atual */}
+        <Col md={2} className='text-center'>
+          <p className='text-center mb-2'>Mês Atual</p>
+          <Gauge data={currentMonthAverage} />
+        </Col>
+      </Row>
+    </>
   );
 };
 

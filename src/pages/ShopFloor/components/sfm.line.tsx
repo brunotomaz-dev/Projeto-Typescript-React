@@ -25,9 +25,11 @@ const LineSFM: React.FC<iLineProps> = ({ indicator }) => {
   /* -------------------------------------------- Requisição API -------------------------------------------- */
   useEffect(() => {
     const indicatorDB = indicator === IndicatorType.REPAIR ? 'repair' : indicator;
-    void getIndicator(indicatorDB, [firstDayString], ['data_registro', `${indicator}`]).then((data: iLineData[]) => {
-      setDBData(data);
-    });
+    void getIndicator(indicatorDB, [firstDayString], ['data_registro', `${indicator}`]).then(
+      (data: iLineData[]) => {
+        setDBData(data);
+      }
+    );
   }, [firstDayString, indicator]);
 
   /* ------------------------------------------- Ajuste dos dados ------------------------------------------- */
@@ -51,7 +53,9 @@ const LineSFM: React.FC<iLineProps> = ({ indicator }) => {
     return Object.entries(grouped)
       .map(([date, items]) => ({
         data_registro: date.split('-')[2],
-        [indicator]: Math.round((items.reduce((sum, item) => sum + Number(item[indicator]), 0) / items.length) * 100),
+        [indicator]: Math.round(
+          (items.reduce((sum, item) => sum + Number(item[indicator]), 0) / items.length) * 100
+        ),
       }))
       .sort((a, b) => new Date(a.data_registro).getTime() - new Date(b.data_registro).getTime());
   }, [DBData, indicator]);
@@ -61,7 +65,8 @@ const LineSFM: React.FC<iLineProps> = ({ indicator }) => {
     const allDates = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
     const allDatesArray = Array.from({ length: allDates }, (_, i) => String(i + 1).padStart(2, '0'));
     return allDatesArray.map(
-      (date) => processData.find((item) => item.data_registro === date) || { data_registro: date, [indicator]: 0 }
+      (date) =>
+        processData.find((item) => item.data_registro === date) || { data_registro: date, [indicator]: 0 }
     );
   }, [processData, indicator]);
 
@@ -105,7 +110,9 @@ const LineSFM: React.FC<iLineProps> = ({ indicator }) => {
       axisPointer: { type: 'cross' },
     },
     grid: {
-      x: '5%',
+      // x: '5%',
+      left: '5%',
+      right: '5%',
       y: '10%',
       height: '80%',
     },

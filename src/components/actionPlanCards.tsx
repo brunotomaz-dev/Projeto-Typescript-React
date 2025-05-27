@@ -1,14 +1,15 @@
 // #cSpell: words descricao contencao solucao responsavel pontuacao superv
 
 import { differenceInDays, format, parseISO, startOfDay } from 'date-fns';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Button, Card, Col, Modal } from 'react-bootstrap';
 import { deleteActionPlan, getActionPlan, updateActionPlan } from '../api/apiRequests';
 import { ActionPlanStatus, getTurnoName, Turno, TurnoID } from '../helpers/constants';
 import { usePermissions } from '../hooks/usePermissions';
-import { usePinnedCards } from '../hooks/usePinnedCards';
 import { useToast } from '../hooks/useToast';
 import { iActionPlan, iActionPlanCards } from '../interfaces/ActionPlan.interface';
+import { togglePin } from '../redux/store/features/pinsSlice';
+import { useAppDispatch, useAppSelector } from '../redux/store/hooks';
 import ActionPlanFormModal from './actionPlanFormModal';
 
 interface iActionPlanTableProps {
@@ -26,7 +27,6 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
     isSuperUser,
   } = usePermissions(); // Adicionando isSuperUser
   const { ToastDisplay, showToast } = useToast();
-  const { isPinned, togglePin, pinnedCards } = usePinnedCards();
 
   /* ----------------------------------------- LOCAL STATE ---------------------------------------- */
   const [actionPlanFiltered, setActionPlanFiltered] = useState<iActionPlanCards[]>([]);
@@ -35,6 +35,11 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+
+  /* ------------------------------------------------- Redux ------------------------------------------------- */
+  const dispatch = useAppDispatch();
+  // Em vez de usar o hook usePinnedCards
+  const { pinnedCards } = useAppSelector((state) => state.pins);
 
   /* -------------------------------------------- DATAS ------------------------------------------- */
   const today = new Date();
@@ -81,8 +86,13 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
 
   // Efeito para verificar prazos PDCA vencidos periodicamente
   useEffect(() => {
+    // Cria uma flag para evitar chamadas recursivas
+    let isUpdatingPlans = false;
+
     // Verificar planos com prazos PDCA vencidos
     const verificarPrazosPDCA = async () => {
+      if (isUpdatingPlans) return;
+
       const hoje = startOfDay(new Date());
 
       // Filtrar planos em PDCA com prazo vencido
@@ -95,47 +105,44 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
 
       // Se encontrou planos vencidos, atualizá-los
       if (planosPDCAVencidos.length > 0) {
-        // Atualizar cada plano vencido
-        for (const plan of planosPDCAVencidos) {
-          try {
-            // Preparar dados atualizados - garantindo que data_registro seja uma string
-            const planUpdated = {
-              ...plan,
-              conclusao: 0, // Muda para Aberto
-              data_registro: plan.prazo || new Date().toISOString(), // Nova data = prazo antigo ou data atual se for nulo
-              prazo: null, // Remove o prazo
-            };
+        isUpdatingPlans = true;
 
-            // Chamar API para atualizar o plano
-            await updateActionPlan(planUpdated as iActionPlan);
+        try {
+          // Atualizar cada plano vencido
+          for (const plan of planosPDCAVencidos) {
+            try {
+              // Preparar dados atualizados
+              const planUpdated = {
+                ...plan,
+                conclusao: 0, // Muda para Aberto
+                data_registro: plan.prazo || new Date().toISOString(),
+                prazo: null, // Remove o prazo
+              };
 
-            // Mostrar notificação para o usuário
-            showToast(`Plano #${plan.recno} saiu de PDCA por prazo vencido`, 'warning');
-          } catch (error) {
-            console.error('Erro ao atualizar plano PDCA vencido:', error);
-            showToast(`Erro ao atualizar plano PDCA #${plan.recno}`, 'danger');
+              await updateActionPlan(planUpdated as iActionPlan);
+              showToast(`Plano #${plan.recno} saiu de PDCA por prazo vencido`, 'warning');
+            } catch (error) {
+              console.error('Erro ao atualizar plano PDCA vencido:', error);
+              showToast(`Erro ao atualizar plano PDCA #${plan.recno}`, 'danger');
+            }
           }
-        }
 
-        // Recarregar os dados para refletir as mudanças
-        void loadActionPlanData();
+          // Recarregar os dados para refletir as mudanças
+          await loadActionPlanData();
+        } finally {
+          isUpdatingPlans = false;
+        }
       }
     };
 
-    // Executar a verificação
+    // Executar a verificação ao montar
     void verificarPrazosPDCA();
 
     // Configurar intervalo para verificar periodicamente
-    const intervalId = setInterval(
-      () => {
-        void verificarPrazosPDCA();
-      },
-      60 * 60 * 1000
-    ); // Verificar a cada 1 hora
+    const intervalId = setInterval(verificarPrazosPDCA, 60 * 60 * 1000); // A cada hora
 
-    // Limpar intervalo ao desmontar
     return () => clearInterval(intervalId);
-  }, []);
+  }, [actionPlanFiltered]);
 
   // Função para carregar dados dos planos de ação
   const loadActionPlanData = async () => {
@@ -265,6 +272,9 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
     return diasAberto >= Math.max(1, diasParaVermelho - 2) && diasAberto < diasParaVermelho;
   };
 
+  // Função para verificar se um cartão está pinado
+  const isPinned = useCallback((recno: number) => pinnedCards.includes(recno), [pinnedCards]);
+
   /* ------------------------------------------- HANDLES ------------------------------------------ */
   // Handler para clique no botão de edição
   const handleEditClick = (actionPlan: iActionPlanCards) => {
@@ -330,11 +340,31 @@ const ActionPlanCards: React.FC<iActionPlanTableProps> = ({ status, shift, onDat
     setShowCreateModal(false);
   };
 
-  const handleTogglePin = (recno: number) => {
+  // Função para pinar/despinar um cartão
+  const handleTogglePin = (recno: number, e?: React.MouseEvent) => {
+    // Evitar duplas chamadas
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    // Verificar se já atingiu o limite máximo de pins
     if (pinnedCards.length >= 3 && !isPinned(recno)) {
       return showToast('Você já fixou o máximo de 3 cartões.', 'warning');
     }
-    togglePin(recno);
+
+    // Registrar o estado atual para feedback
+    const wasPinned = isPinned(recno);
+
+    // Despachar a ação para o Redux
+    dispatch(togglePin(recno));
+
+    // Mostrar feedback ao usuário
+    if (wasPinned) {
+      showToast('Cartão removido dos fixados', 'info');
+    } else {
+      showToast('Cartão fixado com sucesso', 'success');
+    }
   };
 
   // Ajustando as variantes dos botões para incluir o caso PDCA
