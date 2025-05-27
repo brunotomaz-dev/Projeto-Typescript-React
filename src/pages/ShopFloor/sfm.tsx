@@ -7,6 +7,8 @@ import { IndicatorType, RecheioMeta } from '../../helpers/constants';
 import Heatmap from './components/sfm.heatmap';
 import HeatmapBxPeople from './components/sfm.HeatmapBxPeople';
 import LineSFM from './components/sfm.line';
+import PinnedActionPlans from './components/sfm.PinnedActionPlan';
+import TodayActionPlans from './components/sfm.TodayActionPlans';
 
 interface iEff {
   data_registro: string;
@@ -135,10 +137,10 @@ const ShopFloor: React.FC = () => {
             </Card>
           </Col>
           <Col className='col-8'>
-            <Card className='bg-transparent border-0 p-3 mb-2'>
+            <Card className='bg-transparent border-0 p-0 mb-2'>
               <Heatmap indicator={IndicatorType.EFFICIENCY} />
             </Card>
-            <Card className='bg-transparent border-0 p-3 mb-2'>
+            <Card className='bg-transparent border-0 p-0 mb-2'>
               <LineSFM indicator={IndicatorType.EFFICIENCY} />
             </Card>
           </Col>
@@ -160,10 +162,10 @@ const ShopFloor: React.FC = () => {
             </Card>
           </Col>
           <Col className='col-8'>
-            <Card className='bg-transparent border-0 p-3 mb-2'>
+            <Card className='bg-transparent border-0 p-0 mb-2'>
               <Heatmap indicator={IndicatorType.PERFORMANCE} />
             </Card>
-            <Card className='bg-transparent border-0 p-3 mb-2'>
+            <Card className='bg-transparent border-0 p-0 mb-2'>
               <LineSFM indicator={IndicatorType.PERFORMANCE} />
             </Card>
           </Col>
@@ -185,10 +187,10 @@ const ShopFloor: React.FC = () => {
             </Card>
           </Col>
           <Col className='col-8'>
-            <Card className='bg-transparent border-0 p-3 mb-2'>
+            <Card className='bg-transparent border-0 p-0 mb-2'>
               <Heatmap indicator={IndicatorType.REPAIR} />
             </Card>
-            <Card className='bg-transparent border-0 p-3 mb-2'>
+            <Card className='bg-transparent border-0 p-0 mb-2'>
               <LineSFM indicator={IndicatorType.REPAIR} />
             </Card>
           </Col>
@@ -200,7 +202,16 @@ const ShopFloor: React.FC = () => {
           </Col>
         </Row>
       </Card>
-      <HeatmapBxPeople />
+      <Card className='shadow bg-transparent border-0 p-3 mb-2'>
+        <Row>
+          <h3 className='text-center'>Produção de Caixas por Pessoa - 50 cxs</h3>
+          
+            <HeatmapBxPeople />
+          
+        </Row>
+      </Card>
+      <TodayActionPlans />
+      <PinnedActionPlans />
     </>
   );
 };

@@ -140,7 +140,9 @@ const Heatmap: React.FC<iHeatmapProps> = ({ indicator }) => {
       },
       grid: {
         height: showByLine ? '83%' : '70%',
-        x: '5%',
+        // x: '5%',
+        left: '5%',
+        right: '5%',
         y: '10%',
       },
       xAxis: {

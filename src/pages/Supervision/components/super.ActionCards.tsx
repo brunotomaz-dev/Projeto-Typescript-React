@@ -1,12 +1,13 @@
 import { differenceInDays, format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { Badge, Button, Card, Row } from 'react-bootstrap';
 import { getTurnoName } from '../../../helpers/constants';
 import { usePermissions } from '../../../hooks/usePermissions';
-import { usePinnedCards } from '../../../hooks/usePinnedCards';
 import { useToast } from '../../../hooks/useToast';
 import { iActionPlanCards } from '../../../interfaces/ActionPlan.interface';
+import { cleanupPins, togglePin } from '../../../redux/store/features/pinsSlice';
+import { useAppDispatch, useAppSelector } from '../../../redux/store/hooks';
 
 //cSpell: words nivel exibicao superv responsavel solucao
 
@@ -21,20 +22,33 @@ interface iSupervActionCardsProps {
 const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }) => {
   /* -------------------------------------------- HOOK -------------------------------------------- */
   const { ToastDisplay, showToast } = useToast();
-  const { hasElementAccess, userFunctionalLevel } = usePermissions(); // Adicionar userFunctionalLevel aqui
+  const { hasElementAccess, userFunctionalLevel } = usePermissions();
 
-  // Extrair recnos válidos dos dados atuais (apenas se os dados não estiver vazios)
-  const validRecnos = useMemo(
-    () => (actionPlanData.length > 0 ? actionPlanData.map((action) => action.recno) : []),
-    [actionPlanData]
-  );
+  /* ------------------------------------------------- Redux ------------------------------------------------- */
+  const dispatch = useAppDispatch();
 
-  // Passar opção de limpeza para o hook
-  const { isPinned, pinnedCards, togglePin } = usePinnedCards(3, 'supervActionPinnedCards', {
-    // Só habilitar limpeza se tivermos dados válidos
-    enabled: validRecnos.length > 0,
-    validRecnos,
-  });
+  // Similar ao ActionPlanCards, mas sem precisar replicar a lógica
+  const pinnedCards = useAppSelector((state) => state.pins.pinnedCards);
+
+  // Verificar se está pinado
+  const isPinned = useCallback((recno: number) => pinnedCards.includes(recno), [pinnedCards]);
+
+  // Função para pinar/despinar
+  const handleTogglePin = (recno: number) => {
+    if (pinnedCards.length >= 3 && !isPinned(recno)) {
+      return showToast('Você já fixou o máximo de 3 cartões.', 'warning');
+    }
+
+    dispatch(togglePin(recno));
+  };
+
+  // Adicionar limpeza ao carregar novos dados
+  useEffect(() => {
+    if (actionPlanData.length > 0) {
+      const validRecnos = actionPlanData.map((action) => action.recno);
+      dispatch(cleanupPins(validRecnos));
+    }
+  }, [actionPlanData, dispatch]);
 
   /* ------------------------------------------- Funções ------------------------------------------ */
   // Determina automaticamente se devemos mostrar apenas os pinados ou todos
@@ -76,15 +90,6 @@ const SupervActionCards: React.FC<iSupervActionCardsProps> = ({ actionPlanData }
       return b.dias_aberto - a.dias_aberto;
     });
   }, [actionPlanData, pinnedCards, showOnlyPinned]);
-
-  /* ------------------------------------------- Handles ------------------------------------------ */
-  const handleTogglePin = (recno: number) => {
-    if (pinnedCards.length >= 3 && !isPinned(recno)) {
-      return showToast('Você já fixou o máximo de 3 cartões.', 'warning');
-    }
-
-    togglePin(recno);
-  };
 
   /* ---------------------------------------------------------------------------------------------- */
   /*                                             LAYOUT                                             */
