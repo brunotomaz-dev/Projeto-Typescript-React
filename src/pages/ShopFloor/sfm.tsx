@@ -5,6 +5,7 @@ import { getIndicator } from '../../api/apiRequests';
 import GaugeChart from '../../components/gauge';
 import { IndicatorType, RecheioMeta } from '../../helpers/constants';
 import Heatmap from './components/sfm.heatmap';
+import HeatmapBxPeople from './components/sfm.HeatmapBxPeople';
 import LineSFM from './components/sfm.line';
 
 interface iEff {
@@ -199,7 +200,7 @@ const ShopFloor: React.FC = () => {
           </Col>
         </Row>
       </Card>
-      {/* <HeatmapBxPeople /> */}
+      <HeatmapBxPeople />
     </>
   );
 };
