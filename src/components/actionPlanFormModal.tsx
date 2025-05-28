@@ -3,7 +3,7 @@
 import { format, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
 import React, { useEffect, useState } from 'react';
-import { Button, Col, Form, Modal, Row, Stack } from 'react-bootstrap';
+import { Button, Col, FloatingLabel, Form, Modal, Row, Stack } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 import { createActionPlan, updateActionPlan } from '../api/apiRequests';
 import { TurnoID } from '../helpers/constants';
@@ -29,7 +29,8 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
   const userLevel = useAppSelector((state) => state.user.functionalLevel);
 
   /* ------------------------------------------ CONSTANTS ----------------------------------------- */
-  const MAX_DESCRIPTION_LENGTH = 256;
+  const MAX_DESCRIPTION_LENGTH = 512;
+  const MAX_LENGTH = 256;
 
   /* ----------------------------------------- LOCAL STATE ---------------------------------------- */
   const [validated, setValidated] = useState(false);
@@ -375,36 +376,30 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
           )}
           <Form.Group className='mb-3'>
             <Form.Label>Descrição</Form.Label>
-            <Form.Control
-              as='textarea'
-              rows={4}
-              name='descricao'
-              value={formData.descricao || ''}
-              maxLength={MAX_DESCRIPTION_LENGTH}
-              onChange={handleChange}
-              required
-            />
+            <FloatingLabel
+              className='mb-2'
+              label='Descreva na ordem: Linha | Equipamento | Operador | Setor | Problema e demais observações.'
+            >
+              <Form.Control
+                as='textarea'
+                rows={4}
+                placeholder=''
+                style={{ height: '150px', minHeight: '150px' }}
+                name='descricao'
+                value={formData.descricao || ''}
+                maxLength={MAX_DESCRIPTION_LENGTH}
+                onChange={handleChange}
+                required
+              />
+            </FloatingLabel>
             <Form.Control.Feedback type='invalid'>Informe a descrição do plano.</Form.Control.Feedback>
             <Row className='d-flex justify-content-between mt-1'>
-              {descriptionCharsLeft < 256 && (
-                <small className={`text-muted ${descriptionCharsLeft < 20 ? 'text-danger' : ''}`}>
+              {descriptionCharsLeft < 512 && (
+                <small className={`${descriptionCharsLeft < 50 ? 'text-danger' : 'text-muted'}`}>
                   {descriptionCharsLeft} caracteres restantes
                 </small>
               )}
             </Row>
-          </Form.Group>
-
-          <Form.Group className='mb-3'>
-            <Form.Label>Causa Raiz</Form.Label>
-            <Form.Control
-              as='textarea'
-              rows={1}
-              name='causa_raiz'
-              value={formData.causa_raiz || ''}
-              onChange={handleChange}
-              required
-            />
-            <Form.Control.Feedback type='invalid'>Informe a causa raiz.</Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className='mb-3'>
@@ -413,11 +408,28 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
               as='textarea'
               rows={1}
               name='contencao'
+              placeholder='Descreva a ação imediata para conter o problema.'
               value={formData.contencao || ''}
               onChange={handleChange}
+              maxLength={MAX_LENGTH}
               required
             />
             <Form.Control.Feedback type='invalid'>Informe a contenção.</Form.Control.Feedback>
+          </Form.Group>
+
+          <Form.Group className='mb-3'>
+            <Form.Label>Causa Raiz</Form.Label>
+            <Form.Control
+              as='textarea'
+              rows={1}
+              name='causa_raiz'
+              placeholder='Por que o problema ocorreu?'
+              value={formData.causa_raiz || ''}
+              maxLength={MAX_LENGTH}
+              onChange={handleChange}
+              required
+            />
+            <Form.Control.Feedback type='invalid'>Informe a causa raiz.</Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className='mb-3'>
@@ -426,8 +438,10 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
               as='textarea'
               rows={1}
               name='solucao'
+              placeholder='Solução para causa raiz'
               value={formData.solucao || ''}
               onChange={handleChange}
+              maxLength={MAX_LENGTH}
               required
             />
             <Form.Control.Feedback type='invalid'>Informe a solução proposta.</Form.Control.Feedback>
@@ -440,8 +454,10 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
                 as='textarea'
                 rows={1}
                 name='feedback'
+                placeholder='O que espero de feedback? Quem vai dar o feedback?'
                 value={formData.feedback || ''}
                 onChange={handleChange}
+                maxLength={MAX_LENGTH}
                 required
               />
               <Form.Control.Feedback type='invalid'>
@@ -454,6 +470,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
               <Form.Control
                 type='text'
                 name='responsavel'
+                placeholder='Nome do responsável'
                 value={formData.responsavel || ''}
                 onChange={handleChange}
                 required
