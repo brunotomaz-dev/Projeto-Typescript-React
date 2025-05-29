@@ -1,11 +1,7 @@
 import EChartsReact from 'echarts-for-react';
 import React, { useMemo } from 'react';
 import { Row } from 'react-bootstrap';
-import {
-  BSColors,
-  CICLOS_ESPERADOS,
-  CICLOS_ESPERADOS_BOL,
-} from '../../../helpers/constants';
+import { BSColors, CICLOS_ESPERADOS, CICLOS_ESPERADOS_BOL } from '../../../helpers/constants';
 import { impactFilter } from '../../../helpers/ImpactFilter';
 import { iInfoIhmLive } from '../interfaces/infoIhm.interface';
 import { iMaquinaInfo } from '../interfaces/maquinaInfo.interface';
@@ -32,30 +28,25 @@ const BarStops: React.FC<BarStopsProps> = ({ data, cycleData }) => {
   // Calcula o tempo total de parada
   const totalStopTime = useMemo(
     () =>
-      filteredData
-        .filter((item) => item.status === 'parada')
-        .reduce((acc, item) => acc + item.tempo || 0, 0),
+      filteredData.filter((item) => item.status === 'parada').reduce((acc, item) => acc + item.tempo || 0, 0),
     [filteredData]
   );
+  // Tempo rodando
+  const totalRunTime = useMemo(() => {
+    return data.filter((item) => item.status === 'rodando').reduce((acc, item) => acc + item.tempo, 0);
+  }, [data]);
 
   // Cria a perda por ciclo baixo
   const cycleLost = useMemo(() => {
-    // Tempo rodando
-    const totalRunTime = filteredData
-      .filter((item) => item.status === 'rodando')
-      .reduce((acc, item) => acc + item.tempo, 0);
     // Filtra pela maquina rodando
     cycleData = cycleData.filter((item) => item.status === 'true');
     // Produto único
     const product = cycleData.length > 0 ? cycleData[0].produto : '';
     // Verifica se o produto contém a palavra ' BOL', se tiver usa CICLOS_ESPERADOS, se não CICLOS_ESPERADOS_BOL
-    const ciclosIdeais = product.includes(' BOL')
-      ? CICLOS_ESPERADOS_BOL
-      : CICLOS_ESPERADOS;
+    const ciclosIdeais = product.includes(' BOL') ? CICLOS_ESPERADOS_BOL : CICLOS_ESPERADOS;
 
     // Média de ciclos por minuto
-    const cycleAverage =
-      cycleData.reduce((acc, item) => acc + item.ciclo_1_min, 0) / cycleData.length;
+    const cycleAverage = cycleData.reduce((acc, item) => acc + item.ciclo_1_min, 0) / cycleData.length;
     // Diferença entre a média e o esperado
     const cycleDiff = ciclosIdeais > cycleAverage ? ciclosIdeais - cycleAverage : 0;
 
@@ -99,14 +90,14 @@ const BarStops: React.FC<BarStopsProps> = ({ data, cycleData }) => {
     // Une os dados de parada com os dados de ciclo baixo se houver dados de ciclos baixos
     const allStops = lostCycleTime > 0 ? { ...stops, ...cycleLost } : stops;
 
-    // Calcula o tempo total de parada
-    const stopTime = totalStopTime + lostCycleTime;
+    // Calcula o tempo total
+    const accTime = totalStopTime + lostCycleTime + totalRunTime;
 
     // Converte para array e calcula o impacto
     return Object.values(allStops)
       .map((item) => ({
         ...item,
-        impacto: parseFloat(((item.tempo / stopTime) * 100).toFixed(2)),
+        impacto: parseFloat(((item.tempo / accTime) * 100).toFixed(2)),
       }))
       .sort((a, b) => b.tempo - a.tempo);
   }, [filteredData, cycleLost, totalStopTime]);
@@ -154,9 +145,7 @@ const BarStops: React.FC<BarStopsProps> = ({ data, cycleData }) => {
     },
     yAxis: {
       type: 'category',
-      data: stopSummary.map(
-        (item) => `${item.motivo} - ${item.problema} - ${item.causa}`
-      ),
+      data: stopSummary.map((item) => `${item.motivo} - ${item.problema} - ${item.causa}`),
       axisLabel: {
         show: false,
       },
@@ -178,8 +167,7 @@ const BarStops: React.FC<BarStopsProps> = ({ data, cycleData }) => {
           formatter: (params: any) => {
             const item = stopSummary[params.dataIndex];
             const label =
-              item.causa === 'Realizar análise de falha' ||
-              item.causa === 'Necessidade de análise'
+              item.causa === 'Realizar análise de falha' || item.causa === 'Necessidade de análise'
                 ? item.problema
                 : item.causa;
 
