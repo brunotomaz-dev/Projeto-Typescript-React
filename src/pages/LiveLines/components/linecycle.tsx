@@ -23,10 +23,10 @@ const LineCycle: React.FC<LineCycleProps> = ({ maqInfo }) => {
   });
 
   // Média de ciclos (só com a máquina no status 'true')
-  const maqTrue = maqInfo.filter((item) => item.status === 'true');
-  const averageCycles = (
-    maqTrue.reduce((acc, item) => acc + item.ciclo_1_min, 0) / maqTrue.length
-  ).toFixed(2);
+  const maqTrue = maqInfo.filter((item) => item.ciclo_1_min > 0);
+  const averageCycles = (maqTrue.reduce((acc, item) => acc + item.ciclo_1_min, 0) / maqTrue.length).toFixed(
+    2
+  );
   // options for the chart line
   const options = {
     textStyle: {

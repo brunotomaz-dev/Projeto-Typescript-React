@@ -39,7 +39,7 @@ const BarStops: React.FC<BarStopsProps> = ({ data, cycleData }) => {
   // Cria a perda por ciclo baixo
   const cycleLost = useMemo(() => {
     // Filtra pela maquina rodando
-    cycleData = cycleData.filter((item) => item.status === 'true');
+    cycleData = cycleData.filter((item) => item.ciclo_1_min > 0);
     // Produto único
     const product = cycleData.length > 0 ? cycleData[0].produto : '';
     // Verifica se o produto contém a palavra ' BOL', se tiver usa CICLOS_ESPERADOS, se não CICLOS_ESPERADOS_BOL
