@@ -1,39 +1,16 @@
 import { format, startOfDay } from 'date-fns';
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Card, Col, Row } from 'react-bootstrap';
-import { getIndicator } from '../../api/apiRequests';
 import GaugeChart from '../../components/gauge';
 import { IndicatorType, RecheioMeta } from '../../helpers/constants';
+import { useIndicatorData } from '../../hooks/useIndicatorData';
 import Heatmap from './components/sfm.heatmap';
 import HeatmapBxPeople from './components/sfm.HeatmapBxPeople';
 import LineSFM from './components/sfm.line';
 import PinnedActionPlans from './components/sfm.PinnedActionPlan';
 import TodayActionPlans from './components/sfm.TodayActionPlans';
 
-interface iEff {
-  data_registro: string;
-  eficiencia: number;
-}
-
-interface iRep {
-  data_registro: string;
-  reparo: number;
-}
-
-interface iPerf {
-  data_registro: string;
-  performance: number;
-}
-
 const ShopFloor: React.FC = () => {
-  /* ------------------------------------------ Inicia estado local ----------------------------------------- */
-  const [lastEfficiency, setLastEfficiency] = useState<number>(0);
-  const [lastPerformance, setLastPerformance] = useState<number>(0);
-  const [lastRepairs, setLastRepairs] = useState<number>(0);
-  const [currentEfficiency, setCurrentEfficiency] = useState<number>(0);
-  const [currentPerformance, setCurrentPerformance] = useState<number>(0);
-  const [currentRepairs, setCurrentRepairs] = useState<number>(0);
-
   /* ------------------------------------------- Encontra as datas ------------------------------------------ */
   // Encontrar a data de hoje, primeiro dia do mês passado e ultimo dia do mês passado
   const now = startOfDay(new Date());
@@ -45,83 +22,59 @@ const ShopFloor: React.FC = () => {
   const lastMonthFirstDateString = format(firstDateOfLastMonth, 'yyyy-MM-dd');
   const lastMonthFinalDateString = format(finalDayOfLastMonth, 'yyyy-MM-dd');
 
-  /* ---------------------------------------------- Requisições --------------------------------------------- */
+  /* ---------------------------------------- Requisições Mês Passado ---------------------------------------- */
+
+  // Função para calcular a média de um array de objetos com base em uma chave específica
   const getAverage = (data: any[], key: string): number => {
     return data.reduce((acc, curr): number => acc + curr[key] * 100, 0) / data.length;
   };
 
-  useEffect(() => {
-    // Requisita o indicador de eficiencia
-    void getIndicator(
-      IndicatorType.EFFICIENCY,
-      [lastMonthFirstDateString, lastMonthFinalDateString],
-      ['data_registro', 'eficiencia']
-    ).then((data: iEff[]) => {
-      // Remover onde a eficiencia é 0
-      data = data.filter((item) => item.eficiencia > 0);
-      // Obter a média de eficiencia
-      const average = getAverage(data, 'eficiencia');
-      setLastEfficiency(average);
-    });
+  // Requisitar o indicador do mês passado
+  const {
+    data: { efficiency: lastMonthEfficiency, performance: lastMonthPerformance, repair: lastMonthRepairs },
+  } = useIndicatorData([lastMonthFirstDateString, lastMonthFinalDateString]);
 
-    // Requisita o indicador de performance
-    void getIndicator(
-      IndicatorType.PERFORMANCE,
-      [lastMonthFirstDateString, lastMonthFinalDateString],
-      ['data_registro', 'performance']
-    ).then((data: iPerf[]) => {
-      // Obter a média de performance
-      const average = getAverage(data, 'performance');
-      setLastPerformance(average);
-    });
+  // Criar a média de eficiência do mês passado
+  const lastEfficiency = useMemo(() => {
+    const filtered = lastMonthEfficiency.filter((item) => item.eficiencia > 0);
+    return filtered.length ? getAverage(filtered, 'eficiencia') : 0;
+  }, [lastMonthEfficiency]);
 
-    // Requisita o indicador de reparo
-    void getIndicator(
-      'repair',
-      [lastMonthFirstDateString, lastMonthFinalDateString],
-      ['data_registro', 'reparo']
-    ).then((data: iRep[]) => {
-      // Obter a média de reparo
-      const average = getAverage(data, 'reparo');
-      setLastRepairs(average);
-    });
-  }, [lastMonthFirstDateString, lastMonthFinalDateString]);
+  // Criar a média de performance do mês passado
+  const lastPerformance = useMemo(() => {
+    return getAverage(lastMonthPerformance, 'performance');
+  }, [lastMonthPerformance]);
 
-  // Requisitar os indicadores de eficiencia, performance e reparo do mês atual
-  useEffect(() => {
-    // Indicador de eficiencia
-    void getIndicator(
-      IndicatorType.EFFICIENCY,
-      [currentMonthBeginningDateString],
-      ['data_registro', 'eficiencia']
-    ).then((data: iEff[]) => {
-      // Remover onde a eficiencia é 0
-      data = data.filter((item) => item.eficiencia > 0);
-      // Obter a média de eficiencia
-      const average = getAverage(data, 'eficiencia') || 0;
-      setCurrentEfficiency(average);
-    });
+  // Criar a média de reparo do mês passado
+  const lastRepairs = useMemo(() => {
+    return getAverage(lastMonthRepairs, 'reparo');
+  }, [lastMonthRepairs]);
 
-    // Indicador de performance
-    void getIndicator(
-      IndicatorType.PERFORMANCE,
-      [currentMonthBeginningDateString],
-      ['data_registro', 'performance']
-    ).then((data: iPerf[]) => {
-      // Obter a média de performance
-      const average = getAverage(data, 'performance') || 0;
-      setCurrentPerformance(average);
-    });
+  /* ------------------------------------------ Requisições do mês atual ----------------------------------- */
+  // Requisição dos indicadores
+  const {
+    data: {
+      efficiency: currentMonthEfficiency,
+      performance: currentMonthPerformance,
+      repair: currentMonthRepairs,
+    },
+  } = useIndicatorData([currentMonthBeginningDateString]);
 
-    // Indicador de reparo
-    void getIndicator('repair', [currentMonthBeginningDateString], ['data_registro', 'reparo']).then(
-      (data: iRep[]) => {
-        // Obter a média de reparo
-        const average = getAverage(data, 'reparo') || 0;
-        setCurrentRepairs(average);
-      }
-    );
-  }, [currentMonthBeginningDateString]);
+  // Calcular a média de eficiência do mês atual
+  const currentEfficiency = useMemo(() => {
+    const filtered = currentMonthEfficiency.filter((item) => item.eficiencia > 0);
+    return filtered.length ? getAverage(filtered, 'eficiencia') : 0;
+  }, [currentMonthEfficiency]);
+
+  // Calcular a média de performance do mês atual
+  const currentPerformance = useMemo(() => {
+    return currentMonthPerformance.length ? getAverage(currentMonthPerformance, 'performance') : 0;
+  }, [currentMonthPerformance]);
+
+  // Calcular a média de reparo do mês atual
+  const currentRepairs = useMemo(() => {
+    return currentMonthRepairs.length ? getAverage(currentMonthRepairs, 'reparo') : 0;
+  }, [currentMonthRepairs]);
 
   /* ------------------------------------------------ Layout ------------------------------------------------ */
   return (
@@ -205,9 +158,8 @@ const ShopFloor: React.FC = () => {
       <Card className='shadow bg-transparent border-0 p-3 mb-2'>
         <Row>
           <h3 className='text-center'>Produção de Caixas por Pessoa - 50 cxs</h3>
-          
-            <HeatmapBxPeople />
-          
+
+          <HeatmapBxPeople />
         </Row>
       </Card>
       <TodayActionPlans />

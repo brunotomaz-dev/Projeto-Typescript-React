@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from 'react-bootstrap';
+import useEventListener from '../hooks/useEventListener';
 
 interface ScrollToTopProps {
   scrollThreshold?: number;
@@ -35,10 +36,7 @@ const ScrollToTop: React.FC<ScrollToTopProps> = ({
   };
 
   // Adicionar e remover o listener de scroll
-  useEffect(() => {
-    window.addEventListener('scroll', toggleVisibility);
-    return () => window.removeEventListener('scroll', toggleVisibility);
-  }, []);
+  useEventListener('scroll', toggleVisibility);
 
   // Estilo inline para o botão flutuante
   const buttonStyle: React.CSSProperties = {
