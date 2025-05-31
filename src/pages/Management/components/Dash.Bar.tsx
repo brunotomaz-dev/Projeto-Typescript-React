@@ -2,12 +2,7 @@ import EChartsReact from 'echarts-for-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, Row, Spinner } from 'react-bootstrap';
 import { getMaquinaInfo } from '../../../api/apiRequests';
-import {
-  CICLOS_ESPERADOS,
-  CICLOS_ESPERADOS_BOL,
-  TurnoID,
-  colorObj,
-} from '../../../helpers/constants';
+import { CICLOS_ESPERADOS, CICLOS_ESPERADOS_BOL, TurnoID, colorObj } from '../../../helpers/constants';
 import { impactFilter, notImpactFilter } from '../../../helpers/ImpactFilter';
 import { iInfoIHM } from '../../../interfaces/InfoIHM.interface';
 import { useAppSelector } from '../../../redux/store/hooks';
@@ -109,12 +104,7 @@ const DashBar: React.FC<iDashBarProps> = ({
       }
     }
     // Chama a API para buscar as informações da máquina
-    const data = await getMaquinaInfo(params, [
-      'ciclo_1_min',
-      'produto',
-      'status',
-      'maquina_id',
-    ]);
+    const data = await getMaquinaInfo(params, ['ciclo_1_min', 'produto', 'status', 'maquina_id']);
 
     // Inclui o número da linha nos dados da máquina
     const maqInfoWithLine = data.map((item: iMaquinaInfo) => {
@@ -124,6 +114,7 @@ const DashBar: React.FC<iDashBarProps> = ({
 
     // Atualiza o estado com os dados da máquina
     setMaqInfoData(maqInfoWithLine);
+    setIsLoading(false);
   };
 
   /* -------------------------------------------------------------------------- Perda De Ciclo ---- */
@@ -161,24 +152,18 @@ const DashBar: React.FC<iDashBarProps> = ({
 
       // Primeiro, calcular a média de ciclos por minuto da linha
       const averageCyclesByMin =
-        lineMachines.reduce((acc, item) => acc + item.ciclo_1_min, 0) /
-        lineMachines.length;
+        lineMachines.reduce((acc, item) => acc + item.ciclo_1_min, 0) / lineMachines.length;
 
       // Determinar o ciclo ideal baseado no tipo de produto mais comum na linha
-      const bolProducts = lineMachines.filter((item) =>
-        item.produto.includes(' BOL')
-      ).length;
+      const bolProducts = lineMachines.filter((item) => item.produto.includes(' BOL')).length;
       const regularProducts = lineMachines.length - bolProducts;
 
       // Usar o ciclo ideal baseado na maioria dos produtos na linha
-      const idealCycle =
-        bolProducts > regularProducts ? CICLOS_ESPERADOS_BOL : CICLOS_ESPERADOS;
+      const idealCycle = bolProducts > regularProducts ? CICLOS_ESPERADOS_BOL : CICLOS_ESPERADOS;
 
       // Calcular a perda de ciclo com base na média da linha vs. ciclo ideal
       const cycleLossPercent =
-        idealCycle > averageCyclesByMin
-          ? ((idealCycle - averageCyclesByMin) * 100) / idealCycle
-          : 0;
+        idealCycle > averageCyclesByMin ? ((idealCycle - averageCyclesByMin) * 100) / idealCycle : 0;
 
       // Calcular tempo perdido para esta linha
       const runTime = runTimeByLine[linha] || 0;
@@ -213,10 +198,8 @@ const DashBar: React.FC<iDashBarProps> = ({
     const totalLostTime = cycleLostByLine.reduce((acc, item) => acc + item.tempo, 0);
     const averageLoss =
       maqInfoData.length > 0
-        ? cycleLostByLine.reduce(
-            (acc, item) => acc + (item.tempo * 100) / totalLostTime,
-            0
-          ) / cycleLostByLine.length
+        ? cycleLostByLine.reduce((acc, item) => acc + (item.tempo * 100) / totalLostTime, 0) /
+          cycleLostByLine.length
         : 0;
 
     return {
@@ -256,9 +239,7 @@ const DashBar: React.FC<iDashBarProps> = ({
         {} as Record<string, iStopSummary>
       );
 
-    const lostCycleTime = notAffBar
-      ? 0
-      : cycleLost['Perda de Ciclo-Ciclo Baixo-Ciclo Perdido Min'].tempo;
+    const lostCycleTime = notAffBar ? 0 : cycleLost['Perda de Ciclo-Ciclo Baixo-Ciclo Perdido Min'].tempo;
 
     // Une os dados de parada com os dados de ciclo baixo se houver dados de ciclos baixos
     const allStops = lostCycleTime > 0 ? { ...stops, ...cycleLost } : stops;
@@ -343,10 +324,7 @@ const DashBar: React.FC<iDashBarProps> = ({
       );
 
     // Calcular o tempo total para este motivo
-    const totalTime = Object.values(motivoDetails).reduce(
-      (acc, item) => acc + item.tempo,
-      0
-    );
+    const totalTime = Object.values(motivoDetails).reduce((acc, item) => acc + item.tempo, 0);
 
     // Converter para array e adicionar impacto
     const result = Object.values(motivoDetails)
@@ -386,10 +364,8 @@ const DashBar: React.FC<iDashBarProps> = ({
 
   /* ------------------------------------------- Effects ------------------------------------------ */
   useEffect(() => {
-    setIsLoading(true); // Iniciar o carregamento
-    // Chama a função para buscar as informações da máquina
+    setIsLoading(true);
     fetchMaqInfo();
-    setIsLoading(false); // Finalizar o carregamento
   }, [selectedLines, selectedDate, selectedShift]);
 
   /* ------------------------------------------- Series ------------------------------------------- */
@@ -566,21 +542,18 @@ const DashBar: React.FC<iDashBarProps> = ({
     },
     yAxis: {
       type: 'category',
-      data: (dataType === 'ALL' ? stopSummary : getMotivoDetails).map(
-        (item: iStopSummary) => {
-          // Para casos de Perda de Ciclo quando agrupando por linha
-          if (item.motivo === 'Perda de Ciclo' && item.linha) {
-            return `Linha ${item.linha}`;
-          }
-
-          return dataType === 'ALL'
-            ? item.motivo
-            : item.causa === 'Realizar análise de falha' ||
-                item.causa === 'Necessidade de análise'
-              ? item.problema
-              : item.causa;
+      data: (dataType === 'ALL' ? stopSummary : getMotivoDetails).map((item: iStopSummary) => {
+        // Para casos de Perda de Ciclo quando agrupando por linha
+        if (item.motivo === 'Perda de Ciclo' && item.linha) {
+          return `Linha ${item.linha}`;
         }
-      ),
+
+        return dataType === 'ALL'
+          ? item.motivo
+          : item.causa === 'Realizar análise de falha' || item.causa === 'Necessidade de análise'
+            ? item.problema
+            : item.causa;
+      }),
       axisLabel: {
         // show: dataType === 'ALL', // Mostrar apenas no modo ALL
         show: true,
@@ -611,13 +584,9 @@ const DashBar: React.FC<iDashBarProps> = ({
             notMerge={true}
           />
         ) : (
-          <Row
-            style={{ height: '400px' }}
-            className='d-flex justify-content-center align-items-center p-2'
-          >
+          <Row style={{ height: '400px' }} className='d-flex justify-content-center align-items-center p-2'>
             <Alert variant='info' className='text-center'>
-              Sem dados disponíveis para exibição. Por favor, selecione outra data ou
-              período.
+              Sem dados disponíveis para exibição. Por favor, selecione outra data ou período.
             </Alert>
           </Row>
         )
