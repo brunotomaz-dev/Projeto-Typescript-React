@@ -5,7 +5,7 @@ import DOMPurify from 'dompurify';
 import React, { useEffect, useState } from 'react';
 import { Alert, Badge, Card, Col, Container, Row, Spinner } from 'react-bootstrap';
 import { getOrdemServico, getSolicitacaoServico } from '../../api/apiRequests';
-import DatePickerComponent from './components/DatePickerComponent';
+import DatePickerComponent from '../../components/DatePickerComponent';
 import OrderServiceCards from './components/orderServiceCards';
 import { formatHourDecimal } from './functions/formatHourDecimal';
 import { iMaintenanceOrders, OS_Status } from './interfaces/MaintenanceOrders';
@@ -251,11 +251,7 @@ const Manusis: React.FC = () => {
             )}
             {hasOrders &&
               orderByAppointment.map((os) => (
-                <OrderServiceCards
-                  key={os.id}
-                  os={os}
-                  className='border-light shadow bg-transparent'
-                />
+                <OrderServiceCards key={os.id} os={os} className='border-light shadow bg-transparent' />
               ))}
           </Col>
           <Col xs={12} xl={4} className='bg-warning-subtle p-2 rounded-3 d-flex flex-column gap-2'>
@@ -324,8 +320,7 @@ const Manusis: React.FC = () => {
                   <Card.Footer className='text-center'>
                     <strong>Tempo Estimado:</strong> {formatHourDecimal(os.tempo_estimado_trabalho)}
                     <br />
-                    <strong>Tempo Realizado:</strong>{' '}
-                    {formatHourDecimal(os.tempo_trabalho_realizado)}
+                    <strong>Tempo Realizado:</strong> {formatHourDecimal(os.tempo_trabalho_realizado)}
                     <br />
                   </Card.Footer>
                 </Card>

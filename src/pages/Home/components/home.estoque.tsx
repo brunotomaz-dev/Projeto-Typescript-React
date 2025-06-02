@@ -1,46 +1,45 @@
-import React, { useEffect, useState } from 'react';
-import { Card, Row, Table } from 'react-bootstrap';
-import { getEstoqueAtual } from '../../../api/apiRequests';
-
-interface iEstoque {
-  produto: string;
-  quantidade: number;
-}
+import React from 'react';
+import { Card, Row, Spinner, Table } from 'react-bootstrap';
+import { useEstoqueQuery } from '../../../hooks/queries/useEstoqueQuery';
 
 const HomeEstoqueCard: React.FC = () => {
-  const [estoque, setEstoque] = useState<iEstoque[]>([]);
-  useEffect(() => {
-    void getEstoqueAtual().then((data: iEstoque[]) => {
-      setEstoque(data);
-    });
-  }, []);
+  const { estoqueData, isLoading } = useEstoqueQuery();
+
+  // Tipar estoqueData para garantir que seja um array de objetos com as propriedades esperadas
+  interface EstoqueItem {
+    produto: string;
+    quantidade: number;
+  }
+  const typedEstoqueData: EstoqueItem[] = estoqueData as EstoqueItem[];
 
   return (
-    <Card className="shadow border-0 p-3 mb-2">
-      <h3>Estoque</h3>
+    <Card className='shadow border-0 p-3 mb-2'>
+      <h3>
+        Estoque
+        {isLoading && <Spinner animation='border' size='sm' className='ms-2' />}
+      </h3>
       <Row>
         <Table striped responsive>
           <thead>
             <tr>
               <th>Produto</th>
-              <th className="text-end">Quantidade</th>
+              <th className='text-end'>Quantidade</th>
             </tr>
           </thead>
           <tbody>
-            {estoque.map(({ produto, quantidade }) => (
-              <tr key={produto}>
+            {typedEstoqueData.map(({ produto, quantidade }, index) => (
+              <tr key={`${produto}-${index}`}>
                 <td>{produto.trim()}</td>
-                <td className="text-end">{quantidade.toLocaleString('pt-BR')}</td>
+                <td className='text-end'>{quantidade}</td>
               </tr>
             ))}
-            <tr>
-              <td>
-                <strong>Total</strong>
-              </td>
-              <td className="text-end">
-                <strong>{estoque.reduce((acc, curr) => acc + curr.quantidade, 0).toLocaleString('pt-BR')}</strong>
-              </td>
-            </tr>
+            {typedEstoqueData.length === 0 && (
+              <tr>
+                <td colSpan={2} className='text-center'>
+                  {isLoading ? 'Carregando...' : 'Nenhum item em estoque'}
+                </td>
+              </tr>
+            )}
           </tbody>
         </Table>
       </Row>

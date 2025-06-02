@@ -1,116 +1,111 @@
-import { format, startOfDay } from 'date-fns';
+import { format, parse } from 'date-fns';
 import React, { useEffect, useState } from 'react';
-import { Card, Col, Row } from 'react-bootstrap';
-import { getIndicator } from '../../api/apiRequests';
-import GaugeChart from '../../components/gauge';
-import { IndicatorType } from '../../helpers/constants';
-import { iEficiencia, iPerformance, iRepair } from '../../interfaces/Indicators.interfaces';
+import { Button, Col, Container, Row, Spinner } from 'react-bootstrap';
+import DateTurnFilter from '../../components/DateTurnFilter';
+import { getTurnoName, TurnoID } from '../../helpers/constants';
+import { useIndicatorsQuery } from '../../hooks/queries/useIndicatorsQuery';
 import { setLineMachine } from '../../redux/store/features/homeSlice';
-import { useAppDispatch } from '../../redux/store/hooks';
+import { useAppDispatch, useAppSelector } from '../../redux/store/hooks';
 import HomeAbsence from './components/home.absence';
 import HomeCartCountCart from './components/home.cartCount';
 import HomeEstoqueCard from './components/home.estoque';
+import HomeIndicatorsCard from './components/home.indicatorsCard';
 import HomeLinesCard from './components/home.lines';
 import HomeProductionCard from './components/home.production';
 
 //cSpell: words eficiencia
 
 const Home: React.FC = () => {
-  /* -------------------------------------------- REDUX ------------------------------------------- */
+  /* ------------------------------------------------- Hook's ------------------------------------------------ */
   const dispatch = useAppDispatch();
+  const [showFilters, setShowFilters] = useState(false);
+  const { date, turn } = useAppSelector((state) => state.home.filters);
 
-  /* ----------------------------------------- LOCAL STATE ---------------------------------------- */
-  const [eficiencia, setEficiencia] = useState<iEficiencia[]>([]);
-  const [performance, setPerformance] = useState<iPerformance[]>([]);
-  const [repairs, setRepairs] = useState<iRepair[]>([]);
+  // Usar o hook de indicadores com TanStack Query
+  const { lineMachineMap, isLoading, isFetching } = useIndicatorsQuery();
 
-  // Conseguir a data de hoje
-  const now = startOfDay(new Date());
+  // Determina se estão sendo aplicados filtros não-padrão
+  const hasActiveFilters = useAppSelector((state) => {
+    const now = new Date();
+    const today = format(now, 'yyyy-MM-dd');
+    return state.home.filters.date !== today || state.home.filters.turn !== 'ALL';
+  });
 
-  //Deixar a data no formato yyyy-mm-dd
-  const nowDate = format(now, 'yyyy-MM-dd');
-
-  /* ------------------------------------------ CÁLCULOS ------------------------------------------ */
-
-  // Conseguir a média de eficiencia
-  const eficienciaMedia =
-    eficiencia.length > 0
-      ? eficiencia.reduce((acc, curr) => acc + curr.eficiencia, 0) / eficiencia.length
-      : 0;
-
-  const performanceMedia =
-    performance.length > 0
-      ? performance.reduce((acc, curr) => acc + curr.performance, 0) / performance.length
-      : 0;
-
-  const repairsMedia =
-    repairs.length > 0 ? repairs.reduce((acc, curr) => acc + curr.reparo, 0) / repairs.length : 0;
-
-  /* ------------------------------------------- EFFECT ------------------------------------------- */
+  /* ------------------------------------------------- Effect ------------------------------------------------ */
+  // Sincronizar o mapa de máquinas/linhas com o Redux
   useEffect(() => {
-    // Faz a requisição do indicador e salva no estado
-    void getIndicator('eficiencia', nowDate).then((data: iEficiencia[]) => {
-      dispatch(
-        setLineMachine(
-          data.reduce<Record<string, number>>((acc, curr) => {
-            acc[curr.maquina_id] = curr.linha;
-            return acc;
-          }, {})
-        )
-      );
-      setEficiencia(data.filter((item) => item.eficiencia > 0));
-    });
-    void getIndicator('performance', nowDate).then((data: iPerformance[]) => setPerformance(data));
-    void getIndicator('repair', nowDate).then((data: iRepair[]) => setRepairs(data));
-  }, [nowDate, dispatch]);
+    if (Object.keys(lineMachineMap).length > 0) {
+      dispatch(setLineMachine(lineMachineMap));
+    }
+  }, [lineMachineMap, dispatch]);
 
-  /* ---------------------------------------------------------------------------------------------- */
-  /*                                             Layout                                             */
-  /* ---------------------------------------------------------------------------------------------- */
+  /* ----------------------------------------------------------------------------------------------------------- */
+  /*                                                    LAYOUT                                                   */
+  /* ----------------------------------------------------------------------------------------------------------- */
   return (
     <>
-      <h1 className='text-center p-2'>Dados do dia</h1>
+      <header className='mb-3'>
+        <h1 className='text-center'>
+          Dados do dia
+          {isFetching && !isLoading && <Spinner animation='border' size='sm' variant='primary' />}
+        </h1>
+      </header>
+
       <section className='container-fluid'>
-        <Row className='row'>
-          <Col className='col-7 p-1'>
-            <Card className='bg-transparent shadow border-0 p-2 pb-4 h-100'>
-              <h4 className='card-title text-center p-2'>Indicadores de eficiência</h4>
-              <div className='d-flex flex-row justify-content-center align-items-center h-100'>
-                <GaugeChart
-                  indicator={IndicatorType.EFFICIENCY}
-                  data={eficienciaMedia * 100}
-                  large
-                  pos='up-center'
-                />
-                <GaugeChart
-                  indicator={IndicatorType.PERFORMANCE}
-                  data={performanceMedia * 100}
-                  large
-                  pos='down-center'
-                />
-                <GaugeChart
-                  indicator={IndicatorType.REPAIR}
-                  data={repairsMedia * 100}
-                  large
-                  pos='up-center'
-                />
-              </div>
-            </Card>
-          </Col>
-          <Col className='p-1'>
-            <HomeAbsence />
-          </Col>
+        <Button
+          variant={showFilters ? 'secondary' : 'outline-secondary'}
+          size='sm'
+          onClick={() => setShowFilters(!showFilters)}
+          className='d-flex align-items-center mb-2'
+        >
+          <i className={`bi ${showFilters ? 'bi-funnel-fill' : 'bi-funnel'} me-2`}></i>
+          {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+        </Button>
+        {hasActiveFilters && !showFilters && (
+          <span className='badge bg-info text-dark ms-2'>Filtros ativos</span>
+        )}
+
+        <Row className='p-1'>
+          <DateTurnFilter show={showFilters} />
         </Row>
-        <Row className='mt-3'>
-          <Col>
-            <HomeProductionCard />
-            <HomeCartCountCart />
+
+        {/* Exibir resumo dos filtros aplicados quando os filtros estão escondidos mas ativos */}
+        {!showFilters && hasActiveFilters && (
+          <div className='alert alert-info d-flex align-items-center mb-3'>
+            <i className='bi bi-info-circle-fill me-2'></i>
+            <span>
+              Exibindo dados de:{' '}
+              <strong>{format(parse(date, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy')}</strong>
+              {turn !== 'ALL' && (
+                <>
+                  {' '}
+                  - Turno: <strong>{getTurnoName(turn as TurnoID)}</strong>
+                </>
+              )}
+            </span>
+          </div>
+        )}
+      </section>
+
+      <section className='container-fluid'>
+        <Row>
+          <Col className='p-1' xs={12} md={8}>
+            <HomeIndicatorsCard className='mb-2' />
+            <HomeAbsence />
+            <Container fluid>
+              <Row className='gap-2 mt-2'>
+                <Col xs={12} md className='p-0'>
+                  <HomeProductionCard />
+                </Col>
+                <Col xs={12} md className='p-0'>
+                  <HomeCartCountCart />
+                </Col>
+              </Row>
+            </Container>
           </Col>
-          <Col>
-            <HomeLinesCard />
-          </Col>
-          <Col>
+          <Col xs={12} md className='p-1'>
             <HomeEstoqueCard />
+            <HomeLinesCard />
           </Col>
         </Row>
       </section>

@@ -10,7 +10,7 @@ interface iCardsProps {
 const HomeCardsAbsence: React.FC<iCardsProps> = ({ title, value }) => {
   return (
     <Col className='p-1 align-content-center'>
-      <Card className='shadow border-0 fs-responsive'>
+      <Card className='shadow-sm border-1 border border-light fs-responsive bg-light-grey-sfm'>
         <Card.Body className='p-2'>
           <Card.Title className='fs-6 fw-light text-truncate' title={title}>
             {title}

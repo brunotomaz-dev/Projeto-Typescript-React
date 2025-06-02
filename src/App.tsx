@@ -1,11 +1,12 @@
 import { Route, Routes } from 'react-router-dom';
 import './styles/main.scss';
 
+import { QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { initAuth } from './api/auth';
 import PrivateRoute from './api/PrivateRoute';
 import PageLayout from './components/pageLayout';
-import HomeFake from './pages/example';
+import { queryClient } from './lib/react-query';
 import Home from './pages/Home/home';
 import LiveLines from './pages/LiveLines/liveLines';
 import LoginPage from './pages/Login/login';
@@ -24,42 +25,43 @@ function App() {
   }, []);
 
   return (
-    <PageLayout>
-      <Routes>
-        <Route path='init' element={<HomeFake />} />
-        <Route path='/' element={<Home />} />
-        <Route path='login' element={<LoginPage />} />
-        <Route path='sfm' element={<PrivateRoute element={<ShopFloor />} requiredPage='shop_floor' />} />
-        <Route
-          path='p-live'
-          element={<PrivateRoute element={<ProductionLive />} requiredPage='hour_production' />}
-        />
-        <Route path='live' element={<PrivateRoute element={<LiveLines />} requiredPage='live_lines' />} />
-        <Route path='management'>
+    <QueryClientProvider client={queryClient}>
+      <PageLayout>
+        <Routes>
+          <Route path='/' element={<Home />} />
+          <Route path='login' element={<LoginPage />} />
+          <Route path='sfm' element={<PrivateRoute element={<ShopFloor />} requiredPage='shop_floor' />} />
           <Route
-            path='dashboards'
-            element={<PrivateRoute element={<ManagementDashboards />} requiredPage='management' />}
+            path='p-live'
+            element={<PrivateRoute element={<ProductionLive />} requiredPage='hour_production' />}
           />
+          <Route path='live' element={<PrivateRoute element={<LiveLines />} requiredPage='live_lines' />} />
+          <Route path='management'>
+            <Route
+              path='dashboards'
+              element={<PrivateRoute element={<ManagementDashboards />} requiredPage='management' />}
+            />
+            <Route
+              path='production'
+              element={<PrivateRoute element={<ManagementProduction />} requiredPage='management' />}
+            />
+            <Route
+              path='action-plan'
+              element={<PrivateRoute element={<ActionPlanMGMT />} requiredPage='action_plan_management' />}
+            />
+          </Route>
           <Route
-            path='production'
-            element={<PrivateRoute element={<ManagementProduction />} requiredPage='management' />}
+            path='supervision'
+            element={<PrivateRoute element={<SupervisionPage />} requiredPage='supervision' />}
           />
+          <Route path='manusis' element={<PrivateRoute element={<Manusis />} requiredPage='manusis' />} />
           <Route
-            path='action-plan'
-            element={<PrivateRoute element={<ActionPlanMGMT />} requiredPage='action_plan_management' />}
+            path='preventive'
+            element={<PrivateRoute element={<Preventivas />} requiredPage='preventive' />}
           />
-        </Route>
-        <Route
-          path='supervision'
-          element={<PrivateRoute element={<SupervisionPage />} requiredPage='supervision' />}
-        />
-        <Route path='manusis' element={<PrivateRoute element={<Manusis />} requiredPage='manusis' />} />
-        <Route
-          path='preventive'
-          element={<PrivateRoute element={<Preventivas />} requiredPage='preventive' />}
-        />
-      </Routes>
-    </PageLayout>
+        </Routes>
+      </PageLayout>
+    </QueryClientProvider>
   );
 }
 
