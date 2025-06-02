@@ -1,6 +1,4 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { format, startOfDay } from "date-fns";
-import { TurnoID } from "../../../helpers/constants";
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface LineMachine {
   [key: string]: number;
@@ -8,46 +6,22 @@ interface LineMachine {
 
 interface HomeState {
   lineMachine: LineMachine;
-  filters: {
-    date: string;
-    turn: TurnoID | "ALL";
-  };
 }
 
-const today = startOfDay(new Date());
-
+// Define the initial state for the home slice
 const initialState: HomeState = {
   lineMachine: {},
-  filters: {
-    date: format(today, "yyyy-MM-dd"),
-    turn: "ALL",
-  },
 };
 
 const homeSlice = createSlice({
-  name: "home",
+  name: 'home',
   initialState,
   reducers: {
     setLineMachine: (state, action: PayloadAction<LineMachine>) => {
       state.lineMachine = action.payload;
     },
-    setHomeDate: (state, action: PayloadAction<string>) => {
-      state.filters.date = action.payload;
-    },
-    setHomeTurn: (state, action: PayloadAction<TurnoID | "ALL">) => {
-      state.filters.turn = action.payload;
-    },
-    resetHomeFilters: (state) => {
-      state.filters.date = format(today, "yyyy-MM-dd");
-      state.filters.turn = "ALL";
-    },
   },
 });
 
-export const {
-  setLineMachine,
-  setHomeDate,
-  setHomeTurn,
-  resetHomeFilters,
-} = homeSlice.actions;
+export const { setLineMachine } = homeSlice.actions;
 export default homeSlice.reducer;

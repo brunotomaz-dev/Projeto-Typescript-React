@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
+import { useMemo } from 'react';
 import { getMaquinaInfo } from '../../api/apiRequests';
 import { useAppSelector } from '../../redux/store/hooks';
-import { useMemo } from 'react';
-import { format } from 'date-fns';
+import { useFilters } from '../useFilters';
 
 export interface iMaquinas {
   maquina_id: string;
@@ -11,8 +12,8 @@ export interface iMaquinas {
   produto: string;
 }
 
-export const useLinesQuery = () => {
-  const { date, turn } = useAppSelector((state) => state.home.filters);
+export const useLinesQuery = (scope = 'home') => {
+  const { date, turn } = useFilters(scope);
   const lineMachine = useAppSelector((state) => state.home.lineMachine);
 
   // Determinar se a data selecionada é hoje

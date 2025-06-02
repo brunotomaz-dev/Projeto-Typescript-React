@@ -1,35 +1,31 @@
-import { format } from 'date-fns';
 import React from 'react';
 import { Button, Col, Collapse, Form, Row } from 'react-bootstrap';
 import { TurnoID } from '../helpers/constants';
-import { resetHomeFilters, setHomeDate, setHomeTurn } from '../redux/store/features/homeSlice';
-import { useAppDispatch, useAppSelector } from '../redux/store/hooks';
+import { useFilters } from '../hooks/useFilters';
 import DatePickerComponent from './DatePickerComponent';
 import SegmentedTurnBtn from './SegmentedTurnBtn';
 
 interface DateTurnFilterProps {
   className?: string;
   show: boolean;
+  scope?: string; // Aceita qualquer string como escopo
 }
 
-const DateTurnFilter: React.FC<DateTurnFilterProps> = ({ className = '', show }) => {
+const DateTurnFilter: React.FC<DateTurnFilterProps> = ({ className = '', show, scope = 'home' }) => {
   /* ------------------------------------------------- Hook's ------------------------------------------------ */
-  const dispatch = useAppDispatch();
-  const { date, turn } = useAppSelector((state) => state.home.filters);
+  const { date, turn, setDateFilter, setTurnFilter, resetFilters } = useFilters(scope);
 
   /* ----------------------------------------------- Handlers ----------------------------------------------- */
-  const handleDateChange = (date: Date | null) => {
-    if (date) {
-      dispatch(setHomeDate(format(date, 'yyyy-MM-dd')));
-    }
+  const handleDateChange = (newDate: Date | null) => {
+    setDateFilter(newDate);
   };
 
   const handleTurnChange = (selectedTurn: TurnoID) => {
-    dispatch(setHomeTurn(selectedTurn));
+    setTurnFilter(selectedTurn);
   };
 
   const handleReset = () => {
-    dispatch(resetHomeFilters());
+    resetFilters();
   };
 
   /* --------------------------------------------------------------------------------------------------------- */
@@ -52,7 +48,7 @@ const DateTurnFilter: React.FC<DateTurnFilterProps> = ({ className = '', show })
               onTurnChange={handleTurnChange}
               all={true}
               fullWidth={true}
-              id='home-filter-turn'
+              id={`${scope}-filter-turn`}
             />
           </Col>
 

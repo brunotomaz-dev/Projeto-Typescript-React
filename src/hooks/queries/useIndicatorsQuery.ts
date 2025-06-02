@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
+import { useMemo } from 'react';
 import { getIndicator } from '../../api/apiRequests';
 import { iEficiencia, iPerformance, iRepair } from '../../interfaces/Indicators.interfaces';
-import { useAppSelector } from '../../redux/store/hooks';
-import { useMemo } from 'react';
-import { format } from 'date-fns';
+import { useFilters } from '../useFilters';
 
-export const useIndicatorsQuery = () => {
-  const { date, turn } = useAppSelector(state => state.home.filters);
-  
+export const useIndicatorsQuery = (scope = 'home') => {
+  const { date, turn } = useFilters(scope);
+
   // Determinar se a data selecionada é hoje
   const isToday = useMemo(() => {
     const today = new Date();
@@ -19,9 +19,7 @@ export const useIndicatorsQuery = () => {
     queryKey: ['indicators', 'efficiency', date, turn],
     queryFn: async () => {
       const data: iEficiencia[] = await getIndicator('eficiencia', date);
-      return turn === 'ALL' 
-        ? data 
-        : data.filter(item => item.turno === turn);
+      return turn === 'ALL' ? data : data.filter((item) => item.turno === turn);
     },
     refetchInterval: isToday ? 60000 : false, // Atualiza a cada minuto se for hoje
   });
@@ -31,9 +29,7 @@ export const useIndicatorsQuery = () => {
     queryKey: ['indicators', 'performance', date, turn],
     queryFn: async () => {
       const data: iPerformance[] = await getIndicator('performance', date);
-      return turn === 'ALL' 
-        ? data 
-        : data.filter(item => item.turno === turn);
+      return turn === 'ALL' ? data : data.filter((item) => item.turno === turn);
     },
     refetchInterval: isToday ? 60000 : false,
   });
@@ -43,16 +39,14 @@ export const useIndicatorsQuery = () => {
     queryKey: ['indicators', 'repair', date, turn],
     queryFn: async () => {
       const data: iRepair[] = await getIndicator('repair', date);
-      return turn === 'ALL' 
-        ? data 
-        : data.filter(item => item.turno === turn);
+      return turn === 'ALL' ? data : data.filter((item) => item.turno === turn);
     },
     refetchInterval: isToday ? 60000 : false,
   });
 
   // Calcular médias
   const efficiencyAverage = useMemo(() => {
-    const filteredData = (efficiencyQuery.data || []).filter(item => item.eficiencia > 0);
+    const filteredData = (efficiencyQuery.data || []).filter((item) => item.eficiencia > 0);
     return filteredData.length > 0
       ? filteredData.reduce((acc, curr) => acc + curr.eficiencia, 0) / filteredData.length
       : 0;
@@ -60,16 +54,12 @@ export const useIndicatorsQuery = () => {
 
   const performanceAverage = useMemo(() => {
     const data = performanceQuery.data || [];
-    return data.length > 0
-      ? data.reduce((acc, curr) => acc + curr.performance, 0) / data.length
-      : 0;
+    return data.length > 0 ? data.reduce((acc, curr) => acc + curr.performance, 0) / data.length : 0;
   }, [performanceQuery.data]);
 
   const repairAverage = useMemo(() => {
     const data = repairQuery.data || [];
-    return data.length > 0
-      ? data.reduce((acc, curr) => acc + curr.reparo, 0) / data.length
-      : 0;
+    return data.length > 0 ? data.reduce((acc, curr) => acc + curr.reparo, 0) / data.length : 0;
   }, [repairQuery.data]);
 
   // Mapa de máquinas para linhas

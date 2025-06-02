@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import discardsReducer from './features/discardSlice';
+import filterReducer from './features/filterSlice';
 import homeReducer from './features/homeSlice';
 import liveLinesReducer from './features/liveLinesSlice';
 import pinsReducer from './features/pinsSlice';
@@ -18,6 +19,7 @@ export const store = configureStore({
     liveLines: liveLinesReducer,
     preventiva: preventivaReducer,
     pins: pinsReducer,
+    filters: filterReducer,
   },
 });
 

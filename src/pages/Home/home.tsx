@@ -4,8 +4,9 @@ import { Button, Col, Container, Row, Spinner } from 'react-bootstrap';
 import DateTurnFilter from '../../components/DateTurnFilter';
 import { getTurnoName, TurnoID } from '../../helpers/constants';
 import { useIndicatorsQuery } from '../../hooks/queries/useIndicatorsQuery';
+import { useFilters } from '../../hooks/useFilters';
 import { setLineMachine } from '../../redux/store/features/homeSlice';
-import { useAppDispatch, useAppSelector } from '../../redux/store/hooks';
+import { useAppDispatch } from '../../redux/store/hooks';
 import HomeAbsence from './components/home.absence';
 import HomeCartCountCart from './components/home.cartCount';
 import HomeEstoqueCard from './components/home.estoque';
@@ -19,17 +20,11 @@ const Home: React.FC = () => {
   /* ------------------------------------------------- Hook's ------------------------------------------------ */
   const dispatch = useAppDispatch();
   const [showFilters, setShowFilters] = useState(false);
-  const { date, turn } = useAppSelector((state) => state.home.filters);
+  // Usar o hook com o escopo específico da página
+  const { date, turn, isDefault } = useFilters('home');
 
   // Usar o hook de indicadores com TanStack Query
   const { lineMachineMap, isLoading, isFetching } = useIndicatorsQuery();
-
-  // Determina se estão sendo aplicados filtros não-padrão
-  const hasActiveFilters = useAppSelector((state) => {
-    const now = new Date();
-    const today = format(now, 'yyyy-MM-dd');
-    return state.home.filters.date !== today || state.home.filters.turn !== 'ALL';
-  });
 
   /* ------------------------------------------------- Effect ------------------------------------------------ */
   // Sincronizar o mapa de máquinas/linhas com o Redux
@@ -61,16 +56,14 @@ const Home: React.FC = () => {
           <i className={`bi ${showFilters ? 'bi-funnel-fill' : 'bi-funnel'} me-2`}></i>
           {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
         </Button>
-        {hasActiveFilters && !showFilters && (
-          <span className='badge bg-info text-dark ms-2'>Filtros ativos</span>
-        )}
+        {!isDefault && !showFilters && <span className='badge bg-info text-dark ms-2'>Filtros ativos</span>}
 
         <Row className='p-1'>
-          <DateTurnFilter show={showFilters} />
+          <DateTurnFilter show={showFilters} scope='home' />
         </Row>
 
         {/* Exibir resumo dos filtros aplicados quando os filtros estão escondidos mas ativos */}
-        {!showFilters && hasActiveFilters && (
+        {!showFilters && !isDefault && (
           <div className='alert alert-info d-flex align-items-center mb-3'>
             <i className='bi bi-info-circle-fill me-2'></i>
             <span>

@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { getCarrinhosCount, getProduction } from '../../api/apiRequests';
 import { iCartCount } from '../../interfaces/Carrinhos.interface';
 import { iProduction } from '../../pages/ProductionLive/interfaces/production.interface';
-import { useAppSelector } from '../../redux/store/hooks';
+import { useFilters } from '../useFilters';
 
 interface ProductionItem {
   produto: string;
@@ -12,8 +12,8 @@ interface ProductionItem {
   tipo: 'bolinha' | 'baguete';
 }
 
-export const useProductionQuery = () => {
-  const { date, turn } = useAppSelector((state) => state.home.filters);
+export const useProductionQuery = (scope = 'home') => {
+  const { date, turn } = useFilters(scope);
 
   // Determinar se a data selecionada é hoje
   const isToday = useMemo(() => {

@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { useMemo } from 'react';
 import { getAbsenceData, getPresenceData } from '../../api/apiRequests';
 import { iAbsence, iPresence } from '../../interfaces/Absence.interface';
-import { useAppSelector } from '../../redux/store/hooks';
+import { useFilters } from '../useFilters';
 
 // Constantes para tipos de ausência
 const ABSENCE_TYPES = {
@@ -16,8 +16,8 @@ const ABSENCE_TYPES = {
   FERIAS: 'Férias',
 };
 
-export const useAbsenceQuery = () => {
-  const { date, turn } = useAppSelector((state) => state.home.filters);
+export const useAbsenceQuery = (scope = 'home') => {
+  const { date, turn } = useFilters(scope);
 
   // Determinar se a data selecionada é hoje
   const isToday = useMemo(() => {
