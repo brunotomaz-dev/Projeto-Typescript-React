@@ -1,35 +1,37 @@
+import { format, startOfDay } from 'date-fns';
 import React, { useState } from 'react';
 import { Button, Row, Stack } from 'react-bootstrap';
+import { useFiltersVisibility } from '../../../hooks/useLiveFiltersVisibility';
 import { usePermissions } from '../../../hooks/usePermissions';
-import { useAppSelector } from '../../../redux/store/hooks';
+import { setIsOpenedUpdateStops } from '../../../redux/store/features/liveLinesSlice';
+import { useAppDispatch, useAppSelector } from '../../../redux/store/hooks';
 import ModalServiceHistory from './liveLines.ModalHistoricService';
 
-interface HeaderProps {
-  nowDate: string;
-  showFilters: boolean;
-  toggleFilters: () => void;
-  isOpenedUpdateStops: boolean;
-  setIsOpenedUpdateStops: (isOpened: boolean) => void;
-}
-
-const LiveLinesHeader: React.FC<HeaderProps> = ({
-  nowDate,
-  showFilters,
-  toggleFilters,
-  isOpenedUpdateStops,
-  setIsOpenedUpdateStops,
-}) => {
-  /* ------------------------------------------- HOOK ------------------------------------------- */
+const LiveLinesHeader: React.FC = () => {
+  /* ------------------------------------------- HOOKS ------------------------------------------- */
   const { hasResourcePermission, hasElementAccess } = usePermissions();
   const canView = hasResourcePermission('ihm_appointments', 'view');
   const hasBtnHistAccess = hasElementAccess('btn_OS_preventive_history');
+  const dispatch = useAppDispatch();
+
+  // Hook para gerenciar visibilidade de filtros
+  const { isVisible: showFilters, toggle: toggleFilters } = useFiltersVisibility('liveLines');
 
   /* ------------------------------------------------ REDUX ----------------------------------------------- */
   const selectedDate = useAppSelector((state) => state.liveLines.selectedDate);
   const selectedMachine = useAppSelector((state) => state.liveLines.selectedMachine);
+  const isOpenedUpdateStops = useAppSelector((state) => state.liveLines.isOpenedUpdateStops);
 
   /* --------------------------------------------- Local State -------------------------------------------- */
   const [isOpened, setIsOpened] = useState(false);
+
+  // Variáveis
+  const nowDate = format(startOfDay(new Date()), 'yyyy-MM-dd');
+
+  /* -------------------------------------------- Handlers ----------------------------------------------- */
+  const handleToggleUpdateStops = () => {
+    dispatch(setIsOpenedUpdateStops(!isOpenedUpdateStops));
+  };
 
   /* ---------------------------------------------------------------------------------------------- */
   /*                                             LAYOUT                                             */
@@ -42,7 +44,7 @@ const LiveLinesHeader: React.FC<HeaderProps> = ({
         </h1>
         <h5 className='text-center'>{`(${selectedMachine || '-'})`}</h5>
         <Stack direction='horizontal' gap={2}>
-          {/* Novo botão para mostrar/ocultar filtros */}
+          {/* Botão para mostrar/ocultar filtros */}
           <Button variant={showFilters ? 'secondary' : 'outline-secondary'} size='sm' onClick={toggleFilters}>
             <i className={`bi ${showFilters ? 'bi-funnel-fill' : 'bi-funnel'} me-2`}></i>
             {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
@@ -52,7 +54,7 @@ const LiveLinesHeader: React.FC<HeaderProps> = ({
             <Button
               variant={isOpenedUpdateStops ? 'secondary' : 'outline-secondary'}
               size='sm'
-              onClick={() => setIsOpenedUpdateStops(!isOpenedUpdateStops)}
+              onClick={handleToggleUpdateStops}
             >
               <i className='bi bi-bar-chart-steps me-2'></i>
               {isOpenedUpdateStops ? 'Fechar Apontamentos' : 'Ver Apontamentos'}

@@ -6,16 +6,18 @@ export interface iLiveLinesState {
   selectedDate: string;
   selectedMachine: string;
   selectedShift: string;
-  selectedLine: number; // Nova propriedade
-  machineStatus: string; // Nova propriedade
+  selectedLine: number;
+  machineStatus: string;
+  isOpenedUpdateStops: boolean; // Novo campo
 }
 
 const initialState: iLiveLinesState = {
   selectedDate: format(startOfDay(new Date()), 'yyyy-MM-dd'),
   selectedMachine: '',
   selectedShift: getShift(),
-  selectedLine: 1, // Valor inicial
-  machineStatus: '-', // Valor inicial
+  selectedLine: 1,
+  machineStatus: '-',
+  isOpenedUpdateStops: false, // Inicializado como fechado
 };
 
 export const liveLinesSlice = createSlice({
@@ -37,6 +39,9 @@ export const liveLinesSlice = createSlice({
     setMachineStatus: (state, action: PayloadAction<string>) => {
       state.machineStatus = action.payload;
     },
+    setIsOpenedUpdateStops: (state, action: PayloadAction<boolean>) => {
+      state.isOpenedUpdateStops = action.payload;
+    },
   },
 });
 
@@ -46,6 +51,7 @@ export const {
   setLiveSelectedShift,
   setLiveSelectedLine,
   setMachineStatus,
+  setIsOpenedUpdateStops,
 } = liveLinesSlice.actions;
 
 export default liveLinesSlice.reducer;

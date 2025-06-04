@@ -62,7 +62,8 @@ const filtersSlice = createSlice({
 
     resetDateTurnFilter: (state, action: PayloadAction<string>) => {
       const scope = action.payload;
-      state.dateTurn[scope] = defaultDateTurnFilter();
+      state.dateTurn[scope] =
+        scope === 'liveLines' ? alternativeDefaultTurnFilter() : defaultDateTurnFilter();
     },
 
     // Ação para copiar filtros de um escopo para outro

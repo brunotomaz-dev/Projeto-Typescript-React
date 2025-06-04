@@ -1,5 +1,5 @@
 import { format, startOfDay } from 'date-fns';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Col, Row } from 'react-bootstrap';
 import DateTurnFilter from '../../components/DateTurnFilter';
 import { getShift } from '../../helpers/turn';
@@ -7,6 +7,7 @@ import { useLiveIndicatorsQuery } from '../../hooks/queries/useLiveIndicatorsQue
 import { useInfoIHMQuery } from '../../hooks/queries/useLiveInfoIHMQuery';
 import { useMachineInfoQuery } from '../../hooks/queries/useLiveMachineInfoQuery';
 import { useFilters } from '../../hooks/useFilters';
+import { useFiltersVisibility } from '../../hooks/useLiveFiltersVisibility';
 import { setLiveSelectedMachine } from '../../redux/store/features/liveLinesSlice';
 import { useAppDispatch, useAppSelector } from '../../redux/store/hooks';
 import BarStops from './components/barStops';
@@ -28,54 +29,20 @@ const LiveLines: React.FC = () => {
   const nowDate = format(now, 'yyyy-MM-dd');
   const shiftActual = getShift();
 
-  /* -------------------------------------------- ESTADOS LOCAIS -------------------------------------------- */
-  // Estado para mostrar/ocultar filtros
-  const [showFilters, setShowFilters] = useState(false);
-
-  // Estado para controle do modal de apontamentos
-  const [isOpenedUpdateStops, setIsOpenedUpdateStops] = useState(false);
-
-  // Estado para forçar atualização dos apontamentos
-  const [updateTrigger, setUpdateTrigger] = useState(false);
-
   /* ------------------------------------------------ REDUX ----------------------------------------------- */
   const dispatch = useAppDispatch();
-  // Buscar a linha selecionada diretamente do Redux
   const selectedLine = useAppSelector((state) => state.liveLines.selectedLine);
+  const isOpenedUpdateStops = useAppSelector((state) => state.liveLines.isOpenedUpdateStops);
 
-  /* ----------------------------------------------- USE FILTERS ---------------------------------------------- */
-  // Usar filtros com escopo 'liveLines'
+  /* ----------------------------------------------- HOOKS ---------------------------------------------- */
   const { date } = useFilters('liveLines');
+  const { isVisible: showFilters } = useFiltersVisibility('liveLines');
 
   /* ----------------------------------------------- USE QUERIES --------------------------------------------- */
-  // Usar os novos hooks de query
-  const {
-    indicators,
-    metrics,
-    machineId,
-    isLoading: indicatorsLoading,
-    isFetching: indicatorsFetching,
-  } = useLiveIndicatorsQuery(selectedLine);
-
+  // Usar os hooks de query
+  const { indicators, metrics, machineId } = useLiveIndicatorsQuery(selectedLine);
   const { machineInfo, product } = useMachineInfoQuery(machineId);
-
   const { ihmData } = useInfoIHMQuery(selectedLine);
-
-  /* ------------------------------------------------ HANDLES ----------------------------------------------- */
-  // Toggle para mostrar/ocultar filtros
-  const toggleFilters = () => {
-    setShowFilters((prev) => !prev);
-  };
-
-  // Atualizar apontamentos
-  const handleUpdateTrigger = () => {
-    setUpdateTrigger((prev) => !prev);
-  };
-
-  // Toggle modal de apontamentos
-  const toggleUpdateStops = () => {
-    setIsOpenedUpdateStops((prev) => !prev);
-  };
 
   /* ------------------------------------------------ USE MEMO ----------------------------------------------- */
   // Verificar quais turnos devem ser desabilitados
@@ -95,9 +62,6 @@ const LiveLines: React.FC = () => {
         break;
       case 'MAT':
         result.VES = true;
-        break;
-      case 'VES':
-        // Nenhum turno desabilitado
         break;
     }
 
@@ -122,15 +86,10 @@ const LiveLines: React.FC = () => {
   /* -------------------------------------------------------------------------------------------------------- */
   return (
     <>
-      <LiveLinesHeader
-        nowDate={nowDate}
-        showFilters={showFilters}
-        toggleFilters={toggleFilters}
-        isOpenedUpdateStops={isOpenedUpdateStops}
-        setIsOpenedUpdateStops={toggleUpdateStops}
-      />
+      {/* Header agora não recebe mais props */}
+      <LiveLinesHeader />
 
-      {/* DateTurnFilter - Componente de filtros */}
+      {/* DateTurnFilter usa visibilidade do Redux */}
       <Row className='mx-2'>
         <DateTurnFilter
           show={showFilters}
@@ -206,7 +165,7 @@ const LiveLines: React.FC = () => {
       {/* ----------------------------------- Tabela De Apontamentos ----------------------------------- */}
       {isOpenedUpdateStops && (
         <Col className='p-2'>
-          <UpdateStops nowDate={nowDate} onUpdate={handleUpdateTrigger} />
+          <UpdateStops nowDate={nowDate} onUpdate={() => {}} />
         </Col>
       )}
     </>
