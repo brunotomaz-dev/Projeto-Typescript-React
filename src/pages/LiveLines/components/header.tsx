@@ -20,18 +20,18 @@ const LiveLinesHeader: React.FC = () => {
   // Hook para gerenciar visibilidade de filtros
   const { isVisible: showFilters, toggle: toggleFilters } = useFiltersVisibility('liveLines');
 
-  /* ------------------------------------------------ REDUX ----------------------------------------------- */
+  /* ------------------------------------------------- Redux ------------------------------------------------- */
   const selectedDate = useAppSelector((state) => state.liveLines.selectedDate);
   const selectedMachine = useAppSelector((state) => state.liveLines.selectedMachine);
   const isOpenedUpdateStops = useAppSelector((state) => state.liveLines.isOpenedUpdateStops);
 
-  /* --------------------------------------------- Local State -------------------------------------------- */
+  /* ---------------------------------------------- Local State ---------------------------------------------- */
   const [isOpened, setIsOpened] = useState(false);
 
-  // Variáveis
+  /* ----------------------------------------------- Variáveis ----------------------------------------------- */
   const nowDate = format(startOfDay(new Date()), 'yyyy-MM-dd');
 
-  /* -------------------------------------------- Handlers ----------------------------------------------- */
+  /* ------------------------------------------------ Handlers ----------------------------------------------- */
   const handleToggleUpdateStops = () => {
     dispatch(setIsOpenedUpdateStops(!isOpenedUpdateStops));
   };
