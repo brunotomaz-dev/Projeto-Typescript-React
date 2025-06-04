@@ -2,8 +2,10 @@ import { format, startOfDay } from 'date-fns';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Col, Row } from 'react-bootstrap';
 import { getIndicator, getInfoIHM, getMaquinaInfo } from '../../api/apiRequests';
+import DateTurnFilter from '../../components/DateTurnFilter';
 import { IndicatorType } from '../../helpers/constants';
 import { getShift } from '../../helpers/turn';
+import { useFilters } from '../../hooks/useFilters';
 import useInterval from '../../hooks/useInterval';
 import {
   setLiveSelectedDate,
@@ -86,6 +88,9 @@ const LiveLines: React.FC = () => {
   const reduxShift = useAppSelector((state) => state.liveLines.selectedShift);
 
   /* -------------------------------------------- ESTADOS LOCAIS -------------------------------------------- */
+  // Estado para mostrar/ocultar filtros
+  const [showFilters, setShowFilters] = useState(false);
+
   // 1. Estado consolidado para filtros
   const [filters, setFilters] = useState<LineFilters>({
     date: nowDate,
@@ -121,7 +126,30 @@ const LiveLines: React.FC = () => {
     isUpdated: false,
   });
 
+  /* ----------------------------------------------- USE FILTERS ---------------------------------------------- */
+  // Usar o hook de filtros com escopo específico para LiveLines
+  const { date, turn, setDateFilter, setTurnFilter } = useFilters('liveLines');
+
+  // Sincronizar os filtros do Redux com os locais
+  useEffect(() => {
+    // Atualizar filtros locais baseado no useFilters
+    setFilters((prev) => ({
+      ...prev,
+      date,
+      shift: turn,
+    }));
+
+    // Sincronizar com Redux de LiveLines (mantendo compatibilidade)
+    dispatch(setLiveSelectedDate(date));
+    dispatch(setLiveSelectedShift(turn));
+  }, [date, turn, dispatch]);
+
   /* ------------------------------------------------ HANDLES ----------------------------------------------- */
+  // Toggle para mostrar/ocultar filtros
+  const toggleFilters = useCallback(() => {
+    setShowFilters((prev) => !prev);
+  }, []);
+
   // Atualiza os dados dos apontamentos
   const handleUpdate = useCallback(() => {
     setUiState((prev) => ({ ...prev, isUpdated: !prev.isUpdated }));
@@ -139,27 +167,29 @@ const LiveLines: React.FC = () => {
     [dispatch]
   );
 
-  // Mudança de data
+  // Mudança de data (manter para compatibilidade enquanto refatoramos)
   const handleDateChange = useCallback(
     (date: Date | null) => {
       if (date) {
         const formattedDate = format(startOfDay(date), 'yyyy-MM-dd');
         updateFilter('date', formattedDate);
+        setDateFilter(date); // Atualizar também no novo sistema de filtros
 
         if (formattedDate === nowDate) {
           updateFilter('shift', reduxShift);
         }
       }
     },
-    [nowDate, reduxShift, updateFilter]
+    [nowDate, reduxShift, updateFilter, setDateFilter]
   );
 
-  // Mudança de turno
+  // Mudança de turno (manter para compatibilidade enquanto refatoramos)
   const handleShiftChange = useCallback(
     (shift: string) => {
       updateFilter('shift', shift);
+      setTurnFilter(shift as any); // Atualizar também no novo sistema de filtros
     },
-    [updateFilter]
+    [updateFilter, setTurnFilter]
   );
 
   // Mudança de linha
@@ -186,6 +216,38 @@ const LiveLines: React.FC = () => {
 
     return filters.date === nowDate ? opt[shiftActual as keyof typeof opt] : opt.DEFAULT;
   }, [nowDate, filters.date, shiftActual]);
+
+  // Verifica se o turno atual é o mesmo do Redux para ver se habilita o botão
+  const disabledTurns = useMemo(() => {
+    // Se não estiver na data atual, nenhum turno fica desabilitado
+    if (date !== nowDate) {
+      return {};
+    }
+
+    const result: Record<string, boolean> = {};
+
+    // Lógica para desabilitar turnos futuros baseado no turno atual
+    switch (shiftActual) {
+      case 'NOT': // Se estamos no turno noturno
+        result.MAT = true; // Desabilita matutino
+        result.VES = true; // Desabilita vespertino
+        break;
+      case 'MAT': // Se estamos no turno matutino
+        result.VES = true; // Desabilita apenas vespertino
+        break;
+      case 'VES': // Se estamos no turno vespertino
+        // Nenhum turno é desabilitado, pois todos já aconteceram
+        break;
+    }
+
+    return result;
+  }, [date, nowDate, shiftActual]);
+
+  // Verificar se a data atual é diferente da data do sistema
+  // para configurar a propriedade 'all' do DateTurnFilter
+  const isHistoricalDate = useMemo(() => {
+    return filters.date !== nowDate;
+  }, [filters.date, nowDate]);
 
   // Filtro de dados
   const filterData = useCallback(
@@ -447,10 +509,22 @@ const LiveLines: React.FC = () => {
     <>
       <LiveLinesHeader
         nowDate={nowDate}
-        onDateChange={handleDateChange}
+        showFilters={showFilters}
+        toggleFilters={toggleFilters}
         isOpenedUpdateStops={uiState.isOpenedUpdateStops}
         setIsOpenedUpdateStops={toggleUpdateStops}
       />
+
+      {/* DateTurnFilter - Novo componente de filtros */}
+      <Row className='mx-2'>
+        <DateTurnFilter
+          show={showFilters}
+          scope='liveLines'
+          all={isHistoricalDate} // Ativar 'all' quando a data for histórica
+          disabled={disabledTurns}
+        />
+      </Row>
+
       <Row className='m-2 gap-1'>
         {/* --------------------------------------- COLUNA DOS GAUGES -------------------------------------- */}
         <Col

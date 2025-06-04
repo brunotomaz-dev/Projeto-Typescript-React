@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
 import { useCallback, useMemo } from 'react';
 import { TurnoID } from '../helpers/constants';
+import { getShift } from '../helpers/turn';
 import { copyFilters, resetDateTurnFilter, setDate, setTurn } from '../redux/store/features/filterSlice';
 import { useAppDispatch, useAppSelector } from '../redux/store/hooks';
 
@@ -25,8 +26,11 @@ export const useFilters = (scope = 'home') => {
 
   // Verificar se os filtros estão com valores padrão
   const isDefault = useMemo(() => {
+    const shift = getShift();
     const today = format(new Date(), 'yyyy-MM-dd');
-    return date === today && turn === 'ALL';
+    const isDefaultDate = date === today;
+    const isDefaultTurn = scope === 'liveLines' ? turn === shift : turn === 'ALL';
+    return isDefaultDate && isDefaultTurn;
   }, [date, turn]);
 
   // Handlers para atualizar filtros

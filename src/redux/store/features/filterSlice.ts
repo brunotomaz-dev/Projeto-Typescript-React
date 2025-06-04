@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { format, startOfDay } from 'date-fns';
 import { TurnoID } from '../../../helpers/constants';
+import { getShift } from '../../../helpers/turn';
 
 // Definir tipos para filtros
 export type DateTurnFilter = {
@@ -18,11 +19,17 @@ const defaultDateTurnFilter = (): DateTurnFilter => ({
   turn: 'ALL',
 });
 
+// Turno atual padrão
+const alternativeDefaultTurnFilter = (): DateTurnFilter => ({
+  date: format(startOfDay(new Date()), 'yyyy-MM-dd'),
+  turn: getShift(),
+});
+
 // Estado inicial com apenas alguns escopos comuns pré-definidos
 const initialState: FiltersState = {
   dateTurn: {
     home: defaultDateTurnFilter(),
-    production: defaultDateTurnFilter(),
+    liveLines: alternativeDefaultTurnFilter(),
     // Não precisamos pré-definir todos os escopos possíveis
   },
 };

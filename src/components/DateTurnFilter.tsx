@@ -10,6 +10,7 @@ interface DateTurnFilterProps {
   show: boolean;
   scope?: string;
   all?: boolean;
+  disabled?: Record<string, boolean>; // Adicionada essa propriedade
 }
 
 const DateTurnFilter: React.FC<DateTurnFilterProps> = ({
@@ -17,6 +18,7 @@ const DateTurnFilter: React.FC<DateTurnFilterProps> = ({
   show,
   scope = 'home',
   all = true,
+  disabled = {}, // Valor default é objeto vazio (nenhum desabilitado)
 }) => {
   /* ------------------------------------------------- Hook's ------------------------------------------------ */
   const { date, turn, setDateFilter, setTurnFilter, resetFilters } = useFilters(scope);
@@ -55,6 +57,7 @@ const DateTurnFilter: React.FC<DateTurnFilterProps> = ({
               all={all}
               fullWidth={true}
               id={`${scope}-filter-turn`}
+              disabled={disabled} // Passamos o objeto de turnos desabilitados
             />
           </Col>
 

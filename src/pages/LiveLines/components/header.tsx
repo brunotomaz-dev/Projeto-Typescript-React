@@ -1,22 +1,21 @@
-import { parseISO, startOfDay } from 'date-fns';
-import { ptBR } from 'date-fns/locale/pt-BR';
 import React, { useState } from 'react';
 import { Button, Row, Stack } from 'react-bootstrap';
-import DatePicker from 'react-datepicker';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { useAppSelector } from '../../../redux/store/hooks';
 import ModalServiceHistory from './liveLines.ModalHistoricService';
 
 interface HeaderProps {
   nowDate: string;
-  onDateChange: (date: Date | null) => void;
+  showFilters: boolean;
+  toggleFilters: () => void;
   isOpenedUpdateStops: boolean;
   setIsOpenedUpdateStops: (isOpened: boolean) => void;
 }
 
 const LiveLinesHeader: React.FC<HeaderProps> = ({
   nowDate,
-  onDateChange,
+  showFilters,
+  toggleFilters,
   isOpenedUpdateStops,
   setIsOpenedUpdateStops,
 }) => {
@@ -43,29 +42,25 @@ const LiveLinesHeader: React.FC<HeaderProps> = ({
         </h1>
         <h5 className='text-center'>{`(${selectedMachine || '-'})`}</h5>
         <Stack direction='horizontal' gap={2}>
-          <DatePicker
-            selected={parseISO(selectedDate)}
-            className='form-control text-center'
-            locale={ptBR}
-            dateFormat='dd/MM/yyyy'
-            icon='bi bi-calendar-day'
-            popperClassName='custom-popper'
-            calendarClassName='custom-calendar'
-            showIcon={true}
-            onChange={onDateChange}
-            minDate={parseISO('2024-11-01')}
-            maxDate={startOfDay(new Date())}
-          />
+          {/* Novo botão para mostrar/ocultar filtros */}
+          <Button variant={showFilters ? 'secondary' : 'outline-secondary'} size='sm' onClick={toggleFilters}>
+            <i className={`bi ${showFilters ? 'bi-funnel-fill' : 'bi-funnel'} me-2`}></i>
+            {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+          </Button>
+
           {canView && (
             <Button
-              variant='outline-secondary'
+              variant={isOpenedUpdateStops ? 'secondary' : 'outline-secondary'}
+              size='sm'
               onClick={() => setIsOpenedUpdateStops(!isOpenedUpdateStops)}
             >
+              <i className='bi bi-bar-chart-steps me-2'></i>
               {isOpenedUpdateStops ? 'Fechar Apontamentos' : 'Ver Apontamentos'}
             </Button>
           )}
           {hasBtnHistAccess && (
-            <Button variant='outline-secondary' onClick={() => setIsOpened(true)}>
+            <Button variant='outline-secondary' onClick={() => setIsOpened(true)} size='sm'>
+              <i className='bi bi-clock-history me-2'></i>
               Ver Histórico
             </Button>
           )}

@@ -73,6 +73,31 @@ const SegmentedButton: React.FC<iSegmentedButtonProps> = ({
     .navbar-pill-active {
       background-color: var(--bs-light-grey) !important;
       color: var(--bs-secondary) !important;
+    }
+    
+    /* Estilo personalizado para botões desabilitados */
+    .nav-link.disabled {
+      opacity: 0.6 !important;
+      background-color: #f8f8f8 !important;
+      color: #9ca3af !important;
+      cursor: not-allowed !important;
+      position: relative !important;
+    }
+    
+    /* Adicionar um indicador visual para botões desabilitados */
+    .nav-link.disabled::before {
+      content: '\\274C'; /* Símbolo X */
+      font-size: 10px;
+      position: absolute;
+      right: 6px;
+      top: 2px;
+      color: #dc3545;
+      opacity: 0.7;
+    }
+    
+    /* Texto riscado para indicar visualmente que está desabilitado */
+    .nav-link.disabled span {
+      text-decoration: line-through;
     }`;
 
   /* ------------------------------------------------------------------------------------------------------ */
@@ -105,7 +130,8 @@ const SegmentedButton: React.FC<iSegmentedButtonProps> = ({
               key={`link-${option.value}-${id}`}
             >
               {option.icon && option.icon}
-              {option.label}
+              {/* Envolver o texto em span para aplicar estilo condicional */}
+              <span>{option.label}</span>
             </Nav.Link>
           </Nav.Item>
         ))}
