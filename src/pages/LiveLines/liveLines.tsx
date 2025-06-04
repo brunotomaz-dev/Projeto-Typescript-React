@@ -78,7 +78,7 @@ const LiveLines: React.FC = () => {
     NOT: 'Noturno',
     MAT: 'Matutino',
     VES: 'Vespertino',
-    TOT: 'Total',
+    ALL: 'Todos Turnos',
   };
 
   /* ------------------------------------------------ REDUX ----------------------------------------------- */
@@ -181,7 +181,7 @@ const LiveLines: React.FC = () => {
       NOT: ['NOT'],
       MAT: ['MAT', 'NOT'],
       VES: ['VES', 'MAT', 'NOT'],
-      DEFAULT: ['TOT', 'NOT', 'MAT', 'VES'],
+      DEFAULT: ['ALL', 'NOT', 'MAT', 'VES'],
     };
 
     return filters.date === nowDate ? opt[shiftActual as keyof typeof opt] : opt.DEFAULT;
@@ -190,7 +190,7 @@ const LiveLines: React.FC = () => {
   // Filtro de dados
   const filterData = useCallback(
     <T extends iIndicator>(data: T[]): T[] => {
-      if (filters.shift === 'TOT') {
+      if (filters.shift === 'ALL') {
         return data.filter((item) => item.linha === filters.line);
       }
       return data.filter((item) => item.linha === filters.line && item.turno === filters.shift);
@@ -252,7 +252,7 @@ const LiveLines: React.FC = () => {
     if (selectedMachine) {
       try {
         const params =
-          filters.shift === 'TOT'
+          filters.shift === 'ALL'
             ? { data: filters.date, maquina_id: selectedMachine }
             : { data: filters.date, turno: filters.shift, maquina_id: selectedMachine };
 
@@ -275,7 +275,7 @@ const LiveLines: React.FC = () => {
   const fetchInfoIHM = useCallback(async () => {
     try {
       const params =
-        filters.shift === 'TOT'
+        filters.shift === 'ALL'
           ? { data: filters.date, linha: filters.line }
           : { data: filters.date, linha: filters.line, turno: filters.shift };
 

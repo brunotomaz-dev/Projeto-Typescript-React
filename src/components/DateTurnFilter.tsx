@@ -8,10 +8,16 @@ import SegmentedTurnBtn from './SegmentedTurnBtn';
 interface DateTurnFilterProps {
   className?: string;
   show: boolean;
-  scope?: string; // Aceita qualquer string como escopo
+  scope?: string;
+  all?: boolean;
 }
 
-const DateTurnFilter: React.FC<DateTurnFilterProps> = ({ className = '', show, scope = 'home' }) => {
+const DateTurnFilter: React.FC<DateTurnFilterProps> = ({
+  className = '',
+  show,
+  scope = 'home',
+  all = true,
+}) => {
   /* ------------------------------------------------- Hook's ------------------------------------------------ */
   const { date, turn, setDateFilter, setTurnFilter, resetFilters } = useFilters(scope);
 
@@ -46,7 +52,7 @@ const DateTurnFilter: React.FC<DateTurnFilterProps> = ({ className = '', show, s
             <SegmentedTurnBtn
               turn={turn as TurnoID}
               onTurnChange={handleTurnChange}
-              all={true}
+              all={all}
               fullWidth={true}
               id={`${scope}-filter-turn`}
             />
