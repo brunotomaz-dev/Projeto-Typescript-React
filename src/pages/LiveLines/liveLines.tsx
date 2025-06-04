@@ -1,17 +1,13 @@
 import { format, startOfDay } from 'date-fns';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Col, Row } from 'react-bootstrap';
-import { getIndicator, getInfoIHM, getMaquinaInfo } from '../../api/apiRequests';
 import DateTurnFilter from '../../components/DateTurnFilter';
-import { IndicatorType } from '../../helpers/constants';
 import { getShift } from '../../helpers/turn';
+import { useLiveIndicatorsQuery } from '../../hooks/queries/useLiveIndicatorsQuery';
+import { useInfoIHMQuery } from '../../hooks/queries/useLiveInfoIHMQuery';
+import { useMachineInfoQuery } from '../../hooks/queries/useLiveMachineInfoQuery';
 import { useFilters } from '../../hooks/useFilters';
-import useInterval from '../../hooks/useInterval';
-import {
-  setLiveSelectedDate,
-  setLiveSelectedMachine,
-  setLiveSelectedShift,
-} from '../../redux/store/features/liveLinesSlice';
+import { setLiveSelectedMachine } from '../../redux/store/features/liveLinesSlice';
 import { useAppDispatch, useAppSelector } from '../../redux/store/hooks';
 import BarStops from './components/barStops';
 import EfficiencyComparison from './components/effComparison';
@@ -23,201 +19,66 @@ import LineCycle from './components/linecycle';
 import ProductionPanel from './components/productionCard';
 import Timeline from './components/timeline';
 import UpdateStops from './components/UpdateStops';
-import { iEff, iIndicator, iPerf, iRep } from './interfaces/indicator.interfaces';
-import { iInfoIhmLive } from './interfaces/infoIhm.interface';
-import { iMaquinaInfo } from './interfaces/maquinaInfo.interface';
 
 // cspell: words linecycle eficiencia recno
-/* --------------------------------------------- TIPOS LOCAIS --------------------------------------------- */
-type tShiftOptions = 'NOT' | 'MAT' | 'VES' | 'DEFAULT';
-type IndicatorKey = 'eficiencia' | 'performance' | 'reparo';
-
-interface iEfficiencyComparison {
-  linha: number;
-  turno: string;
-  eficiencia: number;
-}
-
-// Interfaces para estados consolidados
-interface LineFilters {
-  date: string;
-  line: number;
-  shift: string;
-}
-
-interface IndicatorData {
-  efficiency: iEff[];
-  performance: iPerf[];
-  repair: iRep[];
-}
-
-interface EfficiencyMetrics {
-  monthAverage: number;
-  turnAverage: number;
-  lineAverage: number;
-  lineMatAverage: number;
-  lineVesAverage: number;
-  lineNotAverage: number;
-}
-
-interface UiState {
-  isOpenedUpdateStops: boolean;
-  isUpdated: boolean;
-}
-
-/* -------------------------------------------------------------------------------------------------------- */
-/*                                           Componente Principal                                           */
-/* -------------------------------------------------------------------------------------------------------- */
 
 const LiveLines: React.FC = () => {
   /* ----------------------------------------------- VARIÁVEIS ---------------------------------------------- */
   const now = startOfDay(new Date());
   const nowDate = format(now, 'yyyy-MM-dd');
-  const lines = Array.from({ length: 14 }, (_, i) => i + 1);
-  const cardStyle = { borderRadius: '10px', fontSize: '1.5vw' };
   const shiftActual = getShift();
-  const turnos = {
-    NOT: 'Noturno',
-    MAT: 'Matutino',
-    VES: 'Vespertino',
-    ALL: 'Todos Turnos',
-  };
-
-  /* ------------------------------------------------ REDUX ----------------------------------------------- */
-  const dispatch = useAppDispatch();
-  const reduxShift = useAppSelector((state) => state.liveLines.selectedShift);
 
   /* -------------------------------------------- ESTADOS LOCAIS -------------------------------------------- */
   // Estado para mostrar/ocultar filtros
   const [showFilters, setShowFilters] = useState(false);
 
-  // 1. Estado consolidado para filtros
-  const [filters, setFilters] = useState<LineFilters>({
-    date: nowDate,
-    line: 1,
-    shift: reduxShift,
-  });
+  // Estado para controle do modal de apontamentos
+  const [isOpenedUpdateStops, setIsOpenedUpdateStops] = useState(false);
 
-  // 2. Estado consolidado para dados de indicadores
-  const [indicatorData, setIndicatorData] = useState<IndicatorData>({
-    efficiency: [],
-    performance: [],
-    repair: [],
-  });
+  // Estado para forçar atualização dos apontamentos
+  const [updateTrigger, setUpdateTrigger] = useState(false);
 
-  // 3. Estado para informações da máquina selecionada
-  const [selectedMachine, setSelectedMachine] = useState<string>('');
-  const [maquinaInfo, setMaquinaInfo] = useState<iMaquinaInfo[]>([]);
-  const [infoIHM, setInfoIHM] = useState<iInfoIhmLive[]>([]);
-
-  // 4. Estado consolidado para métricas de eficiência
-  const [efficiencyMetrics, setEfficiencyMetrics] = useState<EfficiencyMetrics>({
-    monthAverage: 0,
-    turnAverage: 0,
-    lineAverage: 0,
-    lineMatAverage: 0,
-    lineVesAverage: 0,
-    lineNotAverage: 0,
-  });
-
-  // 5. Estado para controle da UI
-  const [uiState, setUiState] = useState<UiState>({
-    isOpenedUpdateStops: false,
-    isUpdated: false,
-  });
+  /* ------------------------------------------------ REDUX ----------------------------------------------- */
+  const dispatch = useAppDispatch();
+  // Buscar a linha selecionada diretamente do Redux
+  const selectedLine = useAppSelector((state) => state.liveLines.selectedLine);
 
   /* ----------------------------------------------- USE FILTERS ---------------------------------------------- */
-  // Usar o hook de filtros com escopo específico para LiveLines
-  const { date, turn, setDateFilter, setTurnFilter } = useFilters('liveLines');
+  // Usar filtros com escopo 'liveLines'
+  const { date } = useFilters('liveLines');
 
-  // Sincronizar os filtros do Redux com os locais
-  useEffect(() => {
-    // Atualizar filtros locais baseado no useFilters
-    setFilters((prev) => ({
-      ...prev,
-      date,
-      shift: turn,
-    }));
+  /* ----------------------------------------------- USE QUERIES --------------------------------------------- */
+  // Usar os novos hooks de query
+  const {
+    indicators,
+    metrics,
+    machineId,
+    isLoading: indicatorsLoading,
+    isFetching: indicatorsFetching,
+  } = useLiveIndicatorsQuery(selectedLine);
 
-    // Sincronizar com Redux de LiveLines (mantendo compatibilidade)
-    dispatch(setLiveSelectedDate(date));
-    dispatch(setLiveSelectedShift(turn));
-  }, [date, turn, dispatch]);
+  const { machineInfo, product } = useMachineInfoQuery(machineId);
+
+  const { ihmData } = useInfoIHMQuery(selectedLine);
 
   /* ------------------------------------------------ HANDLES ----------------------------------------------- */
   // Toggle para mostrar/ocultar filtros
-  const toggleFilters = useCallback(() => {
+  const toggleFilters = () => {
     setShowFilters((prev) => !prev);
-  }, []);
+  };
 
-  // Atualiza os dados dos apontamentos
-  const handleUpdate = useCallback(() => {
-    setUiState((prev) => ({ ...prev, isUpdated: !prev.isUpdated }));
-  }, []);
+  // Atualizar apontamentos
+  const handleUpdateTrigger = () => {
+    setUpdateTrigger((prev) => !prev);
+  };
 
-  // Atualiza os filtros
-  const updateFilter = useCallback(
-    (key: keyof LineFilters, value: string | number) => {
-      setFilters((prev) => ({ ...prev, [key]: value }));
+  // Toggle modal de apontamentos
+  const toggleUpdateStops = () => {
+    setIsOpenedUpdateStops((prev) => !prev);
+  };
 
-      // Sincronização com Redux quando necessário
-      if (key === 'date') dispatch(setLiveSelectedDate(value as string));
-      if (key === 'shift') dispatch(setLiveSelectedShift(value as string));
-    },
-    [dispatch]
-  );
-
-  // Mudança de data (manter para compatibilidade enquanto refatoramos)
-  const handleDateChange = useCallback(
-    (date: Date | null) => {
-      if (date) {
-        const formattedDate = format(startOfDay(date), 'yyyy-MM-dd');
-        updateFilter('date', formattedDate);
-        setDateFilter(date); // Atualizar também no novo sistema de filtros
-
-        if (formattedDate === nowDate) {
-          updateFilter('shift', reduxShift);
-        }
-      }
-    },
-    [nowDate, reduxShift, updateFilter, setDateFilter]
-  );
-
-  // Mudança de turno (manter para compatibilidade enquanto refatoramos)
-  const handleShiftChange = useCallback(
-    (shift: string) => {
-      updateFilter('shift', shift);
-      setTurnFilter(shift as any); // Atualizar também no novo sistema de filtros
-    },
-    [updateFilter, setTurnFilter]
-  );
-
-  // Mudança de linha
-  const handleLineChange = useCallback(
-    (line: number) => {
-      updateFilter('line', line);
-    },
-    [updateFilter]
-  );
-
-  // Controle do modal de apontamentos
-  const toggleUpdateStops = useCallback(() => {
-    setUiState((prev) => ({ ...prev, isOpenedUpdateStops: !prev.isOpenedUpdateStops }));
-  }, []);
-
-  // Opções de turno
-  const shiftOptions = useMemo(() => {
-    const opt: Record<tShiftOptions, string[]> = {
-      NOT: ['NOT'],
-      MAT: ['MAT', 'NOT'],
-      VES: ['VES', 'MAT', 'NOT'],
-      DEFAULT: ['ALL', 'NOT', 'MAT', 'VES'],
-    };
-
-    return filters.date === nowDate ? opt[shiftActual as keyof typeof opt] : opt.DEFAULT;
-  }, [nowDate, filters.date, shiftActual]);
-
-  // Verifica se o turno atual é o mesmo do Redux para ver se habilita o botão
+  /* ------------------------------------------------ USE MEMO ----------------------------------------------- */
+  // Verificar quais turnos devem ser desabilitados
   const disabledTurns = useMemo(() => {
     // Se não estiver na data atual, nenhum turno fica desabilitado
     if (date !== nowDate) {
@@ -228,279 +89,33 @@ const LiveLines: React.FC = () => {
 
     // Lógica para desabilitar turnos futuros baseado no turno atual
     switch (shiftActual) {
-      case 'NOT': // Se estamos no turno noturno
-        result.MAT = true; // Desabilita matutino
-        result.VES = true; // Desabilita vespertino
+      case 'NOT':
+        result.MAT = true;
+        result.VES = true;
         break;
-      case 'MAT': // Se estamos no turno matutino
-        result.VES = true; // Desabilita apenas vespertino
+      case 'MAT':
+        result.VES = true;
         break;
-      case 'VES': // Se estamos no turno vespertino
-        // Nenhum turno é desabilitado, pois todos já aconteceram
+      case 'VES':
+        // Nenhum turno desabilitado
         break;
     }
 
     return result;
   }, [date, nowDate, shiftActual]);
 
-  // Verificar se a data atual é diferente da data do sistema
-  // para configurar a propriedade 'all' do DateTurnFilter
+  // Verificar se é data histórica para habilitar opção "ALL" no filtro
   const isHistoricalDate = useMemo(() => {
-    return filters.date !== nowDate;
-  }, [filters.date, nowDate]);
-
-  // Filtro de dados
-  const filterData = useCallback(
-    <T extends iIndicator>(data: T[]): T[] => {
-      if (filters.shift === 'ALL') {
-        return data.filter((item) => item.linha === filters.line);
-      }
-      return data.filter((item) => item.linha === filters.line && item.turno === filters.shift);
-    },
-    [filters.line, filters.shift]
-  );
-
-  // Média da eficiência
-  const calculateAverage = useCallback(
-    <T extends { [K in IndicatorKey]?: number }>(data: T[], indicator: IndicatorKey): number => {
-      const filteredData = data.filter((item) => typeof item[indicator] === 'number' && item[indicator] > 0);
-
-      if (filteredData.length === 0) {
-        return 0;
-      }
-
-      const average =
-        filteredData.reduce((acc, curr) => acc + (curr[indicator] ?? 0), 0) / filteredData.length;
-      return average * 100;
-    },
-    []
-  );
-
-  /* ------------------------------------------ REQUISIÇÕES DA API ------------------------------------------ */
-  // Requisição de eficiência, performance e reparo
-  const fetchIndicators = useCallback(async () => {
-    try {
-      const [effData, perfData, repData] = await Promise.all([
-        getIndicator(IndicatorType.EFFICIENCY, filters.date, [
-          'linha',
-          'maquina_id',
-          'turno',
-          'data_registro',
-          'total_produzido',
-          'eficiencia',
-        ]),
-        getIndicator(IndicatorType.PERFORMANCE, filters.date, [
-          'linha',
-          'turno',
-          'data_registro',
-          'performance',
-        ]),
-        getIndicator('repair', filters.date, ['linha', 'turno', 'data_registro', 'reparo']),
-      ]);
-
-      // Atualiza o estado consolidado
-      setIndicatorData({
-        efficiency: effData,
-        performance: perfData,
-        repair: repData,
-      });
-    } catch (error) {
-      console.error('Erro ao buscar indicadores:', error);
-    }
-  }, [filters.date]);
-
-  // Requisição de Maquina Info
-  const fetchMaqInfo = useCallback(async () => {
-    if (selectedMachine) {
-      try {
-        const params =
-          filters.shift === 'ALL'
-            ? { data: filters.date, maquina_id: selectedMachine }
-            : { data: filters.date, turno: filters.shift, maquina_id: selectedMachine };
-
-        const data = await getMaquinaInfo(params, [
-          'ciclo_1_min',
-          'hora_registro',
-          'produto',
-          'recno',
-          'status',
-          'tempo_parada',
-        ]);
-        setMaquinaInfo(data);
-      } catch (error) {
-        console.error('Erro ao buscar info da máquina:', error);
-      }
-    }
-  }, [selectedMachine, filters.date, filters.shift]);
-
-  // Requisição de info + ihm
-  const fetchInfoIHM = useCallback(async () => {
-    try {
-      const params =
-        filters.shift === 'ALL'
-          ? { data: filters.date, linha: filters.line }
-          : { data: filters.date, linha: filters.line, turno: filters.shift };
-
-      const data = await getInfoIHM(params, [
-        'status',
-        'data_hora',
-        'data_hora_final',
-        'motivo',
-        'problema',
-        'causa',
-        'tempo',
-        'afeta_eff',
-      ]);
-      setInfoIHM(data);
-    } catch (error) {
-      console.error('Erro ao buscar info IHM:', error);
-    }
-  }, [filters.date, filters.shift, filters.line]);
-
-  // Requisição de eficiência média
-  const fetchEfficiencyMetrics = useCallback(async () => {
-    try {
-      // Data inicial
-      const now = startOfDay(new Date());
-      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-      const firstDayString = format(firstDay, 'yyyy-MM-dd');
-
-      const data: iEfficiencyComparison[] = await getIndicator(
-        IndicatorType.EFFICIENCY,
-        [firstDayString],
-        ['linha', 'turno', 'eficiencia']
-      );
-
-      // Filtra dados válidos
-      const filteredData = data.filter((item) => item.eficiencia > 0);
-
-      if (filteredData.length === 0) {
-        return;
-      }
-
-      // Média da eficiência
-      const calculateMetricAverage = (items: iEfficiencyComparison[]): number => {
-        if (items.length === 0) return 0;
-        return items.reduce((acc, curr) => acc + (Math.round(curr.eficiencia * 100) ?? 0), 0) / items.length;
-      };
-
-      // Cálculo de todas as médias
-      const monthAverage = calculateMetricAverage(filteredData);
-
-      // Eficiência do turno
-      const turnData = filteredData.filter((item) => item.turno === filters.shift);
-      const turnAverage = calculateMetricAverage(turnData);
-
-      // Eficiência da linha
-      const lineData = filteredData.filter((item) => item.linha === filters.line);
-      const lineAverage = calculateMetricAverage(lineData);
-
-      // Eficiência da linha por turno
-      const lineMatData = lineData.filter((item) => item.turno === 'MAT');
-      const lineMatAverage = calculateMetricAverage(lineMatData);
-
-      const lineVesData = lineData.filter((item) => item.turno === 'VES');
-      const lineVesAverage = calculateMetricAverage(lineVesData);
-
-      const lineNotData = lineData.filter((item) => item.turno === 'NOT');
-      const lineNotAverage = calculateMetricAverage(lineNotData);
-
-      // Atualiza o estado consolidado de métricas
-      setEfficiencyMetrics({
-        monthAverage,
-        turnAverage,
-        lineAverage,
-        lineMatAverage,
-        lineVesAverage,
-        lineNotAverage,
-      });
-    } catch (error) {
-      console.error('Erro ao buscar métricas de eficiência:', error);
-    }
-  }, [filters.line, filters.shift]);
-
-  /* ------------------------------------------------ UseMemo ------------------------------------------------ */
-  // Dados filtrados dos indicadores
-  const filteredData = useMemo(
-    () => ({
-      efficiency: filterData(indicatorData.efficiency),
-      performance: filterData(indicatorData.performance),
-      repair: filterData(indicatorData.repair),
-    }),
-    [indicatorData, filterData]
-  );
-
-  // Cálculo dos indicadores a partir dos dados filtrados
-  const indicators = useMemo(
-    () => ({
-      efficiency: calculateAverage(filteredData.efficiency, 'eficiencia'),
-      performance: calculateAverage(filteredData.performance, 'performance'),
-      repair: calculateAverage(filteredData.repair, 'reparo'),
-      productionTotal: filteredData.efficiency.reduce((acc, curr) => acc + curr.total_produzido, 0),
-    }),
-    [filteredData, calculateAverage]
-  );
+    return date !== nowDate;
+  }, [date, nowDate]);
 
   /* ---------------------------------------------- USE EFFECTS --------------------------------------------- */
-  // Requisição de indicadores quando a data muda
+  // Sincronizar a máquina selecionada com o Redux
   useEffect(() => {
-    void fetchIndicators();
-  }, [fetchIndicators]);
-
-  // Atualizar máquina selecionada quando dados de eficiência mudam
-  useEffect(() => {
-    const machineId = filteredData.efficiency[0]?.maquina_id ?? '';
-    setSelectedMachine(machineId);
-    dispatch(setLiveSelectedMachine(machineId));
-  }, [filteredData.efficiency, dispatch]);
-
-  // Requisição de Maquina Info quando máquina/data/turno mudam
-  useEffect(() => {
-    void fetchMaqInfo();
-  }, [fetchMaqInfo]);
-
-  // Requisição de info + ihm quando data/turno/linha mudam
-  useEffect(() => {
-    void fetchInfoIHM();
-  }, [fetchInfoIHM]);
-
-  // Requisição de eficiência média quando linha/turno mudam
-  useEffect(() => {
-    void fetchEfficiencyMetrics();
-  }, [fetchEfficiencyMetrics]);
-
-  // Limpeza do componente
-  useEffect(() => {
-    return () => {
-      // Restaura os dados do redux
-      dispatch(setLiveSelectedDate(nowDate));
-      dispatch(setLiveSelectedMachine(''));
-      dispatch(setLiveSelectedShift(shiftActual));
-    };
-  }, [dispatch, nowDate, shiftActual]);
-
-  /* --------------------------------------------- USE INTERVAL --------------------------------------------- */
-  // Atualizações periódicas
-  useInterval(
-    () => {
-      void fetchIndicators();
-    },
-    filters.date === nowDate ? 60 * 1000 : null
-  );
-
-  useInterval(
-    () => {
-      void fetchMaqInfo();
-    },
-    selectedMachine ? 60 * 1000 : null
-  );
-
-  useInterval(
-    () => {
-      void fetchInfoIHM();
-    },
-    filters.date === nowDate ? 60 * 1000 : null
-  );
+    if (machineId) {
+      dispatch(setLiveSelectedMachine(machineId));
+    }
+  }, [machineId, dispatch]);
 
   /* -------------------------------------------------------------------------------------------------------- */
   /*                                                  Layout                                                  */
@@ -511,16 +126,16 @@ const LiveLines: React.FC = () => {
         nowDate={nowDate}
         showFilters={showFilters}
         toggleFilters={toggleFilters}
-        isOpenedUpdateStops={uiState.isOpenedUpdateStops}
+        isOpenedUpdateStops={isOpenedUpdateStops}
         setIsOpenedUpdateStops={toggleUpdateStops}
       />
 
-      {/* DateTurnFilter - Novo componente de filtros */}
+      {/* DateTurnFilter - Componente de filtros */}
       <Row className='mx-2'>
         <DateTurnFilter
           show={showFilters}
           scope='liveLines'
-          all={isHistoricalDate} // Ativar 'all' quando a data for histórica
+          all={isHistoricalDate}
           disabled={disabledTurns}
         />
       </Row>
@@ -540,10 +155,7 @@ const LiveLines: React.FC = () => {
         </Col>
         {/* -------------------------------------- COLUNA DA PRODUÇÃO -------------------------------------- */}
         <Col xs={3} xl={2} className='card bg-transparent shadow mb-lg-0 mb-2'>
-          <ProductionPanel
-            productionTotal={indicators.productionTotal}
-            produto={maquinaInfo.at(-1)?.produto?.trim() || '-'}
-          />
+          <ProductionPanel productionTotal={indicators.productionTotal} produto={product} />
         </Col>
         {/* --------------------------------------- COLUNA DE BARRAS --------------------------------------- */}
         <Col
@@ -551,14 +163,14 @@ const LiveLines: React.FC = () => {
           xl
           className='card p-2 justify-content-center shadow bg-transparent border-0 mb-lg-0 mb-2'
         >
-          <BarStops data={infoIHM} cycleData={maquinaInfo} />
+          <BarStops data={ihmData} cycleData={machineInfo} />
         </Col>
         {/* ---------------------_--------------- COLUNA DE COMPARAÇÃO -------------------------_----------- */}
         <Col xs xl className='card p-2 shadow bg-transparent border-0 mb-lg-0 mb-2'>
           <EfficiencyComparison
-            factoryEff={efficiencyMetrics.monthAverage}
-            turnEff={efficiencyMetrics.turnAverage}
-            lineEff={efficiencyMetrics.lineAverage}
+            factoryEff={metrics?.monthAverage || 0}
+            turnEff={metrics?.turnAverage || 0}
+            lineEff={metrics?.lineAverage || 0}
             currentEff={indicators.efficiency}
           />
         </Col>
@@ -566,46 +178,35 @@ const LiveLines: React.FC = () => {
       <Row className='d-flex m-2 gap-1'>
         {/* ------------------------------------- COLUNA DOS CONTROLES ------------------------------------- */}
         <Col xs xl={2} className='card bg-transparent border-0 h-100'>
-          <LineControls
-            selectedLine={filters.line}
-            lines={lines}
-            turnos={turnos}
-            shiftOptions={shiftOptions}
-            onLineChange={handleLineChange}
-            onShiftChange={handleShiftChange}
-            cardStyle={cardStyle}
-            status={maquinaInfo.at(-1)?.status || '-'}
-            statusRender={reduxShift === filters.shift && filters.date === nowDate}
-            infoParada={infoIHM.at(-1)}
-          />
+          <LineControls />
         </Col>
         {/* --------------------------- COLUNA DOS GRÁFICOS DE CICLOS E TIMELINE --------------------------- */}
         <Col xs={12} xl className='card p-2 shadow border-0 bg-transparent justify-content-around'>
-          <LineCycle maqInfo={maquinaInfo} />
-          <Timeline data={infoIHM} />
+          <LineCycle maqInfo={machineInfo} />
+          <Timeline data={ihmData} />
         </Col>
         {/* -------------------------------------------- MÉDIAS -------------------------------------------- */}
-        {efficiencyMetrics.monthAverage > 0 && (
+        {(metrics?.monthAverage || 0) > 0 && (
           <Col xs={12} xl={2} className='card bg-light p-2 bg-transparent border-0 shadow align-items-center'>
             <Row className='w-100 h-100'>
               <h6 className='mt-2 fs-6 text-center fw-bold text-dark-emphasis'> Eficiência Média da Linha</h6>
-              {efficiencyMetrics.lineNotAverage > 0 && (
-                <GaugeAverage average={efficiencyMetrics.lineNotAverage} turn='Noturno' />
+              {(metrics?.lineNotAverage || 0) > 0 && (
+                <GaugeAverage average={metrics?.lineNotAverage || 0} turn='Noturno' />
               )}
-              {efficiencyMetrics.lineMatAverage > 0 && (
-                <GaugeAverage average={efficiencyMetrics.lineMatAverage} turn='Matutino' />
+              {(metrics?.lineMatAverage || 0) > 0 && (
+                <GaugeAverage average={metrics?.lineMatAverage || 0} turn='Matutino' />
               )}
-              {efficiencyMetrics.lineVesAverage > 0 && (
-                <GaugeAverage average={efficiencyMetrics.lineVesAverage} turn='Vespertino' />
+              {(metrics?.lineVesAverage || 0) > 0 && (
+                <GaugeAverage average={metrics?.lineVesAverage || 0} turn='Vespertino' />
               )}
             </Row>
           </Col>
         )}
       </Row>
       {/* ----------------------------------- Tabela De Apontamentos ----------------------------------- */}
-      {uiState.isOpenedUpdateStops && (
+      {isOpenedUpdateStops && (
         <Col className='p-2'>
-          <UpdateStops nowDate={nowDate} selectedLine={filters.line} onUpdate={handleUpdate} />
+          <UpdateStops nowDate={nowDate} onUpdate={handleUpdateTrigger} />
         </Col>
       )}
     </>
