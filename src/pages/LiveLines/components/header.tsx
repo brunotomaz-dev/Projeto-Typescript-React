@@ -1,6 +1,8 @@
-import { format, startOfDay } from 'date-fns';
+import { format, parse, startOfDay } from 'date-fns';
 import React, { useState } from 'react';
 import { Button, Row, Stack } from 'react-bootstrap';
+import { getTurnoName, TurnoID } from '../../../helpers/constants';
+import { useFilters } from '../../../hooks/useFilters';
 import { useFiltersVisibility } from '../../../hooks/useLiveFiltersVisibility';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { setIsOpenedUpdateStops } from '../../../redux/store/features/liveLinesSlice';
@@ -13,6 +15,7 @@ const LiveLinesHeader: React.FC = () => {
   const canView = hasResourcePermission('ihm_appointments', 'view');
   const hasBtnHistAccess = hasElementAccess('btn_OS_preventive_history');
   const dispatch = useAppDispatch();
+  const { isDefault, turn, date } = useFilters('liveLines');
 
   // Hook para gerenciar visibilidade de filtros
   const { isVisible: showFilters, toggle: toggleFilters } = useFiltersVisibility('liveLines');
@@ -67,6 +70,22 @@ const LiveLinesHeader: React.FC = () => {
             </Button>
           )}
         </Stack>
+        {/* Exibir resumo dos filtros aplicados quando os filtros estão escondidos mas ativos */}
+        {!showFilters && !isDefault && (
+          <div className='alert alert-info d-flex align-items-center mt-3'>
+            <i className='bi bi-info-circle-fill me-2'></i>
+            <span>
+              Exibindo dados salvos de:{' '}
+              <strong>{format(parse(date, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy')}</strong>
+              {turn !== 'ALL' && (
+                <>
+                  {' '}
+                  - Turno: <strong>{getTurnoName(turn as TurnoID)}</strong>
+                </>
+              )}
+            </span>
+          </div>
+        )}
       </Row>
       <ModalServiceHistory isOpened={isOpened} onHide={() => setIsOpened(false)} />
     </>
