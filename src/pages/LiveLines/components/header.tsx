@@ -10,7 +10,7 @@ import { useAppDispatch, useAppSelector } from '../../../redux/store/hooks';
 import ModalServiceHistory from './liveLines.ModalHistoricService';
 
 const LiveLinesHeader: React.FC = () => {
-  /* ------------------------------------------- HOOKS ------------------------------------------- */
+  /* ------------------------------------------------- Hook's ------------------------------------------------ */
   const { hasResourcePermission, hasElementAccess } = usePermissions();
   const canView = hasResourcePermission('ihm_appointments', 'view');
   const hasBtnHistAccess = hasElementAccess('btn_OS_preventive_history');
@@ -36,9 +36,9 @@ const LiveLinesHeader: React.FC = () => {
     dispatch(setIsOpenedUpdateStops(!isOpenedUpdateStops));
   };
 
-  /* ---------------------------------------------------------------------------------------------- */
-  /*                                             LAYOUT                                             */
-  /* ---------------------------------------------------------------------------------------------- */
+  /* --------------------------------------------------------------------------------------------------------- */
+  /*                                                   LAYOUT                                                  */
+  /* --------------------------------------------------------------------------------------------------------- */
   return (
     <>
       <Row className='m-2'>
