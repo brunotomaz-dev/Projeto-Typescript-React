@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button, Row, Stack } from 'react-bootstrap';
 import { getTurnoName, TurnoID } from '../../../helpers/constants';
 import { useFilters } from '../../../hooks/useFilters';
-import { useFiltersVisibility } from '../../../hooks/useLiveFiltersVisibility';
+import { useFiltersVisibility } from '../../../hooks/useFiltersVisibility';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { setIsOpenedUpdateStops } from '../../../redux/store/features/liveLinesSlice';
 import { useAppDispatch, useAppSelector } from '../../../redux/store/hooks';
@@ -18,7 +18,11 @@ const LiveLinesHeader: React.FC = () => {
   const { isDefault, turn, date } = useFilters('liveLines');
 
   // Hook para gerenciar visibilidade de filtros
-  const { isVisible: showFilters, toggle: toggleFilters } = useFiltersVisibility('liveLines');
+  const {
+    isVisible: showFilters,
+    toggle: toggleFilters,
+    resetVisibility,
+  } = useFiltersVisibility('liveLines');
 
   /* ------------------------------------------------- Redux ------------------------------------------------- */
   const selectedDate = useAppSelector((state) => state.liveLines.selectedDate);
@@ -35,6 +39,14 @@ const LiveLinesHeader: React.FC = () => {
   const handleToggleUpdateStops = () => {
     dispatch(setIsOpenedUpdateStops(!isOpenedUpdateStops));
   };
+
+  /* ------------------------------------------------ Effects ------------------------------------------------ */
+  // Resetar a visibilidade dos filtros quando o componente é desmontado
+  React.useEffect(() => {
+    return () => {
+      resetVisibility();
+    };
+  }, [resetVisibility]);
 
   /* --------------------------------------------------------------------------------------------------------- */
   /*                                                   LAYOUT                                                  */

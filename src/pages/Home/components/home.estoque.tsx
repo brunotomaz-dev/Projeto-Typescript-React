@@ -30,13 +30,25 @@ const HomeEstoqueCard: React.FC = () => {
             {typedEstoqueData.map(({ produto, quantidade }, index) => (
               <tr key={`${produto}-${index}`}>
                 <td>{produto.trim()}</td>
-                <td className='text-end'>{quantidade}</td>
+                <td className='text-end'>{quantidade.toLocaleString('pt-BR')}</td>
               </tr>
             ))}
             {typedEstoqueData.length === 0 && (
               <tr>
                 <td colSpan={2} className='text-center'>
                   {isLoading ? 'Carregando...' : 'Nenhum item em estoque'}
+                </td>
+              </tr>
+            )}
+            {typedEstoqueData.length > 0 && (
+              <tr className='table-success'>
+                <td>
+                  <strong>Total</strong>
+                </td>
+                <td className='text-end'>
+                  <strong>
+                    {typedEstoqueData.reduce((acc, item) => acc + item.quantidade, 0).toLocaleString('pt-BR')}
+                  </strong>
                 </td>
               </tr>
             )}

@@ -25,9 +25,19 @@ export const uiStateSlice = createSlice({
       const { scope, isVisible } = action.payload;
       state.filtersVisibility[scope] = isVisible;
     },
+    resetFiltersVisibility: (state, action: PayloadAction<string | undefined>) => {
+      const scope = action.payload;
+      if (scope) {
+        // Reset apenas do escopo específico
+        state.filtersVisibility[scope] = initialState.filtersVisibility[scope] || false;
+      } else {
+        // Reset de todos os escopos
+        state.filtersVisibility = { ...initialState.filtersVisibility };
+      }
+    },
   },
 });
 
-export const { setFiltersVisibility } = uiStateSlice.actions;
+export const { setFiltersVisibility, resetFiltersVisibility } = uiStateSlice.actions;
 
 export default uiStateSlice.reducer;

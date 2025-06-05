@@ -7,8 +7,9 @@ import { useLiveIndicatorsQuery } from '../../hooks/queries/useLiveIndicatorsQue
 import { useInfoIHMQuery } from '../../hooks/queries/useLiveInfoIHMQuery';
 import { useMachineInfoQuery } from '../../hooks/queries/useLiveMachineInfoQuery';
 import { useFilters } from '../../hooks/useFilters';
-import { useFiltersVisibility } from '../../hooks/useLiveFiltersVisibility';
-import { setLiveSelectedMachine } from '../../redux/store/features/liveLinesSlice';
+import { useFiltersVisibility } from '../../hooks/useFiltersVisibility';
+import { setTurn } from '../../redux/store/features/filterSlice';
+import { setLiveSelectedMachine, setLiveSelectedShift } from '../../redux/store/features/liveLinesSlice';
 import { useAppDispatch, useAppSelector } from '../../redux/store/hooks';
 import BarStops from './components/barStops';
 import EfficiencyComparison from './components/effComparison';
@@ -27,7 +28,7 @@ const LiveLines: React.FC = () => {
   /* ----------------------------------------------- VARIÁVEIS ---------------------------------------------- */
   const now = startOfDay(new Date());
   const nowDate = format(now, 'yyyy-MM-dd');
-  const shiftActual = getShift();
+  const shiftActual = getShift(); // Obter o turno atual no momento da renderização inicial
 
   /* ------------------------------------------------ REDUX ----------------------------------------------- */
   const dispatch = useAppDispatch();
@@ -39,9 +40,9 @@ const LiveLines: React.FC = () => {
   const { isVisible: showFilters } = useFiltersVisibility('liveLines');
 
   /* ----------------------------------------------- USE QUERIES --------------------------------------------- */
-  // Usar os hooks de query
+  // Hooks de query
   const { indicators, metrics, machineId } = useLiveIndicatorsQuery(selectedLine);
-  const { machineInfo, product } = useMachineInfoQuery(machineId);
+  const { machineInfo } = useMachineInfoQuery(machineId);
   const { ihmData } = useInfoIHMQuery(selectedLine);
 
   /* ------------------------------------------------ USE MEMO ----------------------------------------------- */
@@ -74,6 +75,22 @@ const LiveLines: React.FC = () => {
   }, [date, nowDate]);
 
   /* ---------------------------------------------- USE EFFECTS --------------------------------------------- */
+  // Efeito para atualizar o turno atual ao montar o componente
+  useEffect(() => {
+    // Obter o turno atual novamente (para garantir a atualização)
+    const currentShift = getShift();
+    const today = format(startOfDay(new Date()), 'yyyy-MM-dd');
+
+    // Se estamos na data atual, atualizar o turno
+    if (date === today) {
+      // Atualizar no slice específico do LiveLines
+      dispatch(setLiveSelectedShift(currentShift));
+
+      // Atualizar também no sistema de filtros, mas apenas se estiver na data atual
+      dispatch(setTurn({ scope: 'liveLines', turn: currentShift }));
+    }
+  }, [dispatch, date]); // Executar quando o componente for montado e quando a data mudar
+
   // Sincronizar a máquina selecionada com o Redux
   useEffect(() => {
     if (machineId) {
@@ -104,17 +121,13 @@ const LiveLines: React.FC = () => {
         <Col
           xs={12}
           xl={5}
-          className='card bg-transparent shadow d-flex justify-content-center border-0 mb-lg-0 mb-2'
+          className='card bg-light shadow d-flex justify-content-center border-0 mb-lg-0 mb-2'
         >
-          <LineIndicators
-            eficiencia={indicators.efficiency}
-            performance={indicators.performance}
-            reparos={indicators.repair}
-          />
+          <LineIndicators />
         </Col>
         {/* -------------------------------------- COLUNA DA PRODUÇÃO -------------------------------------- */}
-        <Col xs={3} xl={2} className='card bg-transparent shadow mb-lg-0 mb-2'>
-          <ProductionPanel productionTotal={indicators.productionTotal} produto={product} />
+        <Col xs={3} xl={2} className='card bg-light shadow mb-lg-0 mb-2'>
+          <ProductionPanel />
         </Col>
         {/* --------------------------------------- COLUNA DE BARRAS --------------------------------------- */}
         <Col
@@ -149,13 +162,13 @@ const LiveLines: React.FC = () => {
           <Col xs={12} xl={2} className='card bg-light p-2 bg-transparent border-0 shadow align-items-center'>
             <Row className='w-100 h-100'>
               <h6 className='mt-2 fs-6 text-center fw-bold text-dark-emphasis'> Eficiência Média da Linha</h6>
-              {(metrics?.lineNotAverage || 0) > 0 && (
+              {(metrics?.lineNotAverage || 0) >= 0 && (
                 <GaugeAverage average={metrics?.lineNotAverage || 0} turn='Noturno' />
               )}
-              {(metrics?.lineMatAverage || 0) > 0 && (
+              {(metrics?.lineMatAverage || 0) >= 0 && (
                 <GaugeAverage average={metrics?.lineMatAverage || 0} turn='Matutino' />
               )}
-              {(metrics?.lineVesAverage || 0) > 0 && (
+              {(metrics?.lineVesAverage || 0) >= 0 && (
                 <GaugeAverage average={metrics?.lineVesAverage || 0} turn='Vespertino' />
               )}
             </Row>

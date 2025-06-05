@@ -1,21 +1,39 @@
 import React from 'react';
-import { Row } from 'react-bootstrap';
+import { Card } from 'react-bootstrap';
+import { useLineIndicators } from '../../../hooks/useLiveLineIndicators';
+import { useProductionData } from '../../../hooks/useLiveProductionData';
 
-interface ProductionPanelProps {
-  productionTotal: number;
-  produto: string;
-}
+const ProductionPanel: React.FC = () => {
+  // Obter dados diretamente do hook especializado
+  const { productionTotal, produto, isLoading } = useProductionData();
+  const { efficiency } = useLineIndicators();
 
-const ProductionPanel: React.FC<ProductionPanelProps> = ({ productionTotal, produto }) => {
-  const sizeClass = produto.length > 20 ? 'fs-5' : 'fs-4';
+  const isEfficiencyLow = efficiency < 90; // Defina o limite de eficiência conforme necessário
 
   return (
-    <Row className='h-100 p-3 fs-responsive'>
-      <p>Produto</p>
-      <h4 className={`text-center ${sizeClass}`}>{produto}</h4>
-      <p>Produção</p>
-      <h1 className='text-center'>{productionTotal}</h1>
-    </Row>
+    <Card.Body className='d-flex flex-column h-100 justify-content-center'>
+      {isLoading ? (
+        <div className='d-flex justify-content-center align-items-center h-100'>
+          <div className='spinner-border text-secondary' role='status'>
+            <span className='visually-hidden'>Carregando...</span>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className='text-center'>
+            <h5 className='text-secondary'>Bandejas Produzidas</h5>
+            <span className={`text-center fs-2 fw-bold ${isEfficiencyLow ? 'text-danger' : 'text-success'}`}>
+              {productionTotal.toLocaleString('pt-BR')}
+            </span>
+          </div>
+          <hr className='my-3' />
+          <div className='text-center'>
+            <h5 className='text-secondary'>Produto</h5>
+            <span className='text-center fs-5 fw-bold text-primary'>{produto}</span>
+          </div>
+        </>
+      )}
+    </Card.Body>
   );
 };
 

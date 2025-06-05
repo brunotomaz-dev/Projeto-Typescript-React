@@ -1,10 +1,11 @@
 import { format, parse } from 'date-fns';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Button, Col, Container, Row, Spinner } from 'react-bootstrap';
 import DateTurnFilter from '../../components/DateTurnFilter';
 import { getTurnoName, TurnoID } from '../../helpers/constants';
 import { useIndicatorsQuery } from '../../hooks/queries/useIndicatorsQuery';
 import { useFilters } from '../../hooks/useFilters';
+import { useFiltersVisibility } from '../../hooks/useFiltersVisibility';
 import { setLineMachine } from '../../redux/store/features/homeSlice';
 import { useAppDispatch } from '../../redux/store/hooks';
 import HomeAbsence from './components/home.absence';
@@ -19,9 +20,10 @@ import HomeProductionCard from './components/home.production';
 const Home: React.FC = () => {
   /* ------------------------------------------------- Hook's ------------------------------------------------ */
   const dispatch = useAppDispatch();
-  const [showFilters, setShowFilters] = useState(false);
   // Usar o hook com o escopo específico da página
   const { date, turn, isDefault } = useFilters('home');
+  // Hook de visibilidade do filtro
+  const { isVisible: showFilters, toggle: toggleFilters, resetVisibility } = useFiltersVisibility('home');
 
   // Usar o hook de indicadores com TanStack Query
   const { lineMachineMap, isLoading, isFetching } = useIndicatorsQuery();
@@ -33,6 +35,13 @@ const Home: React.FC = () => {
       dispatch(setLineMachine(lineMachineMap));
     }
   }, [lineMachineMap, dispatch]);
+
+  // Resetar o estado de visibilidade dos filtros quando desmontar o componente
+  useEffect(() => {
+    return () => {
+      resetVisibility();
+    };
+  }, [resetVisibility]);
 
   /* ----------------------------------------------------------------------------------------------------------- */
   /*                                                    LAYOUT                                                   */
@@ -50,7 +59,7 @@ const Home: React.FC = () => {
         <Button
           variant={showFilters ? 'secondary' : 'outline-secondary'}
           size='sm'
-          onClick={() => setShowFilters(!showFilters)}
+          onClick={toggleFilters}
           className='d-flex align-items-center mb-2'
         >
           <i className={`bi ${showFilters ? 'bi-funnel-fill' : 'bi-funnel'} me-2`}></i>

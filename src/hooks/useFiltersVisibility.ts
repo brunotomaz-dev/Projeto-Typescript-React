@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { setFiltersVisibility } from '../redux/store/features/uiStateSlice';
+import { resetFiltersVisibility, setFiltersVisibility } from '../redux/store/features/uiStateSlice';
 import { useAppDispatch, useAppSelector } from '../redux/store/hooks';
 
 export const useFiltersVisibility = (scope = 'home') => {
@@ -20,5 +20,10 @@ export const useFiltersVisibility = (scope = 'home') => {
     [dispatch, scope]
   );
 
-  return { isVisible, toggle, setVisible };
+  // Reset da visibilidade
+  const resetVisibility = useCallback(() => {
+    dispatch(resetFiltersVisibility(scope));
+  }, [dispatch, scope]);
+
+  return { isVisible, toggle, setVisible, resetVisibility };
 };
