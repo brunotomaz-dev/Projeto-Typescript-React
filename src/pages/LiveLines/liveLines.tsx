@@ -155,7 +155,7 @@ const LiveLines: React.FC = () => {
       {/* ----------------------------------- Tabela De Apontamentos ----------------------------------- */}
       {isOpenedUpdateStops && (
         <Col className='p-2'>
-          <UpdateStops nowDate={nowDate} onUpdate={() => {}} />
+          <UpdateStops />
         </Col>
       )}
     </>

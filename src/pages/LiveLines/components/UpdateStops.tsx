@@ -1,116 +1,49 @@
+import { useQueryClient } from '@tanstack/react-query'; // Importar useQueryClient
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Alert, Button, Card, Modal, Table } from 'react-bootstrap';
-import { deleteMaquinaIHM, getInfoIHM, getMaquinaIHM } from '../../../api/apiRequests';
-import { getShiftByTime } from '../../../helpers/turn';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { useToast } from '../../../hooks/useToast';
-import { iInfoIHM } from '../../../interfaces/InfoIHM.interface';
-import { useAppSelector } from '../../../redux/store/hooks';
+import { useUpdateStops } from '../../../hooks/useUpdateStops';
 import { iMaquinaIHM } from '../interfaces/maquinaIhm.interface';
 import CreateStopModal from './ModalCreate';
 import EditStopModal from './ModalUpdate';
 
-interface iUpdateStopsProps {
-  nowDate: string;
-  onUpdate: () => void;
-}
+const UpdateStops: React.FC = () => {
+  /* ------------------------------------------------- Hook's ------------------------------------------------ */
+  // Acessar o queryClient para invalidar queries
+  const queryClient = useQueryClient();
 
-const UpdateStops: React.FC<iUpdateStopsProps> = ({ nowDate, onUpdate }) => {
-  /* ------------------------------------------------ REDUX ----------------------------------------------- */
-  const selectedLine = useAppSelector((state) => state.liveLines.selectedLine);
-  const selectedDate = useAppSelector((state) => state.liveLines.selectedDate);
-  const selectedMachine = useAppSelector((state) => state.liveLines.selectedMachine);
-  const selectedShift = useAppSelector((state) => state.liveLines.selectedShift);
+  // Usar o hook especializado
+  const {
+    maquinaIHM,
+    loading,
+    error,
+    isToday,
+    deleteStop,
+    isDeleting: isDeletingMutation,
+    selectedLine,
+    selectedMachine,
+    selectedDate,
+    selectedShift,
+    hasData,
+  } = useUpdateStops();
 
-  /* ----------------------------------------- Constantes ----------------------------------------- */
-  const isToday = nowDate === selectedDate; // Verifica se a data selecionada é hoje
+  const { showToast, ToastDisplay } = useToast();
 
+  const { hasResourcePermission } = usePermissions();
+  const canEdit = hasResourcePermission('ihm_appointments', 'update');
+  const canDelete = hasResourcePermission('ihm_appointments', 'delete');
+  const canCreate = hasResourcePermission('ihm_appointments', 'create');
   /* ----------------------------------------------------------------------------- Local State ---- */
-  const [maquinaIHM, setMaquinaIHM] = useState<iMaquinaIHM[]>([]);
   const [selectedStop, setSelectedStop] = useState<iMaquinaIHM | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [stopToDelete, setStopToDelete] = useState<number | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const { showToast, ToastDisplay } = useToast();
-
-  /* ----------------------------------------------------------------------------- Permissions ---- */
-  const { hasResourcePermission } = usePermissions();
-  const canEdit = hasResourcePermission('ihm_appointments', 'update');
-  const canDelete = hasResourcePermission('ihm_appointments', 'delete');
-  const canCreate = hasResourcePermission('ihm_appointments', 'create');
-
-  /* --------------------------------------------------------------------------------- Effects ---- */
-  useEffect(() => {
-    // Apaga os dados do estado
-    setMaquinaIHM([]);
-
-    fetchData();
-  }, [selectedDate, selectedLine, selectedShift, isToday]);
 
   /* ------------------------------------------------------------------------------ Functions ---- */
-  const fetchData = () => {
-    // Para o dia atual, continuar usando getMaquinaIHM
-    if (isToday) {
-      void getMaquinaIHM({ data: selectedDate, linha: selectedLine })
-        .then((res: iMaquinaIHM[]) => {
-          // Verificar o turno do registro
-          res = res.filter((item) => {
-            const shift = getShiftByTime(item.hora_registro);
-            return shift === selectedShift;
-          });
-          setMaquinaIHM(res);
-        })
-        .catch((err) => {
-          console.error('err', err);
-          showToast('Erro ao carregar dados', 'danger');
-        });
-    }
-    // Para dias anteriores, usar getInfoIHM
-    else {
-      void getInfoIHM({
-        data: selectedDate,
-        linha: selectedLine,
-        turno: selectedShift,
-      })
-        .then((res: iInfoIHM[]) => {
-          // Converter dados de InfoIHM para o formato MaquinaIHM
-          const convertedData = res
-            .filter((item) => item.status !== 'rodando')
-            .map(
-              (item) =>
-                ({
-                  recno: item.recno,
-                  data_registro: item.data_registro,
-                  hora_registro: item.hora_registro,
-                  fabrica: item.fabrica,
-                  linha: item.linha,
-                  maquina_id: item.maquina_id,
-                  equipamento: item.equipamento,
-                  motivo: item.motivo,
-                  problema: item.problema,
-                  causa: item.causa,
-                  afeta_eff: item.afeta_eff,
-                  operador_id: item.operador_id,
-                  os_numero: item.os_numero,
-                  s_backup: null,
-                  // Incluir dados adicionais que podem ser necessários
-                  _isHistorical: true, // Propriedade para identificar registros históricos
-                }) as iMaquinaIHM & { _isHistorical: boolean }
-            );
-
-          setMaquinaIHM(convertedData);
-        })
-        .catch((err) => {
-          console.error('err', err);
-          showToast('Erro ao carregar dados históricos', 'danger');
-        });
-    }
-  };
-
   const handleEdit = (stop: iMaquinaIHM) => {
     if (!canEdit) {
       showToast('Você não tem permissão para editar registros', 'warning');
@@ -131,8 +64,10 @@ const UpdateStops: React.FC<iUpdateStopsProps> = ({ nowDate, onUpdate }) => {
   };
 
   const handleSaveChanges = () => {
-    fetchData(); // Recarregar dados após salvar
-    onUpdate();
+    // Invalidar a query para recarregar os dados
+    queryClient.invalidateQueries({
+      queryKey: ['maquinaIHM', selectedDate, selectedShift, selectedLine, selectedMachine],
+    });
     showToast('Registro atualizado com sucesso', 'success');
   };
 
@@ -146,12 +81,15 @@ const UpdateStops: React.FC<iUpdateStopsProps> = ({ nowDate, onUpdate }) => {
   };
 
   const handleCreateSave = () => {
-    fetchData(); // Recarregar dados após salvar
+    // Invalidar a query para recarregar os dados
+    queryClient.invalidateQueries({
+      queryKey: ['maquinaIHM', selectedDate, selectedShift, selectedLine, selectedMachine],
+    });
     setShowCreateModal(false);
     showToast('Apontamento registrado com sucesso', 'success');
   };
 
-  // Novo método para abrir o modal de confirmação
+  // Método para abrir o modal de confirmação
   const handleDeleteClick = (id: number) => {
     if (!canDelete) {
       showToast('Você não tem permissão para excluir registros', 'warning');
@@ -163,25 +101,20 @@ const UpdateStops: React.FC<iUpdateStopsProps> = ({ nowDate, onUpdate }) => {
   };
 
   // Método para confirmar a exclusão
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!stopToDelete || !canDelete) return;
 
-    setIsDeleting(true);
-
-    deleteMaquinaIHM(stopToDelete)
-      .then(() => {
-        fetchData(); // Recarregar dados após deletar
+    // Usar a função deleteStop do hook
+    deleteStop(stopToDelete, {
+      onSuccess: () => {
         showToast('Registro excluído com sucesso', 'success');
-      })
-      .catch((err) => {
-        console.error('err', err);
-        showToast('Erro ao excluir registro', 'danger');
-      })
-      .finally(() => {
-        setIsDeleting(false);
         setShowDeleteModal(false);
         setStopToDelete(null);
-      });
+      },
+      onError: () => {
+        showToast('Erro ao excluir registro', 'danger');
+      },
+    });
   };
 
   // Método para cancelar a exclusão
@@ -190,12 +123,33 @@ const UpdateStops: React.FC<iUpdateStopsProps> = ({ nowDate, onUpdate }) => {
     setStopToDelete(null);
   };
 
+  // Indicador de carregamento
+  if (loading) {
+    return (
+      <div className='d-flex justify-content-center my-5'>
+        <div className='spinner-border text-primary' role='status'>
+          <span className='visually-hidden'>Carregando...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Mensagem de erro
+  if (error) {
+    return (
+      <Alert variant='danger' className='text-center w-75 mx-auto'>
+        <i className='bi bi-exclamation-triangle-fill me-2'></i>
+        <strong>Erro!</strong> {error}
+      </Alert>
+    );
+  }
+
   /* ---------------------------------------------------------------------------------------------- */
   /*                                             LAYOUT                                             */
   /* ---------------------------------------------------------------------------------------------- */
   return (
     <>
-      {maquinaIHM.length > 0 ? (
+      {hasData ? (
         <Card className='p-2'>
           <Card.Title className='text-center my-3 d-flex justify-content-around align-items-center'>
             <div className='flex-grow-1 text-center'>Apontamentos de Paradas</div>
@@ -347,11 +301,11 @@ const UpdateStops: React.FC<iUpdateStopsProps> = ({ nowDate, onUpdate }) => {
           <p className='mt-3 text-danger fw-bold'>Esta ação não pode ser desfeita.</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant='secondary' onClick={handleCancelDelete} disabled={isDeleting}>
+          <Button variant='secondary' onClick={handleCancelDelete} disabled={isDeletingMutation}>
             Cancelar
           </Button>
-          <Button variant='danger' onClick={handleConfirmDelete} disabled={isDeleting}>
-            {isDeleting ? (
+          <Button variant='danger' onClick={handleConfirmDelete} disabled={isDeletingMutation}>
+            {isDeletingMutation ? (
               <>
                 <span
                   className='spinner-border spinner-border-sm me-2'
