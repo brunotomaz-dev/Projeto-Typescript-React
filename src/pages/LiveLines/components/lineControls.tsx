@@ -62,7 +62,10 @@ const LineControls: React.FC = () => {
         </FormSelect>
       </Row>
       <Row className='mb-2'>
-        <Card className='bg-light p-4 shadow text-center fs-3 rounded-3'>{`${getTurnoName(turn)}`}</Card>
+        <Card className='bg-light p-4 shadow text-center fs-3 rounded-3 d-flex align-items-center justify-content-center flex-row gap-2'>
+          <i className={`bi bi-${turn === 'MAT' ? 'sun' : turn === 'VES' ? 'sunset' : 'moon'} fs-6`} />
+          {getTurnoName(turn)}
+        </Card>
       </Row>
       {statusRender && <MachineStatus status={status} />}
       {status !== 'true' && statusRender && (
