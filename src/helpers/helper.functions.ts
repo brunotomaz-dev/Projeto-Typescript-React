@@ -10,8 +10,8 @@ export const toTitleCase = (str: string): string => {
 // Função para identificar o tipo de pasta
 export const extrairTipoPasta = (produto: string): string => {
   const pastaMappings: Record<string, string> = {
-    ALHO: 'Alho Tradicional',
-    DOCE: 'Alho Doce',
+    ALHO: 'Alho',
+    DOCE: 'Doce',
     CEBOLA: 'Cebola',
     PEPPERONI: 'Pepperoni',
   };

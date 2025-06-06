@@ -1,10 +1,6 @@
 import React, { useMemo } from 'react';
 import { Alert, Card, Table } from 'react-bootstrap';
-import {
-  extrairTipoPao,
-  extrairTipoPasta,
-  toTitleCase,
-} from '../../../helpers/helper.functions';
+import { extrairTipoPao, extrairTipoPasta, toTitleCase } from '../../../helpers/helper.functions';
 import { useAppSelector } from '../../../redux/store/hooks';
 import { iDescartes } from '../interface/Descartes.interface';
 
@@ -87,7 +83,7 @@ const TotalDiscardsTable: React.FC = () => {
       if (item.descarteBdj > 0) {
         const tipoProduto = item.produto.split(' ')[1] || '?';
         const tipoBdj = item.produto.split('/')[1] || 'GR';
-        const chave = `Bandejas com bobina (${toTitleCase(tipoProduto)}/${tipoBdj})`;
+        const chave = `Bandejas com bobina ${toTitleCase(tipoProduto)}/${tipoBdj}`;
         bdjAgregado[chave] = (bdjAgregado[chave] || 0) + item.descarteBdj;
       }
     });
@@ -110,7 +106,7 @@ const TotalDiscardsTable: React.FC = () => {
       if (item.reprocessoBdj > 0) {
         const tipoProduto = item.produto.split(' ')[1] || 'Produto';
         const tipoBdj = item.produto.split('/')[1] || 'GR';
-        const chave = `Bandejas com bobina (${toTitleCase(tipoProduto)}/${tipoBdj})`;
+        const chave = `Bandejas com bobina ${toTitleCase(tipoProduto)}/${tipoBdj}`;
         bdjAgregado[chave] = (bdjAgregado[chave] || 0) + item.reprocessoBdj;
       }
     });
@@ -178,11 +174,7 @@ const TotalDiscardsTable: React.FC = () => {
   const hasReprocessoBdj = reprocessoBdjData.dados.length > 0;
 
   const hasAnyDescarte =
-    hasDescartePasta ||
-    hasDescartePaes ||
-    hasDescartePaesPasta ||
-    hasDescarteBdj ||
-    hasReprocessoBdj;
+    hasDescartePasta || hasDescartePaes || hasDescartePaesPasta || hasDescarteBdj || hasReprocessoBdj;
 
   /* -------------------------------------------------------------------------------------------- */
   /*                                            LAYOUT                                            */
