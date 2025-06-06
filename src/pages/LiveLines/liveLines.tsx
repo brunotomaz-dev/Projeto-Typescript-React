@@ -13,7 +13,7 @@ import BarStops from './components/barStops';
 import EfficiencyComparison from './components/effComparison';
 import LineIndicators from './components/gauges';
 import LiveLinesHeader from './components/header';
-import LineAverages from './components/lineAverages';
+import LineAverages from './components/LineAverages';
 import LineControls from './components/lineControls';
 import LineCycle from './components/linecycle';
 import ProductionPanel from './components/productionCard';
@@ -155,7 +155,7 @@ const LiveLines: React.FC = () => {
       {/* ----------------------------------- Tabela De Apontamentos ----------------------------------- */}
       {isOpenedUpdateStops && (
         <Col className='p-2'>
-          <UpdateStops nowDate={nowDate} onUpdate={() => {}} />
+          <UpdateStops />
         </Col>
       )}
     </>

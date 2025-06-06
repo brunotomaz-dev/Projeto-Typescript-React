@@ -1,34 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Col, Form, Modal, Row, Stack } from 'react-bootstrap';
-import { insertMaquinaIHM } from '../../../api/apiRequests';
 import { apontamentosHierarquia } from '../../../helpers/apontamentosHierarquia';
+import { useCreateStopModal } from '../../../hooks/useCreateStopModal';
 import { useToast } from '../../../hooks/useToast';
-import { useAppSelector } from '../../../redux/store/hooks';
 import { iMaquinaIHM } from '../interfaces/maquinaIhm.interface';
 
-interface CreateStopModalProps {
-  show: boolean;
-  onHide: () => void;
-  selectedLine: number;
-  selectedMachine: string;
-  selectedDate: string;
-  onSave: () => void;
-}
-
-const CreateStopModal: React.FC<CreateStopModalProps> = ({
-  show,
-  onHide,
-  selectedLine,
-  selectedMachine,
-  selectedDate,
-  onSave,
-}) => {
+const CreateStopModal: React.FC = () => {
   /* ------------------------------------------- HOOK's ------------------------------------------- */
+  const { isVisible, isLoading, closeModal, saveRecord, selectedLine, selectedMachine, selectedDate } =
+    useCreateStopModal();
   const { showToast, ToastDisplay } = useToast();
-  const userName = useAppSelector((state) => state.user.fullName);
 
   /* --------------------------------------- Estados Locais --------------------------------------- */
-  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<iMaquinaIHM>>({});
 
   // Estados para controlar as opções dependentes
@@ -46,7 +29,7 @@ const CreateStopModal: React.FC<CreateStopModalProps> = ({
 
   /* ------------------------------------------- Effect ------------------------------------------- */
   useEffect(() => {
-    if (show) {
+    if (isVisible) {
       // Inicializar os dados do formulário
       const currentTime = new Date();
       const currentHour = currentTime.getHours().toString().padStart(2, '0');
@@ -59,19 +42,17 @@ const CreateStopModal: React.FC<CreateStopModalProps> = ({
         hora_registro: `${currentHour}:${currentMinute}`,
         afeta_eff: 0, // Valor padrão
         os_numero: '0', // Valor padrão
-        operador_id: '', // Inicializa vazio para ser preenchido pelo usuário
+        operador_id: '',
       });
 
       // Inicializar os motivos disponíveis
       setMotivos(Object.keys(apontamentosHierarquia));
     }
-  }, [show, selectedLine, selectedMachine, selectedDate, userName]);
+  }, [isVisible, selectedLine, selectedMachine, selectedDate]);
 
   /* ------------------------------------------- Handles ------------------------------------------ */
   // Manipular mudanças nos campos do formulário
-  const handleChange = (
-    e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
 
     // Validação especial para o campo operador_id
@@ -102,8 +83,7 @@ const CreateStopModal: React.FC<CreateStopModalProps> = ({
 
       // Atualizar opções de problemas baseado no equipamento
       if (formData.motivo) {
-        const motivoData =
-          apontamentosHierarquia[formData.motivo as keyof typeof apontamentosHierarquia];
+        const motivoData = apontamentosHierarquia[formData.motivo as keyof typeof apontamentosHierarquia];
 
         if (motivoData && value in motivoData) {
           // Equipamento existente na hierarquia
@@ -155,8 +135,7 @@ const CreateStopModal: React.FC<CreateStopModalProps> = ({
 
       // Atualizar opções de causas baseado no problema
       if (formData.motivo && formData.equipamento) {
-        const motivoData =
-          apontamentosHierarquia[formData.motivo as keyof typeof apontamentosHierarquia];
+        const motivoData = apontamentosHierarquia[formData.motivo as keyof typeof apontamentosHierarquia];
 
         if (
           motivoData &&
@@ -190,38 +169,27 @@ const CreateStopModal: React.FC<CreateStopModalProps> = ({
       return;
     }
 
-    setIsLoading(true);
-    try {
-      // Preparar os dados para envio
-      const dataToSend = { ...formData };
+    // Preparar os dados para envio
+    const dataToSend = { ...formData };
 
-      // Garantir que o campo equipamento seja um espaço em branco quando for "Linha"
-      dataToSend.equipamento = denormalizeEquipamento(dataToSend.equipamento);
+    // Garantir que o campo equipamento seja um espaço em branco quando for "Linha"
+    dataToSend.equipamento = denormalizeEquipamento(dataToSend.equipamento);
 
-      // Garantir que o campo os_numero esteja preenchido
-      if (dataToSend.motivo !== 'Manutenção') {
-        dataToSend.os_numero = '0';
-      } else if (!dataToSend.os_numero) {
-        dataToSend.os_numero = '0';
-      }
-
-      await insertMaquinaIHM(dataToSend as iMaquinaIHM);
-      showToast('Apontamento registrado com sucesso!', 'success');
-      onSave();
-      onHide();
-    } catch (error) {
-      console.error('Erro ao registrar apontamento:', error);
-      showToast('Erro ao registrar apontamento', 'danger');
-    } finally {
-      setIsLoading(false);
+    // Garantir que o campo os_numero esteja preenchido
+    if (dataToSend.motivo !== 'Manutenção') {
+      dataToSend.os_numero = '0';
+    } else if (!dataToSend.os_numero) {
+      dataToSend.os_numero = '0';
     }
+
+    await saveRecord(dataToSend);
   };
 
   /* ---------------------------------------------------------------------------------------------- */
   /*                                             LAYOUT                                             */
   /* ---------------------------------------------------------------------------------------------- */
   return (
-    <Modal show={show} onHide={onHide} size='lg' centered>
+    <Modal show={isVisible} onHide={closeModal} size='lg' centered>
       <Modal.Header closeButton>
         <Modal.Title>Adicionar Apontamento</Modal.Title>
       </Modal.Header>
@@ -263,12 +231,7 @@ const CreateStopModal: React.FC<CreateStopModalProps> = ({
             <Col md={4}>
               <Form.Group>
                 <Form.Label className='required-field'>Motivo</Form.Label>
-                <Form.Select
-                  name='motivo'
-                  value={formData.motivo || ''}
-                  onChange={handleChange}
-                  required
-                >
+                <Form.Select name='motivo' value={formData.motivo || ''} onChange={handleChange} required>
                   <option value=''>Selecione...</option>
                   {motivos.map((motivo) => (
                     <option key={motivo} value={motivo}>
@@ -375,7 +338,7 @@ const CreateStopModal: React.FC<CreateStopModalProps> = ({
       </Modal.Body>
       <Modal.Footer>
         <Stack direction='horizontal' gap={2} className='justify-content-end'>
-          <Button variant='secondary' onClick={onHide}>
+          <Button variant='secondary' onClick={closeModal}>
             Cancelar
           </Button>
           <Button variant='primary' onClick={handleSubmit} disabled={isLoading}>
