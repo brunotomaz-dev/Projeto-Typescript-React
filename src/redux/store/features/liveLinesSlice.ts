@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { format, startOfDay } from 'date-fns';
 import { getShift } from '../../../helpers/turn';
+import { iMaquinaIHM } from '../../../pages/LiveLines/interfaces/maquinaIhm.interface';
 
 export interface iLiveLinesState {
   selectedDate: string;
@@ -8,7 +9,14 @@ export interface iLiveLinesState {
   selectedShift: string;
   selectedLine: number;
   machineStatus: string;
-  isOpenedUpdateStops: boolean; // Novo campo
+  isOpenedUpdateStops: boolean;
+
+  // Estados para o modal de edição
+  isEditModalOpen: boolean;
+  stopToEdit: iMaquinaIHM | null;
+
+  // Estado para o modal de criação
+  isCreateModalOpen: boolean;
 }
 
 const initialState: iLiveLinesState = {
@@ -17,7 +25,12 @@ const initialState: iLiveLinesState = {
   selectedShift: getShift(),
   selectedLine: 1,
   machineStatus: '-',
-  isOpenedUpdateStops: false, // Inicializado como fechado
+  isOpenedUpdateStops: false,
+
+  // Estados iniciais dos modais
+  isEditModalOpen: false,
+  stopToEdit: null,
+  isCreateModalOpen: false,
 };
 
 export const liveLinesSlice = createSlice({
@@ -42,6 +55,21 @@ export const liveLinesSlice = createSlice({
     setIsOpenedUpdateStops: (state, action: PayloadAction<boolean>) => {
       state.isOpenedUpdateStops = action.payload;
     },
+
+    openEditModal: (state, action: PayloadAction<iMaquinaIHM>) => {
+      state.stopToEdit = action.payload;
+      state.isEditModalOpen = true;
+    },
+    closeEditModal: (state) => {
+      state.isEditModalOpen = false;
+      state.stopToEdit = null;
+    },
+    openCreateModal: (state) => {
+      state.isCreateModalOpen = true;
+    },
+    closeCreateModal: (state) => {
+      state.isCreateModalOpen = false;
+    },
   },
 });
 
@@ -52,6 +80,10 @@ export const {
   setLiveSelectedLine,
   setMachineStatus,
   setIsOpenedUpdateStops,
+  openEditModal,
+  closeEditModal,
+  openCreateModal,
+  closeCreateModal,
 } = liveLinesSlice.actions;
 
 export default liveLinesSlice.reducer;

@@ -1,4 +1,3 @@
-import { useQueryClient } from '@tanstack/react-query'; // Importar useQueryClient
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import React, { useState } from 'react';
@@ -6,40 +5,35 @@ import { Alert, Button, Card, Modal, Table } from 'react-bootstrap';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { useToast } from '../../../hooks/useToast';
 import { useUpdateStops } from '../../../hooks/useUpdateStops';
+import { openCreateModal, openEditModal } from '../../../redux/store/features/liveLinesSlice';
+import { useAppDispatch } from '../../../redux/store/hooks';
 import { iMaquinaIHM } from '../interfaces/maquinaIhm.interface';
 import CreateStopModal from './ModalCreate';
 import EditStopModal from './ModalUpdate';
 
 const UpdateStops: React.FC = () => {
   /* ------------------------------------------------- Hook's ------------------------------------------------ */
-  // Acessar o queryClient para invalidar queries
-  const queryClient = useQueryClient();
+  const dispatch = useAppDispatch();
 
-  // Usar o hook especializado
+  // Usar os hooks especializados
   const {
     maquinaIHM,
-    loading,
     error,
     isToday,
     deleteStop,
     isDeleting: isDeletingMutation,
-    selectedLine,
-    selectedMachine,
-    selectedDate,
-    selectedShift,
     hasData,
   } = useUpdateStops();
 
   const { showToast, ToastDisplay } = useToast();
-
   const { hasResourcePermission } = usePermissions();
+
   const canEdit = hasResourcePermission('ihm_appointments', 'update');
   const canDelete = hasResourcePermission('ihm_appointments', 'delete');
   const canCreate = hasResourcePermission('ihm_appointments', 'create');
+
   /* ----------------------------------------------------------------------------- Local State ---- */
-  const [selectedStop, setSelectedStop] = useState<iMaquinaIHM | null>(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  // Estado apenas para o modal de confirmação de exclusão
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [stopToDelete, setStopToDelete] = useState<number | null>(null);
 
@@ -50,25 +44,8 @@ const UpdateStops: React.FC = () => {
       return;
     }
 
-    setSelectedStop(stop);
-    setShowEditModal(true);
-  };
-
-  const handleCloseModal = () => {
-    setShowEditModal(false);
-    setSelectedStop(null);
-  };
-
-  const handleCloseCreateModal = () => {
-    setShowCreateModal(false);
-  };
-
-  const handleSaveChanges = () => {
-    // Invalidar a query para recarregar os dados
-    queryClient.invalidateQueries({
-      queryKey: ['maquinaIHM', selectedDate, selectedShift, selectedLine, selectedMachine],
-    });
-    showToast('Registro atualizado com sucesso', 'success');
+    // Usar a action do Redux para abrir o modal e passar os dados
+    dispatch(openEditModal(stop));
   };
 
   const handleCreateClick = () => {
@@ -77,16 +54,8 @@ const UpdateStops: React.FC = () => {
       return;
     }
 
-    setShowCreateModal(true);
-  };
-
-  const handleCreateSave = () => {
-    // Invalidar a query para recarregar os dados
-    queryClient.invalidateQueries({
-      queryKey: ['maquinaIHM', selectedDate, selectedShift, selectedLine, selectedMachine],
-    });
-    setShowCreateModal(false);
-    showToast('Apontamento registrado com sucesso', 'success');
+    // Usar a action do Redux para abrir o modal
+    dispatch(openCreateModal());
   };
 
   // Método para abrir o modal de confirmação
@@ -122,17 +91,6 @@ const UpdateStops: React.FC = () => {
     setShowDeleteModal(false);
     setStopToDelete(null);
   };
-
-  // Indicador de carregamento
-  if (loading) {
-    return (
-      <div className='d-flex justify-content-center my-5'>
-        <div className='spinner-border text-primary' role='status'>
-          <span className='visually-hidden'>Carregando...</span>
-        </div>
-      </div>
-    );
-  }
 
   // Mensagem de erro
   if (error) {
@@ -252,23 +210,9 @@ const UpdateStops: React.FC = () => {
         </Alert>
       )}
 
-      {/* Modal de edição */}
-      <EditStopModal
-        show={showEditModal}
-        onHide={handleCloseModal}
-        stopData={selectedStop}
-        onSave={handleSaveChanges}
-      />
+      <EditStopModal />
 
-      {/* Modal de criação */}
-      <CreateStopModal
-        show={showCreateModal}
-        onHide={handleCloseCreateModal}
-        selectedLine={selectedLine}
-        selectedMachine={selectedMachine || ''}
-        selectedDate={selectedDate}
-        onSave={handleCreateSave}
-      />
+      <CreateStopModal />
 
       {/* Modal de confirmação de exclusão */}
       <Modal show={showDeleteModal} onHide={handleCancelDelete} centered backdrop='static'>

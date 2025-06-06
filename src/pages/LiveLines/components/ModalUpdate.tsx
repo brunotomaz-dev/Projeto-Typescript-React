@@ -3,11 +3,8 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import React, { useEffect, useState } from 'react';
 import { Button, Col, Form, Modal, Row, Stack } from 'react-bootstrap';
-import {
-  updateHistoricalAppointmentRecord,
-  updateMaquinaIHM,
-} from '../../../api/apiRequests';
 import { apontamentosHierarquia } from '../../../helpers/apontamentosHierarquia';
+import { useEditStopModal } from '../../../hooks/useEditStopModal';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { useToast } from '../../../hooks/useToast';
 import { iMaquinaIHM } from '../interfaces/maquinaIhm.interface';
@@ -17,29 +14,16 @@ interface iExtendedMaquinaIHM extends iMaquinaIHM {
   _isHistorical?: boolean;
 }
 
-interface EditStopModalProps {
-  show: boolean;
-  onHide: () => void;
-  stopData: iMaquinaIHM | null;
-  onSave: () => void;
-}
-
-const EditStopModal: React.FC<EditStopModalProps> = ({
-  show,
-  onHide,
-  stopData,
-  onSave,
-}) => {
+const EditStopModal: React.FC = () => {
   /* ------------------------------------------- HOOK's ------------------------------------------- */
   const { hasResourcePermission } = usePermissions();
   const { showToast, ToastDisplay } = useToast();
+  const { isVisible, isLoading: isSaving, selectedStop, closeModal, saveChanges } = useEditStopModal();
 
   /* --------------------------------------- Estados Locais --------------------------------------- */
   const canFlag = hasResourcePermission('ihm_appointments', 'flag');
-
-  /* --------------------------------------- Estados Locais --------------------------------------- */
-  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<iExtendedMaquinaIHM>>({});
+
   // Estados para controlar as opções dependentes
   const [motivos, setMotivos] = useState<string[]>([]);
   const [availableEquipment, setAvailableEquipment] = useState<string[]>([]);
@@ -61,11 +45,11 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
 
   /* ------------------------------------------- Effect ------------------------------------------- */
   useEffect(() => {
-    if (stopData) {
+    if (selectedStop) {
       // Normalizar equipamento para exibição: ' ' ou '' -> 'Linha'
       const formattedStopData = {
-        ...stopData,
-        equipamento: normalizeEquipamento(stopData.equipamento),
+        ...selectedStop,
+        equipamento: normalizeEquipamento(selectedStop.equipamento),
       };
 
       setFormData(formattedStopData);
@@ -74,9 +58,8 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
       setMotivos(Object.keys(apontamentosHierarquia));
 
       // Se já tiver um motivo selecionado, carregar os equipamentos correspondentes
-      if (stopData.motivo) {
-        const motivoData =
-          apontamentosHierarquia[stopData.motivo as keyof typeof apontamentosHierarquia];
+      if (selectedStop.motivo) {
+        const motivoData = apontamentosHierarquia[selectedStop.motivo as keyof typeof apontamentosHierarquia];
 
         if (motivoData) {
           // Carregar lista de equipamentos para este motivo
@@ -84,36 +67,30 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
           setAvailableEquipment(equipmentList);
 
           // Se já tiver um equipamento selecionado, carregar os problemas correspondentes
-          const displayEquipamento = normalizeEquipamento(stopData.equipamento);
+          const displayEquipamento = normalizeEquipamento(selectedStop.equipamento);
 
           // Se o equipamento existe na hierarquia, carregar seus problemas
           if (displayEquipamento in motivoData) {
-            setAvailableProblems(
-              Object.keys(motivoData[displayEquipamento as keyof typeof motivoData])
-            );
+            setAvailableProblems(Object.keys(motivoData[displayEquipamento as keyof typeof motivoData]));
 
             // Se já tiver um problema selecionado, carregar as causas correspondentes
-            if (stopData.problema) {
+            if (selectedStop.problema) {
               const equipObj = motivoData[displayEquipamento as keyof typeof motivoData];
               // Verificar se o equipamento e o problema existem na hierarquia
-              if (equipObj && stopData.problema in equipObj) {
+              if (equipObj && selectedStop.problema in equipObj) {
                 // Acessar as causas de forma segura
-                setAvailableCauses(
-                  equipObj[stopData.problema as keyof typeof equipObj] || []
-                );
+                setAvailableCauses(equipObj[selectedStop.problema as keyof typeof equipObj] || []);
               }
             }
           }
         }
       }
     }
-  }, [stopData]);
+  }, [selectedStop]);
 
   /* ------------------------------------------- Handles ------------------------------------------ */
   // Manipular mudanças nos campos do formulário
-  const handleChange = (
-    e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
 
     if (name === 'equipamento') {
@@ -127,8 +104,7 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
 
       // Atualizar opções de problemas baseado no equipamento
       if (formData.motivo) {
-        const motivoData =
-          apontamentosHierarquia[formData.motivo as keyof typeof apontamentosHierarquia];
+        const motivoData = apontamentosHierarquia[formData.motivo as keyof typeof apontamentosHierarquia];
 
         if (motivoData && value in motivoData) {
           // Equipamento existente na hierarquia
@@ -163,8 +139,7 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
       }));
 
       // Atualizar opções de equipamentos baseado no motivo
-      const motivoData =
-        apontamentosHierarquia[value as keyof typeof apontamentosHierarquia];
+      const motivoData = apontamentosHierarquia[value as keyof typeof apontamentosHierarquia];
 
       if (motivoData) {
         setAvailableEquipment(Object.keys(motivoData));
@@ -181,8 +156,7 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
 
       // Atualizar opções de causas baseado no problema
       if (formData.motivo && formData.equipamento) {
-        const motivoData =
-          apontamentosHierarquia[formData.motivo as keyof typeof apontamentosHierarquia];
+        const motivoData = apontamentosHierarquia[formData.motivo as keyof typeof apontamentosHierarquia];
 
         if (
           motivoData &&
@@ -190,9 +164,7 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
           value in motivoData[formData.equipamento as keyof typeof motivoData]
         ) {
           const equipObj = motivoData[formData.equipamento as keyof typeof motivoData];
-          setAvailableCauses(
-            (equipObj[value as keyof typeof equipObj] as string[]) || []
-          );
+          setAvailableCauses((equipObj[value as keyof typeof equipObj] as string[]) || []);
         } else {
           setAvailableCauses([]);
         }
@@ -201,12 +173,7 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
   };
 
   const handleSubmit = async () => {
-    if (
-      !formData.motivo ||
-      !formData.equipamento ||
-      !formData.problema ||
-      !formData.causa
-    ) {
+    if (!formData.motivo || !formData.equipamento || !formData.problema || !formData.causa) {
       showToast('Preencha todos os campos obrigatórios', 'warning');
       return;
     }
@@ -217,59 +184,33 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
       return;
     }
 
-    setIsLoading(true);
-    try {
-      // Criar uma cópia do formData para não modificar o estado diretamente
-      const dataToSend = { ...formData };
+    // Criar uma cópia do formData para não modificar o estado diretamente
+    const dataToSend = { ...formData };
 
-      // Remover o campo s_backup antes de enviar para a API
-      if ('s_backup' in dataToSend) {
-        delete dataToSend.s_backup;
-      }
-
-      // Garantir que o campo equipamento seja um espaço em branco quando for "Linha"
-      dataToSend.equipamento = denormalizeEquipamento(dataToSend.equipamento);
-
-      // Tratar o campo os_numero para evitar nulo quando não for Manutenção
-      if (dataToSend.motivo !== 'Manutenção') {
-        dataToSend.os_numero = '0';
-      } else if (!dataToSend.os_numero) {
-        dataToSend.os_numero = '0';
-      }
-
-      // Verificar se é um registro histórico ou atual
-      if ('_isHistorical' in dataToSend) {
-        // Remover propriedades auxiliares antes de enviar
-        delete dataToSend._isHistorical;
-
-        // Usar a API específica para registros históricos
-        await updateHistoricalAppointmentRecord(dataToSend as iMaquinaIHM);
-        showToast('Registro histórico atualizado com sucesso!', 'success');
-      } else {
-        // Usar a API normal para registros do dia atual
-        await updateMaquinaIHM(dataToSend as iMaquinaIHM);
-        showToast('Parada atualizada com sucesso!', 'success');
-      }
-
-      onSave();
-      onHide();
-    } catch (error) {
-      console.error('Erro ao atualizar parada:', error);
-      showToast('Erro ao atualizar parada', 'danger');
-    } finally {
-      setIsLoading(false);
+    // Remover o campo s_backup antes de enviar para a API
+    if ('s_backup' in dataToSend) {
+      delete dataToSend.s_backup;
     }
+
+    // Garantir que o campo equipamento seja um espaço em branco quando for "Linha"
+    dataToSend.equipamento = denormalizeEquipamento(dataToSend.equipamento);
+
+    // Tratar o campo os_numero para evitar nulo quando não for Manutenção
+    if (dataToSend.motivo !== 'Manutenção') {
+      dataToSend.os_numero = '0';
+    } else if (!dataToSend.os_numero) {
+      dataToSend.os_numero = '0';
+    }
+
+    await saveChanges(dataToSend as iMaquinaIHM);
   };
 
   /* ---------------------------------------------------------------------------------------------- */
   /*                                             LAYOUT                                             */
   /* ---------------------------------------------------------------------------------------------- */
   return (
-    <Modal show={show} onHide={onHide} size='lg' centered>
-      <Modal.Header
-        closeButton
-        className={formData._isHistorical ? 'bg-info text-white' : ''}
-      >
+    <Modal show={isVisible} onHide={closeModal} size='lg' centered>
+      <Modal.Header closeButton className={formData._isHistorical ? 'bg-info text-white' : ''}>
         <Modal.Title>
           {formData._isHistorical ? 'Editar Registro Histórico' : 'Editar Parada'}
           {formData._isHistorical && (
@@ -323,12 +264,7 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
             <Col md={4}>
               <Form.Group>
                 <Form.Label className='required-field'>Motivo</Form.Label>
-                <Form.Select
-                  name='motivo'
-                  value={formData.motivo || ''}
-                  onChange={handleChange}
-                  required
-                >
+                <Form.Select name='motivo' value={formData.motivo || ''} onChange={handleChange} required>
                   <option value=''>Selecione...</option>
                   {motivos.map((motivo) => (
                     <option key={motivo} value={motivo}>
@@ -433,11 +369,11 @@ const EditStopModal: React.FC<EditStopModalProps> = ({
       </Modal.Body>
       <Modal.Footer>
         <Stack direction='horizontal' gap={2} className='justify-content-end'>
-          <Button variant='secondary' onClick={onHide}>
+          <Button variant='secondary' onClick={closeModal}>
             Cancelar
           </Button>
-          <Button variant='primary' onClick={handleSubmit} disabled={isLoading}>
-            {isLoading ? 'Salvando...' : 'Salvar Alterações'}
+          <Button variant='primary' onClick={handleSubmit} disabled={isSaving}>
+            {isSaving ? 'Salvando...' : 'Salvar Alterações'}
           </Button>
         </Stack>
       </Modal.Footer>
