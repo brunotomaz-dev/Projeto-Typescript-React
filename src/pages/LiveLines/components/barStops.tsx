@@ -3,13 +3,7 @@ import React, { useMemo } from 'react';
 import { Row } from 'react-bootstrap';
 import { BSColors, CICLOS_ESPERADOS, CICLOS_ESPERADOS_BOL } from '../../../helpers/constants';
 import { impactFilter } from '../../../helpers/ImpactFilter';
-import { iInfoIhmLive } from '../interfaces/infoIhm.interface';
-import { iMaquinaInfo } from '../interfaces/maquinaInfo.interface';
-
-interface BarStopsProps {
-  data: iInfoIhmLive[];
-  cycleData: iMaquinaInfo[];
-}
+import { useBarStopsData } from '../../../hooks/useBarStopsData';
 
 interface StopSummary {
   motivo: string;
@@ -19,7 +13,11 @@ interface StopSummary {
   impacto: number;
 }
 
-const BarStops: React.FC<BarStopsProps> = ({ data, cycleData }) => {
+const BarStops: React.FC = () => {
+  /* ------------------------------------------------- Hook's ------------------------------------------------ */
+  const { data, cycleData, isLoading, isFetching } = useBarStopsData();
+
+  /* ------------------------------------------------ Funções ------------------------------------------------ */
   //  Filtro dos itens que não afetam a eficiência
   const filteredData = useMemo(() => {
     return impactFilter(data);
@@ -39,14 +37,15 @@ const BarStops: React.FC<BarStopsProps> = ({ data, cycleData }) => {
   // Cria a perda por ciclo baixo
   const cycleLost = useMemo(() => {
     // Filtra pela maquina rodando
-    cycleData = cycleData.filter((item) => item.ciclo_1_min > 0);
+    const filteredCycleData = cycleData.filter((item) => item.ciclo_1_min > 0);
     // Produto único
-    const product = cycleData.length > 0 ? cycleData[0].produto : '';
+    const product = filteredCycleData.length > 0 ? filteredCycleData[0].produto : '';
     // Verifica se o produto contém a palavra ' BOL', se tiver usa CICLOS_ESPERADOS, se não CICLOS_ESPERADOS_BOL
     const ciclosIdeais = product.includes(' BOL') ? CICLOS_ESPERADOS_BOL : CICLOS_ESPERADOS;
 
     // Média de ciclos por minuto
-    const cycleAverage = cycleData.reduce((acc, item) => acc + item.ciclo_1_min, 0) / cycleData.length;
+    const cycleAverage =
+      filteredCycleData.reduce((acc, item) => acc + item.ciclo_1_min, 0) / filteredCycleData.length;
     // Diferença entre a média e o esperado
     const cycleDiff = ciclosIdeais > cycleAverage ? ciclosIdeais - cycleAverage : 0;
 
@@ -102,6 +101,7 @@ const BarStops: React.FC<BarStopsProps> = ({ data, cycleData }) => {
       .sort((a, b) => b.tempo - a.tempo);
   }, [filteredData, cycleLost, totalStopTime]);
 
+  /* ------------------------------------------------- Option ------------------------------------------------ */
   // Options para echart de barra
   const option = {
     title: {
@@ -184,8 +184,20 @@ const BarStops: React.FC<BarStopsProps> = ({ data, cycleData }) => {
     ],
   };
 
+  const isRefreshing = isLoading || isFetching;
+
+  /* --------------------------------------------------------------------------------------------------------- */
+  /*                                                   LAYOUT                                                  */
+  /* --------------------------------------------------------------------------------------------------------- */
   return (
     <>
+      {isRefreshing && (
+        <Row className='position-absolute top-0 end-0 m-2'>
+          <div className={`spinner-border ${isLoading ? 'text-secondary' : 'text-light-grey'}`} role='status'>
+            <span className='visually-hidden'>Atualizando...</span>
+          </div>
+        </Row>
+      )}
       {totalStopTime > 0 ? (
         <EChartsReact option={option} style={{ height: '100%', width: '100%' }} />
       ) : (

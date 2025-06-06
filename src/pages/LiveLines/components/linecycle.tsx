@@ -1,114 +1,114 @@
 import EChartsReact from 'echarts-for-react';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Row } from 'react-bootstrap';
 import { BSColors } from '../../../helpers/constants';
-import { iMaquinaInfo } from '../interfaces/maquinaInfo.interface';
+import { useLineCycleData } from '../../../hooks/useLineCycleData';
 
-interface LineCycleProps {
-  maqInfo: iMaquinaInfo[];
-}
+const LineCycle: React.FC = () => {
+  /* ------------------------------------------------- Hook's ------------------------------------------------ */
+  // Usar o hook especializado para obter os dados
+  const { cycles, hours, averageCycles, hasData, isLoading, isFetching } = useLineCycleData();
 
-const LineCycle: React.FC<LineCycleProps> = ({ maqInfo }) => {
-  // Ordenar os dados por recno
-  maqInfo.sort((a, b) => a.recno - b.recno);
-
-  // Dados para o gráfico de linha
-  const cycles = maqInfo.map((maq) => maq.ciclo_1_min);
-  let hour = maqInfo.map((maq) => maq.hora_registro);
-
-  // Ajustar a hora para o formato hh:mm sendo que estava em hh:mm:ss.ms
-  hour = hour.map((h) => {
-    const [hour, minute] = h.split(':');
-    return `${hour}:${minute}`;
-  });
-
-  // Média de ciclos (só com a máquina no status 'true')
-  const maqTrue = maqInfo.filter((item) => item.ciclo_1_min > 0);
-  const averageCycles = (maqTrue.reduce((acc, item) => acc + item.ciclo_1_min, 0) / maqTrue.length).toFixed(
-    2
-  );
-  // options for the chart line
-  const options = {
-    textStyle: {
-      fontFamily: 'Poppins',
-    },
-    title: {
-      text: 'Ciclos de Máquina',
-      left: 'center',
+  /* ------------------------------------------------- Option ------------------------------------------------ */
+  // Configurações do gráfico
+  const options = useMemo(
+    () => ({
       textStyle: {
-        fontSize: 16,
+        fontFamily: 'Poppins',
       },
-    },
-    grid: {
-      left: '1.5%',
-      right: '1.5%',
-      bottom: '5%',
-      top: '25%',
-      containLabel: true,
-    },
-    tooltip: {
-      trigger: 'axis',
-      textStyle: {
-        color: BSColors.BLUE_DELFT_COLOR,
-      },
-    },
-    xAxis: {
-      type: 'category',
-      data: hour,
-      axisTick: {
-        show: false,
-      },
-    },
-    yAxis: {
-      type: 'value',
-    },
-    series: [
-      {
-        data: cycles,
-        type: 'line',
-        itemStyle: {
-          color: BSColors.GREY_600_COLOR,
+      title: {
+        text: 'Ciclos de Máquina',
+        left: 'center',
+        textStyle: {
+          fontSize: 16,
         },
-        showSymbol: false,
-        // markPoint: {
-        //   data: [
-        //     {
-        //       type: 'max',
-        //     },
-        //   ],
-        //   symbol: 'pin',
-        // },
-        markLine: {
-          symbol: ['none', 'none'],
-          lineStyle: {
-            color: BSColors.ORANGE_COLOR,
-            type: 'dashed',
-            width: 1,
+      },
+      grid: {
+        left: '1.5%',
+        right: '1.5%',
+        bottom: '5%',
+        top: '25%',
+        containLabel: true,
+      },
+      tooltip: {
+        trigger: 'axis',
+        textStyle: {
+          color: BSColors.BLUE_DELFT_COLOR,
+        },
+      },
+      xAxis: {
+        type: 'category',
+        data: hours,
+        axisTick: {
+          show: false,
+        },
+      },
+      yAxis: {
+        type: 'value',
+        splitLine: {
+          show: false,
+        },
+      },
+      series: [
+        {
+          data: cycles,
+          type: 'line',
+          itemStyle: {
+            color: BSColors.GREY_600_COLOR,
           },
-          label: {
-            formatter: `Média: ${averageCycles}`,
-            position: 'insideStartTop',
-            distance: 20,
-            color: BSColors.GREY_700_COLOR,
-          },
-          data: [
-            {
-              yAxis: parseFloat(averageCycles),
-              name: 'Média',
+          showSymbol: false,
+          markLine: {
+            symbol: ['none', 'none'],
+            lineStyle: {
+              color: BSColors.ORANGE_COLOR,
+              type: 'dashed',
+              width: 1,
             },
-          ],
+            label: {
+              formatter: `Média: ${averageCycles}`,
+              position: 'insideStartTop',
+              distance: 20,
+              color: BSColors.GREY_700_COLOR,
+            },
+            data: [
+              {
+                yAxis: parseFloat(averageCycles),
+                name: 'Média',
+              },
+            ],
+          },
         },
-      },
-    ],
-  };
+      ],
+    }),
+    [cycles, hours, averageCycles]
+  );
+
+  // Se não houver dados, mostrar mensagem
+  if (!hasData) {
+    return (
+      <Row className='mb-2 p-2 d-flex justify-content-center align-items-center' style={{ height: '220px' }}>
+        <h5 className='text-center text-secondary'>Sem dados de ciclos disponíveis</h5>
+      </Row>
+    );
+  }
+
+  /* --------------------------------------------------------------------------------------------------------- */
+  /*                                                   LAYOUT                                                  */
+  /* --------------------------------------------------------------------------------------------------------- */
+  const isRefreshing = isLoading || isFetching;
 
   return (
     <>
-      {maqInfo.length > 0 && (
-        <Row className='mb-2 p-2' style={{ height: '220px' }}>
-          <EChartsReact option={options} style={{ height: '100%', width: '100%' }} />
+      {isRefreshing && (
+        <Row className='position-absolute top-0 end-0 m-2'>
+          <div className={`spinner-border ${isLoading ? 'text-secondary' : 'text-light-grey'}`} role='status'>
+            <span className='visually-hidden'>Atualizando...</span>
+          </div>
         </Row>
       )}
+      <Row className='mb-2 p-2' style={{ height: '220px' }}>
+        <EChartsReact option={options} style={{ height: '100%', width: '100%' }} />
+      </Row>
     </>
   );
 };

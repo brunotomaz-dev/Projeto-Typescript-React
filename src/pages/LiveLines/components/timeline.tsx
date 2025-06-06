@@ -3,15 +3,22 @@ import EChartsReact from 'echarts-for-react';
 import React, { useMemo } from 'react';
 import { Row } from 'react-bootstrap';
 import { BSColors, colorObj } from '../../../helpers/constants';
-import { iInfoIhmLive } from '../interfaces/infoIhm.interface';
+import { useTimelineData } from '../../../hooks/useTimelineData';
 
-interface TimelineProps {
-  data: iInfoIhmLive[];
-}
+const Timeline: React.FC = () => {
+  // Usar hook especializado para obter os dados
+  const { data, isLoading, isFetching, hasData } = useTimelineData();
 
-const Timeline: React.FC<TimelineProps> = ({ data }) => {
   // Processa todos os dados em um único useMemo
   const { processedData, timeRange, uniqueMotivos } = useMemo(() => {
+    if (!Array.isArray(data) || data.length === 0) {
+      return {
+        processedData: [],
+        timeRange: { min: 0, max: 24 * 60 },
+        uniqueMotivos: [],
+      };
+    }
+
     // Processa os dados
     const processed = data.map((item) => {
       const startTime = new Date(item.data_hora);
@@ -26,11 +33,7 @@ const Timeline: React.FC<TimelineProps> = ({ data }) => {
       return {
         ...item,
         causa:
-          item.status === 'rodando'
-            ? ''
-            : item.status === 'parada' && item.motivo === null
-              ? ''
-              : item.causa,
+          item.status === 'rodando' ? '' : item.status === 'parada' && item.motivo === null ? '' : item.causa,
         motivo:
           item.status === 'rodando'
             ? 'Rodando'
@@ -105,21 +108,22 @@ const Timeline: React.FC<TimelineProps> = ({ data }) => {
     }));
   }, [processedData, uniqueMotivos]);
 
-  const option = {
-    title: {
-      text: 'Timeline de Paradas',
-      left: 'center',
-      top: 0,
-      textStyle: {
-        fontSize: 18,
-        fontFamily: 'Poppins',
+  const option = useMemo(
+    () => ({
+      title: {
+        text: 'Timeline de Paradas',
+        left: 'center',
+        top: 0,
+        textStyle: {
+          fontSize: 18,
+          fontFamily: 'Poppins',
+        },
       },
-    },
-    tooltip: {
-      trigger: 'item',
-      formatter: (params: any) => {
-        const data = params.data;
-        return `
+      tooltip: {
+        trigger: 'item',
+        formatter: (params: any) => {
+          const data = params.data;
+          return `
           <div>
             <b>${data.motivo}</b><br/>
             ${data.problema ? `Problema: ${data.problema}<br/>` : ''}
@@ -129,65 +133,84 @@ const Timeline: React.FC<TimelineProps> = ({ data }) => {
             <b>${data.afeta_eff ? 'Não impacta' : ''}</b>
           </div>
         `;
-      },
-    },
-    legend: {
-      show: true,
-      data: uniqueMotivos,
-      orient: 'horizontal',
-      top: 60,
-      left: 'center',
-      textStyle: {
-        fontSize: 11,
-        fontFamily: 'Poppins',
-      },
-      itemGap: 10,
-    },
-    grid: {
-      top: 90,
-      left: '1.5%',
-      right: '1.5%',
-      bottom: '3%',
-      containLabel: true,
-    },
-    xAxis: {
-      type: 'value',
-      min: timeRange.min,
-      max: timeRange.max,
-      axisLabel: {
-        formatter: (value: number) => {
-          const hours = Math.floor(value / 60);
-          const minutes = value % 60;
-          return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
         },
       },
-    },
-    yAxis: {
-      type: 'category',
-      data: ['Timeline'],
-      axisLabel: { show: false },
-    },
-    series: series,
-  };
+      legend: {
+        show: true,
+        data: uniqueMotivos,
+        orient: 'horizontal',
+        top: 60,
+        left: 'center',
+        textStyle: {
+          fontSize: 11,
+          fontFamily: 'Poppins',
+        },
+        itemGap: 10,
+      },
+      grid: {
+        top: 90,
+        left: '1.5%',
+        right: '1.5%',
+        bottom: '3%',
+        containLabel: true,
+      },
+      xAxis: {
+        type: 'value',
+        min: timeRange.min,
+        max: timeRange.max,
+        axisLabel: {
+          formatter: (value: number) => {
+            const hours = Math.floor(value / 60);
+            const minutes = value % 60;
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+          },
+        },
+      },
+      yAxis: {
+        type: 'category',
+        data: ['Timeline'],
+        axisLabel: { show: false },
+      },
+      series: series,
+    }),
+    [timeRange, uniqueMotivos, series]
+  );
 
-  // Cria uma key única baseada nos dados
-  const chartKey = useMemo(() => {
-    return `timeline-${data.length}-${timeRange.min}-${timeRange.max}-${uniqueMotivos.join('-')}`;
-  }, [data.length, timeRange.min, timeRange.max, uniqueMotivos]);
+  // Se não há dados
+  if (!hasData) {
+    return (
+      <Row className='p-2 d-flex justify-content-center align-items-center' style={{ height: '150px' }}>
+        <h5 className='text-center text-secondary'>Sem dados de timeline disponíveis</h5>
+      </Row>
+    );
+  }
+
+  // Cria uma key única baseada nos dados para forçar re-renderização quando necessário
+  const chartKey = `timeline-${data.length}-${timeRange.min}-${timeRange.max}-${uniqueMotivos.join('-')}`;
+
+  const isRefreshing = isLoading || isFetching;
 
   return (
     <>
-      {data.length > 0 && (
-        <Row className='p-2'>
-          <EChartsReact
-            key={chartKey}
-            option={option}
-            style={{ height: '150px' }}
-            notMerge={true} // Força recriação completa do gráfico
-            lazyUpdate={false} // Desativa atualizações lazy
-          />
-        </Row>
-      )}
+      <Row className='p-2' style={{ position: 'relative' }}>
+        {isFetching && (
+          <div className='position-absolute top-0 end-0 m-2'>
+            <div
+              className={`spinner-border spinner-border-sm ${isRefreshing ? 'text-light-grey' : 'text-secondary'}`}
+              role='status'
+            >
+              <span className='visually-hidden'>Atualizando...</span>
+            </div>
+          </div>
+        )}
+        <EChartsReact
+          key={chartKey}
+          option={option}
+          style={{ height: '150px' }}
+          notMerge={true}
+          lazyUpdate={false}
+        />
+      </Row>
     </>
   );
 };

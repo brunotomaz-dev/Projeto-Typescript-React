@@ -4,8 +4,6 @@ import { Col, Row } from 'react-bootstrap';
 import DateTurnFilter from '../../components/DateTurnFilter';
 import { getShift } from '../../helpers/turn';
 import { useLiveIndicatorsQuery } from '../../hooks/queries/useLiveIndicatorsQuery';
-import { useInfoIHMQuery } from '../../hooks/queries/useLiveInfoIHMQuery';
-import { useMachineInfoQuery } from '../../hooks/queries/useLiveMachineInfoQuery';
 import { useFilters } from '../../hooks/useFilters';
 import { useFiltersVisibility } from '../../hooks/useFiltersVisibility';
 import { setTurn } from '../../redux/store/features/filterSlice';
@@ -13,13 +11,14 @@ import { setLiveSelectedMachine, setLiveSelectedShift } from '../../redux/store/
 import { useAppDispatch, useAppSelector } from '../../redux/store/hooks';
 import BarStops from './components/barStops';
 import EfficiencyComparison from './components/effComparison';
-import GaugeAverage from './components/gaugeAverage';
 import LineIndicators from './components/gauges';
 import LiveLinesHeader from './components/header';
+import LineAverages from './components/lineAverages';
 import LineControls from './components/lineControls';
 import LineCycle from './components/linecycle';
 import ProductionPanel from './components/productionCard';
 import Timeline from './components/timeline';
+import TimelineSummary from './components/timelineSummary';
 import UpdateStops from './components/UpdateStops';
 
 // cspell: words linecycle eficiencia recno
@@ -41,9 +40,7 @@ const LiveLines: React.FC = () => {
 
   /* ----------------------------------------------- USE QUERIES --------------------------------------------- */
   // Hooks de query
-  const { indicators, metrics, machineId } = useLiveIndicatorsQuery(selectedLine);
-  const { machineInfo } = useMachineInfoQuery(machineId);
-  const { ihmData } = useInfoIHMQuery(selectedLine);
+  const { machineId } = useLiveIndicatorsQuery(selectedLine);
 
   /* ------------------------------------------------ USE MEMO ----------------------------------------------- */
   // Verificar quais turnos devem ser desabilitados
@@ -130,21 +127,12 @@ const LiveLines: React.FC = () => {
           <ProductionPanel />
         </Col>
         {/* --------------------------------------- COLUNA DE BARRAS --------------------------------------- */}
-        <Col
-          xs={5}
-          xl
-          className='card p-2 justify-content-center shadow bg-transparent border-0 mb-lg-0 mb-2'
-        >
-          <BarStops data={ihmData} cycleData={machineInfo} />
+        <Col xs={5} xl className='card p-2 justify-content-center shadow bg-light border-0 mb-lg-0 mb-2'>
+          <BarStops />
         </Col>
-        {/* ---------------------_--------------- COLUNA DE COMPARAÇÃO -------------------------_----------- */}
-        <Col xs xl className='card p-2 shadow bg-transparent border-0 mb-lg-0 mb-2'>
-          <EfficiencyComparison
-            factoryEff={metrics?.monthAverage || 0}
-            turnEff={metrics?.turnAverage || 0}
-            lineEff={metrics?.lineAverage || 0}
-            currentEff={indicators.efficiency}
-          />
+        {/* ---------------------_--------------- COLUNA DE COMPARAÇÃO ------------------------------------- */}
+        <Col xs xl className='card p-2 shadow bg-light border-0 mb-lg-0 mb-2'>
+          <EfficiencyComparison />
         </Col>
       </Row>
       <Row className='d-flex m-2 gap-1'>
@@ -153,27 +141,16 @@ const LiveLines: React.FC = () => {
           <LineControls />
         </Col>
         {/* --------------------------- COLUNA DOS GRÁFICOS DE CICLOS E TIMELINE --------------------------- */}
-        <Col xs={12} xl className='card p-2 shadow border-0 bg-transparent justify-content-around'>
-          <LineCycle maqInfo={machineInfo} />
-          <Timeline data={ihmData} />
+        <Col xs={12} xl className='card p-2 shadow border-0 bg-light justify-content-around'>
+          <LineCycle />
+          <Timeline />
+          <TimelineSummary />
         </Col>
         {/* -------------------------------------------- MÉDIAS -------------------------------------------- */}
-        {(metrics?.monthAverage || 0) > 0 && (
-          <Col xs={12} xl={2} className='card bg-light p-2 bg-transparent border-0 shadow align-items-center'>
-            <Row className='w-100 h-100'>
-              <h6 className='mt-2 fs-6 text-center fw-bold text-dark-emphasis'> Eficiência Média da Linha</h6>
-              {(metrics?.lineNotAverage || 0) >= 0 && (
-                <GaugeAverage average={metrics?.lineNotAverage || 0} turn='Noturno' />
-              )}
-              {(metrics?.lineMatAverage || 0) >= 0 && (
-                <GaugeAverage average={metrics?.lineMatAverage || 0} turn='Matutino' />
-              )}
-              {(metrics?.lineVesAverage || 0) >= 0 && (
-                <GaugeAverage average={metrics?.lineVesAverage || 0} turn='Vespertino' />
-              )}
-            </Row>
-          </Col>
-        )}
+
+        <Col xs={12} xl={2} className='card bg-light p-2 bg-light border-0 shadow align-items-center'>
+          <LineAverages />
+        </Col>
       </Row>
       {/* ----------------------------------- Tabela De Apontamentos ----------------------------------- */}
       {isOpenedUpdateStops && (

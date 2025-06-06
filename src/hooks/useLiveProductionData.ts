@@ -9,12 +9,17 @@ export const useProductionData = () => {
   const machineId = useAppSelector((state) => state.liveLines.selectedMachine);
 
   // Utilizar os hooks de query existentes
-  const { indicators, isLoading: indicatorsLoading } = useLiveIndicatorsQuery(selectedLine);
-  const { product, isLoading: machineLoading } = useMachineInfoQuery(machineId);
+  const {
+    indicators,
+    isLoading: indicatorsLoading,
+    isFetching: indicatorsFetching,
+  } = useLiveIndicatorsQuery(selectedLine);
+  const { product, isLoading: machineLoading, isFetching: machineFetching } = useMachineInfoQuery(machineId);
 
   return {
     productionTotal: indicators.productionTotal,
     produto: product,
     isLoading: indicatorsLoading || machineLoading,
+    isFetching: indicatorsFetching || machineFetching,
   };
 };
