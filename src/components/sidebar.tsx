@@ -189,13 +189,11 @@ const Sidebar: React.FC = () => {
     <>
       <aside id='sidebar' className={`${!isCollapsed ? 'expand' : ''}`}>
         {/* -------------------------------------------- Header -------------------------------------------- */}
-        <section className='sidebar-header'>
-          <Link to='/init' className='text-black mx-auto mt-3 logo-container d-flex justify-content-center'>
-            <div className='logo-wrapper'>
-              <img src={STMLogo} alt='Logo Colorido Santa Massa' className='logo-square' />
-              <img src={STMLogoH} alt='Logo Colorido Santa Massa' className='logo-horizontal' />
-            </div>
-          </Link>
+        <section className='sidebar-header text-black mt-2 logo-container'>
+          <div className='logo-wrapper mx-auto'>
+            <img src={STMLogo} alt='Logo Colorido Santa Massa' className='logo-square' />
+            <img src={STMLogoH} alt='Logo Colorido Santa Massa' className='logo-horizontal' />
+          </div>
           <hr />
         </section>
 

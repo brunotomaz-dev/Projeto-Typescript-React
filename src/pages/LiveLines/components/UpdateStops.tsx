@@ -13,13 +13,13 @@ import CreateStopModal from './ModalCreate';
 import EditStopModal from './ModalUpdate';
 
 interface iUpdateStopsProps {
-  selectedLine: number;
   nowDate: string;
   onUpdate: () => void;
 }
 
-const UpdateStops: React.FC<iUpdateStopsProps> = ({ nowDate, selectedLine, onUpdate }) => {
+const UpdateStops: React.FC<iUpdateStopsProps> = ({ nowDate, onUpdate }) => {
   /* ------------------------------------------------ REDUX ----------------------------------------------- */
+  const selectedLine = useAppSelector((state) => state.liveLines.selectedLine);
   const selectedDate = useAppSelector((state) => state.liveLines.selectedDate);
   const selectedMachine = useAppSelector((state) => state.liveLines.selectedMachine);
   const selectedShift = useAppSelector((state) => state.liveLines.selectedShift);
@@ -327,15 +327,12 @@ const UpdateStops: React.FC<iUpdateStopsProps> = ({ nowDate, selectedLine, onUpd
           {stopToDelete && maquinaIHM.find((item) => item.recno === stopToDelete) && (
             <div className='mt-3 p-3 bg-light rounded border'>
               <p className='mb-2'>
-                <strong>Motivo:</strong>{' '}
-                {maquinaIHM.find((item) => item.recno === stopToDelete)?.motivo}
+                <strong>Motivo:</strong> {maquinaIHM.find((item) => item.recno === stopToDelete)?.motivo}
               </p>
               <p className='mb-2'>
                 <strong>Data:</strong>{' '}
                 {format(
-                  parseISO(
-                    maquinaIHM.find((item) => item.recno === stopToDelete)?.data_registro || ''
-                  ),
+                  parseISO(maquinaIHM.find((item) => item.recno === stopToDelete)?.data_registro || ''),
                   'dd/MM/yyyy',
                   { locale: ptBR }
                 )}

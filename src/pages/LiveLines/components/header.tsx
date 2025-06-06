@@ -1,40 +1,56 @@
-import { parseISO, startOfDay } from 'date-fns';
-import { ptBR } from 'date-fns/locale/pt-BR';
+import { format, parse, startOfDay } from 'date-fns';
 import React, { useState } from 'react';
 import { Button, Row, Stack } from 'react-bootstrap';
-import DatePicker from 'react-datepicker';
+import { getTurnoName, TurnoID } from '../../../helpers/constants';
+import { useFilters } from '../../../hooks/useFilters';
+import { useFiltersVisibility } from '../../../hooks/useFiltersVisibility';
 import { usePermissions } from '../../../hooks/usePermissions';
-import { useAppSelector } from '../../../redux/store/hooks';
+import { setIsOpenedUpdateStops } from '../../../redux/store/features/liveLinesSlice';
+import { useAppDispatch, useAppSelector } from '../../../redux/store/hooks';
 import ModalServiceHistory from './liveLines.ModalHistoricService';
 
-interface HeaderProps {
-  nowDate: string;
-  onDateChange: (date: Date | null) => void;
-  isOpenedUpdateStops: boolean;
-  setIsOpenedUpdateStops: (isOpened: boolean) => void;
-}
-
-const LiveLinesHeader: React.FC<HeaderProps> = ({
-  nowDate,
-  onDateChange,
-  isOpenedUpdateStops,
-  setIsOpenedUpdateStops,
-}) => {
-  /* ------------------------------------------- HOOK ------------------------------------------- */
+const LiveLinesHeader: React.FC = () => {
+  /* ------------------------------------------------- Hook's ------------------------------------------------ */
   const { hasResourcePermission, hasElementAccess } = usePermissions();
   const canView = hasResourcePermission('ihm_appointments', 'view');
   const hasBtnHistAccess = hasElementAccess('btn_OS_preventive_history');
+  const dispatch = useAppDispatch();
+  const { isDefault, turn, date } = useFilters('liveLines');
 
-  /* ------------------------------------------------ REDUX ----------------------------------------------- */
+  // Hook para gerenciar visibilidade de filtros
+  const {
+    isVisible: showFilters,
+    toggle: toggleFilters,
+    resetVisibility,
+  } = useFiltersVisibility('liveLines');
+
+  /* ------------------------------------------------- Redux ------------------------------------------------- */
   const selectedDate = useAppSelector((state) => state.liveLines.selectedDate);
   const selectedMachine = useAppSelector((state) => state.liveLines.selectedMachine);
+  const isOpenedUpdateStops = useAppSelector((state) => state.liveLines.isOpenedUpdateStops);
 
-  /* --------------------------------------------- Local State -------------------------------------------- */
+  /* ---------------------------------------------- Local State ---------------------------------------------- */
   const [isOpened, setIsOpened] = useState(false);
 
-  /* ---------------------------------------------------------------------------------------------- */
-  /*                                             LAYOUT                                             */
-  /* ---------------------------------------------------------------------------------------------- */
+  /* ----------------------------------------------- Variáveis ----------------------------------------------- */
+  const nowDate = format(startOfDay(new Date()), 'yyyy-MM-dd');
+
+  /* ------------------------------------------------ Handlers ----------------------------------------------- */
+  const handleToggleUpdateStops = () => {
+    dispatch(setIsOpenedUpdateStops(!isOpenedUpdateStops));
+  };
+
+  /* ------------------------------------------------ Effects ------------------------------------------------ */
+  // Resetar a visibilidade dos filtros quando o componente é desmontado
+  React.useEffect(() => {
+    return () => {
+      resetVisibility();
+    };
+  }, [resetVisibility]);
+
+  /* --------------------------------------------------------------------------------------------------------- */
+  /*                                                   LAYOUT                                                  */
+  /* --------------------------------------------------------------------------------------------------------- */
   return (
     <>
       <Row className='m-2'>
@@ -43,33 +59,45 @@ const LiveLinesHeader: React.FC<HeaderProps> = ({
         </h1>
         <h5 className='text-center'>{`(${selectedMachine || '-'})`}</h5>
         <Stack direction='horizontal' gap={2}>
-          <DatePicker
-            selected={parseISO(selectedDate)}
-            className='form-control text-center'
-            locale={ptBR}
-            dateFormat='dd/MM/yyyy'
-            icon='bi bi-calendar-day'
-            popperClassName='custom-popper'
-            calendarClassName='custom-calendar'
-            showIcon={true}
-            onChange={onDateChange}
-            minDate={parseISO('2024-11-01')}
-            maxDate={startOfDay(new Date())}
-          />
+          {/* Botão para mostrar/ocultar filtros */}
+          <Button variant={showFilters ? 'secondary' : 'outline-secondary'} size='sm' onClick={toggleFilters}>
+            <i className={`bi ${showFilters ? 'bi-funnel-fill' : 'bi-funnel'} me-2`}></i>
+            {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+          </Button>
+
           {canView && (
             <Button
-              variant='outline-secondary'
-              onClick={() => setIsOpenedUpdateStops(!isOpenedUpdateStops)}
+              variant={isOpenedUpdateStops ? 'secondary' : 'outline-secondary'}
+              size='sm'
+              onClick={handleToggleUpdateStops}
             >
-              {isOpenedUpdateStops ? 'Fechar Apontamentos' : 'Ver Apontamentos'}
+              <i className='bi bi-bar-chart-steps me-2'></i>
+              {isOpenedUpdateStops ? 'Ocultar Apontamentos' : 'Mostrar Apontamentos'}
             </Button>
           )}
           {hasBtnHistAccess && (
-            <Button variant='outline-secondary' onClick={() => setIsOpened(true)}>
+            <Button variant='outline-secondary' onClick={() => setIsOpened(true)} size='sm'>
+              <i className='bi bi-clock-history me-2'></i>
               Ver Histórico
             </Button>
           )}
         </Stack>
+        {/* Exibir resumo dos filtros aplicados quando os filtros estão escondidos mas ativos */}
+        {!showFilters && !isDefault && (
+          <div className='alert alert-info d-flex align-items-center mt-3'>
+            <i className='bi bi-info-circle-fill me-2'></i>
+            <span>
+              Exibindo dados salvos de:{' '}
+              <strong>{format(parse(date, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy')}</strong>
+              {turn !== 'ALL' && (
+                <>
+                  {' '}
+                  - Turno: <strong>{getTurnoName(turn as TurnoID)}</strong>
+                </>
+              )}
+            </span>
+          </div>
+        )}
       </Row>
       <ModalServiceHistory isOpened={isOpened} onHide={() => setIsOpened(false)} />
     </>

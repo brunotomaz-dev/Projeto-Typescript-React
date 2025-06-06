@@ -16,6 +16,8 @@
     "@mantine/hooks": "^7.16.3",
     "@popperjs/core": "^2.11.8",
     "@reduxjs/toolkit": "^2.3.0",
+    "@tanstack/react-query": "^5.79.0",
+    "@tanstack/react-query-devtools": "^5.79.0",
     "@types/dompurify": "^3.0.5",
     "@types/html-to-text": "^9.0.4",
     "axios": "^1.7.7",
@@ -42,6 +44,7 @@
   "devDependencies": {
     "@eslint/js": "^9.13.0",
     "@redux-devtools/extension": "^3.3.0",
+    "@tanstack/eslint-plugin-query": "^5.78.0",
     "@types/node": "^22.15.21",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
