@@ -72,7 +72,7 @@ const LiveLinesHeader: React.FC = () => {
               onClick={handleToggleUpdateStops}
             >
               <i className='bi bi-bar-chart-steps me-2'></i>
-              {isOpenedUpdateStops ? 'Fechar Apontamentos' : 'Ver Apontamentos'}
+              {isOpenedUpdateStops ? 'Ocultar Apontamentos' : 'Mostrar Apontamentos'}
             </Button>
           )}
           {hasBtnHistAccess && (
