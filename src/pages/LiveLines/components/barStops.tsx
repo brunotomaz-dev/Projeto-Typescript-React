@@ -142,6 +142,9 @@ const BarStops: React.FC = () => {
       name: 'Tempo (min)',
       nameLocation: 'center',
       nameGap: 25,
+      splitLine: {
+        show: false,
+      },
     },
     yAxis: {
       type: 'category',
