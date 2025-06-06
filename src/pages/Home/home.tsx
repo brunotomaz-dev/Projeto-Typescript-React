@@ -1,6 +1,7 @@
 import { format, parse } from 'date-fns';
 import React, { useEffect } from 'react';
 import { Button, Col, Container, Row, Spinner } from 'react-bootstrap';
+import { CSSTransition } from 'react-transition-group';
 import DateTurnFilter from '../../components/DateTurnFilter';
 import { getTurnoName, TurnoID } from '../../helpers/constants';
 import { useIndicatorsQuery } from '../../hooks/queries/useIndicatorsQuery';
@@ -21,7 +22,7 @@ const Home: React.FC = () => {
   /* ------------------------------------------------- Hook's ------------------------------------------------ */
   const dispatch = useAppDispatch();
   // Usar o hook com o escopo específico da página
-  const { date, turn, isDefault } = useFilters('home');
+  const { date, turn, isDefault, resetFilters } = useFilters('home');
   // Hook de visibilidade do filtro
   const { isVisible: showFilters, toggle: toggleFilters, resetVisibility } = useFiltersVisibility('home');
 
@@ -43,6 +44,12 @@ const Home: React.FC = () => {
     };
   }, [resetVisibility]);
 
+  /* ------------------------------------------------ Handles ------------------------------------------------ */
+  const handleResetFilters = () => {
+    resetFilters();
+    resetVisibility();
+  };
+
   /* ----------------------------------------------------------------------------------------------------------- */
   /*                                                    LAYOUT                                                   */
   /* ----------------------------------------------------------------------------------------------------------- */
@@ -55,12 +62,12 @@ const Home: React.FC = () => {
         </h1>
       </header>
 
-      <section className='container-fluid'>
+      <section className='container-fluid px-1'>
         <Button
           variant={showFilters ? 'secondary' : 'outline-secondary'}
           size='sm'
           onClick={toggleFilters}
-          className='d-flex align-items-center mb-2'
+          className='d-flex align-items-center mb-1'
         >
           <i className={`bi ${showFilters ? 'bi-funnel-fill' : 'bi-funnel'} me-2`}></i>
           {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
@@ -72,8 +79,8 @@ const Home: React.FC = () => {
         </Row>
 
         {/* Exibir resumo dos filtros aplicados quando os filtros estão escondidos mas ativos */}
-        {!showFilters && !isDefault && (
-          <div className='alert alert-info d-flex align-items-center mb-3'>
+        <CSSTransition in={!showFilters && !isDefault} timeout={300} classNames='filter-alert' unmountOnExit>
+          <div className='alert alert-info d-flex align-items-center mb-1'>
             <i className='bi bi-info-circle-fill me-2'></i>
             <span>
               Exibindo dados de:{' '}
@@ -85,8 +92,12 @@ const Home: React.FC = () => {
                 </>
               )}
             </span>
+            <Button variant='outline-info' size='sm' className='ms-2' onClick={handleResetFilters}>
+              <i className='bi bi-arrow-clockwise me-2'></i>
+              Limpar Filtros
+            </Button>
           </div>
-        )}
+        </CSSTransition>
       </section>
 
       <section className='container-fluid'>

@@ -1,0 +1,47 @@
+.filter-alert-enter {
+  opacity: 0;
+  transform: translateY(-20px);
+  max-height: 0;
+  overflow: hidden;
+}
+
+.filter-alert-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 80px; 
+  margin-bottom: 0.25rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  // Durações ligeiramente diferentes para diferentes propriedades
+  transition: 
+    opacity 250ms ease-out,
+    transform 300ms ease-out,
+    max-height 350ms ease-out,
+    padding 300ms ease-out,
+    margin 300ms ease-out;
+  overflow: hidden;
+}
+
+.filter-alert-exit {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 100px; 
+  overflow: hidden;
+}
+
+.filter-alert-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  max-height: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  // Durações ligeiramente diferentes para diferentes propriedades
+  transition: 
+    opacity 250ms ease-out,
+    transform 250ms ease-out,
+    max-height 300ms ease-out,
+    padding 250ms ease-out,
+    margin 250ms ease-out;
+  overflow: hidden;
+}

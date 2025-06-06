@@ -113,7 +113,7 @@ const LiveLines: React.FC = () => {
         />
       </Row>
 
-      <Row className='m-2 gap-1'>
+      <Row className='mx-2 gap-1'>
         {/* --------------------------------------- COLUNA DOS GAUGES -------------------------------------- */}
         <Col
           xs={12}
