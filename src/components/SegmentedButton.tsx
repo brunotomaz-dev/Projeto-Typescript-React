@@ -13,7 +13,7 @@ interface iSegmentedButtonProps {
   value: string;
   onChange?: (value: string) => void;
   rounded?: 'full' | 'small' | 'medium';
-  fullWidth?: boolean;
+  width?: 25 | 50 | 75 | 100;
   small?: boolean;
   id?: string;
 }
@@ -23,7 +23,7 @@ const SegmentedButton: React.FC<iSegmentedButtonProps> = ({
   value,
   onChange,
   rounded = 'medium',
-  fullWidth = false,
+  width,
   small = false,
   id = 'segmented-button',
 }) => {
@@ -58,8 +58,8 @@ const SegmentedButton: React.FC<iSegmentedButtonProps> = ({
     medium: 'rounded-3',
   }[rounded];
 
-  // Estilo para o botão se 'fullWidth' for verdadeiro
-  const fullWidthStyle = fullWidth ? 'w-100' : 'w-25';
+  // Estilo para o botão se 'width' for verdadeiro
+  const fullWidthStyle = width ? `w-${width}` : 'w-25';
 
   // Manipulador para quando o usuário clica em uma opção
   const handleSelect = (selectedKey: string | null) => {

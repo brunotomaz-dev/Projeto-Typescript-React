@@ -7,7 +7,7 @@ interface iSegmentedTurnBtnProps {
   onTurnChange?: (turn: TurnoID) => void;
   all?: boolean;
   small?: boolean;
-  fullWidth?: boolean;
+  width?: 25 | 50 | 75 | 100;
   id?: string;
   disabled?: {
     [key in TurnoID]?: boolean;
@@ -19,7 +19,7 @@ const SegmentedTurnBtn: React.FC<iSegmentedTurnBtnProps> = ({
   onTurnChange,
   all = false,
   small = false,
-  fullWidth = false,
+  width = 25,
   id = 'segmented-btn-turn',
   disabled = {},
 }) => {
@@ -73,7 +73,7 @@ const SegmentedTurnBtn: React.FC<iSegmentedTurnBtnProps> = ({
       onChange={handleTurnChange}
       id={id}
       small={small}
-      fullWidth={fullWidth}
+      width={width}
     />
   );
 };

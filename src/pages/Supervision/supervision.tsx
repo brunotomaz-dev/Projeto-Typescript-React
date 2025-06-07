@@ -254,9 +254,9 @@ const SupervisionPage: React.FC = () => {
             minDate={parseISO('2024-08-01')}
             maxDate={now}
           />
-          <Col style={{ minWidth: '340px', maxWidth: '450px' }}>
-            <SegmentedTurnBtn turn={superTurn} onTurnChange={handleTurnChange} fullWidth />
-          </Col>
+          <span style={{ width: 'fit-content' }}>
+            <SegmentedTurnBtn turn={superTurn} onTurnChange={handleTurnChange} width={100} small />
+          </span>
         </Stack>
 
         <SupervActionCards actionPlanData={actionPlanToShow} />

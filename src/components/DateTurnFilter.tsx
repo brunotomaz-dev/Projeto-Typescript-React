@@ -50,12 +50,12 @@ const DateTurnFilter: React.FC<DateTurnFilterProps> = ({
             </Form.Group>
           </Col>
 
-          <Col xs={12} md={6} className='mb-2 mb-md-0'>
+          <Col xs={12} md={5} className='mb-2 mb-md-0'>
             <SegmentedTurnBtn
               turn={turn as TurnoID}
               onTurnChange={handleTurnChange}
               all={all}
-              fullWidth={true}
+              width={100}
               id={`${scope}-filter-turn`}
               disabled={disabled} // Passamos o objeto de turnos desabilitados
             />
