@@ -16,14 +16,7 @@ const UpdateStops: React.FC = () => {
   const dispatch = useAppDispatch();
 
   // Usar os hooks especializados
-  const {
-    maquinaIHM,
-    error,
-    isToday,
-    deleteStop,
-    isDeleting: isDeletingMutation,
-    hasData,
-  } = useUpdateStops();
+  const { maquinaIHM, isToday, deleteStop, isDeleting: isDeletingMutation, hasData } = useUpdateStops();
 
   const { showToast, ToastDisplay } = useToast();
   const { hasResourcePermission } = usePermissions();
@@ -91,16 +84,6 @@ const UpdateStops: React.FC = () => {
     setShowDeleteModal(false);
     setStopToDelete(null);
   };
-
-  // Mensagem de erro
-  if (error) {
-    return (
-      <Alert variant='danger' className='text-center w-75 mx-auto'>
-        <i className='bi bi-exclamation-triangle-fill me-2'></i>
-        <strong>Erro!</strong> {error}
-      </Alert>
-    );
-  }
 
   /* ---------------------------------------------------------------------------------------------- */
   /*                                             LAYOUT                                             */

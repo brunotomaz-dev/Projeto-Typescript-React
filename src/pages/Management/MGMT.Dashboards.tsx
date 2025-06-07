@@ -73,13 +73,16 @@ const ManagementDashboards: React.FC = () => {
           onChange={handleDateChange}
           initialMode={dateMode}
         />
-        <SegmentedTurnBtn
-          onTurnChange={(turno) => setTurn(turno)}
-          turn={turn}
-          all
-          key={'dashboards-turn'}
-          small
-        />
+        <span style={{ width: 'fit-content' }}>
+          <SegmentedTurnBtn
+            onTurnChange={(turno) => setTurn(turno)}
+            turn={turn}
+            all
+            key={'dashboards-turn'}
+            small
+            width={100}
+          />
+        </span>
         <ManagementLinePicker onChange={setSelectedLines} />
       </Stack>
       <Row className='mb-3'>

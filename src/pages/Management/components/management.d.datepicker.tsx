@@ -205,13 +205,9 @@ const DashboardDatePicker: React.FC<iDashboardDatePickerProps> = ({
               // size='sm'
               className='toggle-date-mode-btn ms-1 py-1'
               onClick={toggleDateMode}
-              aria-label={
-                dateMode === 'single' ? 'Mudar para período' : 'Mudar para data única'
-              }
+              aria-label={dateMode === 'single' ? 'Mudar para período' : 'Mudar para data única'}
             >
-              <i
-                className={`bi ${dateMode === 'single' ? 'bi-calendar-range' : 'bi-calendar-date'}`}
-              ></i>
+              <i className={`bi ${dateMode === 'single' ? 'bi-calendar-range' : 'bi-calendar-date'}`}></i>
             </Button>
           </OverlayTrigger>
         )}
