@@ -3,7 +3,7 @@ import { ptBR } from 'date-fns/locale/pt-BR';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Card } from 'react-bootstrap';
 import { getProduction } from '../../../api/apiRequests';
-import { setCurrentMonthProduction } from '../../../redux/store/features/productionSlice';
+import { setCurrentMonthProduction } from '../../../redux/store/features/productionMonthSlice';
 import { useAppDispatch, useAppSelector } from '../../../redux/store/hooks';
 import ProductionCard from './monthProductionCard';
 
@@ -56,7 +56,7 @@ const MonthProdCardsMNT: React.FC<iTodayProductionCardsProps> = ({ firstDay }) =
   // Dispatch para enviar para o Redux
   const dispatch = useAppDispatch();
   // Seleciona o estado do Redux
-  const currentMonthProduction = useAppSelector((state) => state.production.currentMonthProduction);
+  const currentMonthProduction = useAppSelector((state) => state.monthlyProduction.currentMonthProduction);
 
   /* ------------------------------------ INICIALIZAÇÃO DE ESTADOS LOCAIS ----------------------------------- */
   const [productionLM, setProductionLM] = useState<any[]>([]);
@@ -114,10 +114,7 @@ const MonthProdCardsMNT: React.FC<iTodayProductionCardsProps> = ({ firstDay }) =
       setProductionLM
     );
     fetchProduction(
-      [
-        format(startOfDay(firstDayTwoMonthsAgo), 'yyyy-MM-dd'),
-        format(lastDayTwoMonthsAgo, 'yyyy-MM-dd'),
-      ],
+      [format(startOfDay(firstDayTwoMonthsAgo), 'yyyy-MM-dd'), format(lastDayTwoMonthsAgo, 'yyyy-MM-dd')],
       setProductionL2M
     );
   }, [firstDay]);

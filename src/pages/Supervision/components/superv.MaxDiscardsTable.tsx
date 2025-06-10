@@ -12,7 +12,7 @@ interface iDescartesData {
 const MaxDiscardsTable: React.FC = () => {
   /* ------------------------------------------- REDUX ------------------------------------------ */
   // Recuperar dados do Redux
-  const discardData = useAppSelector((state) => state.discards.discardData) as iDescartes[];
+  const discardData = useAppSelector((state) => state.production.descartes) as iDescartes[];
 
   /* ------------------------------------------ Funções ----------------------------------------- */
   // Obter os N principais descartes para um determinado tipo de descarte
@@ -52,11 +52,7 @@ const MaxDiscardsTable: React.FC = () => {
   const hasReprocessoDiscards = topReprocessoDiscards.length > 0;
 
   const hasAnyDiscards =
-    hasPastaDiscards ||
-    hasPaesDiscards ||
-    hasPaesPastaDiscards ||
-    hasBdjDiscards ||
-    hasReprocessoDiscards;
+    hasPastaDiscards || hasPaesDiscards || hasPaesPastaDiscards || hasBdjDiscards || hasReprocessoDiscards;
 
   /* ---------------------------------- Componente Interno --------------------------------- */
   interface iDiscardCardProps {

@@ -13,7 +13,7 @@ const initialState: UiStateState = {
   filtersVisibility: {
     home: false,
     liveLines: false,
-    production: false,
+    supervision: false,
   },
 };
 

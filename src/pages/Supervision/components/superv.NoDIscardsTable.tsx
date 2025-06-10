@@ -6,7 +6,7 @@ import { iDescartes } from '../interface/Descartes.interface';
 const NoDiscardsTable: React.FC = () => {
   /* ------------------------------------------- REDUX ------------------------------------------ */
   // Recuperar dados do Redux
-  const discardData = useAppSelector((state) => state.discards.discardData) as iDescartes[];
+  const discardData = useAppSelector((state) => state.production.descartes) as iDescartes[];
 
   // Lista com linhas que não tiveram descarte
   const noDiscardLines = discardData.filter((item) => {
@@ -49,13 +49,8 @@ const NoDiscardsTable: React.FC = () => {
             ))}
           </Row>
         ) : (
-          <Alert
-            variant={`${displayDiscardLines ? 'success' : 'warning'}`}
-            className='text-center'
-          >
-            {fullDiscardLines
-              ? 'Nenhum apontamento feito.'
-              : 'Todas as linhas apontaram descarte.'}
+          <Alert variant={`${displayDiscardLines ? 'success' : 'warning'}`} className='text-center'>
+            {fullDiscardLines ? 'Nenhum apontamento feito.' : 'Todas as linhas apontaram descarte.'}
           </Alert>
         )}
       </Card.Body>

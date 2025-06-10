@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { useMemo } from 'react';
-import { getCarrinhosCount, getProduction } from '../../api/apiRequests';
-import { iCartCount } from '../../interfaces/Carrinhos.interface';
+import { getProduction } from '../../api/apiRequests';
 import { iProduction } from '../../pages/ProductionLive/interfaces/production.interface';
 import { useFilters } from '../useFilters';
 
@@ -27,16 +26,6 @@ export const useProductionQuery = (scope = 'home') => {
     queryFn: async () => {
       const data: iProduction[] = await getProduction(date);
       return turn === 'ALL' ? data : data.filter((item) => item.turno === turn);
-    },
-    refetchInterval: isToday ? 60000 : false,
-  });
-
-  // Query para contagem de carrinhos
-  const cartsQuery = useQuery({
-    queryKey: ['carts', date, turn],
-    queryFn: async () => {
-      const data: iCartCount[] = await getCarrinhosCount(date, date);
-      return turn === 'ALL' ? data : data.filter((item) => item.Turno === turn);
     },
     refetchInterval: isToday ? 60000 : false,
   });
@@ -83,19 +72,12 @@ export const useProductionQuery = (scope = 'home') => {
     };
   }, [productionDetails]);
 
-  // Calcular total de carrinhos
-  const totalCarts = useMemo(() => {
-    return (cartsQuery.data || []).reduce((acc, curr) => acc + (curr.Contagem_Carrinhos || 0), 0);
-  }, [cartsQuery.data]);
-
   return {
     productionData: productionQuery.data || [],
     productionDetails, // Nova propriedade com detalhes por produto
-    cartsData: cartsQuery.data || [],
-    isLoading: productionQuery.isLoading || cartsQuery.isLoading,
-    isFetching: productionQuery.isFetching || cartsQuery.isFetching,
-    error: productionQuery.error || cartsQuery.error,
+    isLoading: productionQuery.isLoading,
+    isFetching: productionQuery.isFetching,
+    error: productionQuery.error,
     productionByType,
-    totalCarts,
   };
 };

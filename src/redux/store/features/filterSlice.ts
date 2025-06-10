@@ -30,9 +30,11 @@ const initialState: FiltersState = {
   dateTurn: {
     home: defaultDateTurnFilter(),
     liveLines: alternativeDefaultTurnFilter(),
-    // Não precisamos pré-definir todos os escopos possíveis
+    supervision: alternativeDefaultTurnFilter(),
   },
 };
+
+export const alternativeScopes = ['liveLines', 'supervision'];
 
 const filtersSlice = createSlice({
   name: 'filters',
@@ -62,8 +64,9 @@ const filtersSlice = createSlice({
 
     resetDateTurnFilter: (state, action: PayloadAction<string>) => {
       const scope = action.payload;
-      state.dateTurn[scope] =
-        scope === 'liveLines' ? alternativeDefaultTurnFilter() : defaultDateTurnFilter();
+      state.dateTurn[scope] = alternativeScopes.includes(scope)
+        ? alternativeDefaultTurnFilter()
+        : defaultDateTurnFilter();
     },
 
     // Ação para copiar filtros de um escopo para outro

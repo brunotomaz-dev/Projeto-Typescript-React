@@ -1,115 +1,52 @@
-import React, { useEffect, useState } from 'react';
-import { Card, Table } from 'react-bootstrap';
-import { getProduction } from '../../../api/apiRequests';
-import { TurnoID } from '../../../helpers/constants';
-import { setDiscardData } from '../../../redux/store/features/discardSlice';
-import { useAppDispatch } from '../../../redux/store/hooks';
-import { iProduction } from '../../ProductionLive/interfaces/production.interface';
-import { iDescartes } from '../interface/Descartes.interface';
-//cSpell: words paes
-interface iProductionTotal {
-  [key: string]: number;
-}
+import React from 'react';
+import { Card, Spinner, Table } from 'react-bootstrap';
+import { useProductionAndDiscardsQuery } from '../../../hooks/queries/useProductionAndDiscardsQuery';
+import { useFilters } from '../../../hooks/useFilters';
+import { useAppSelector } from '../../../redux/store/hooks';
 
-interface iProductionTableProps {
-  shift: TurnoID;
-  todayString: string;
-  totalProduction: (total: number) => void;
-}
+const ProductionTable: React.FC = () => {
+  const { date, turn } = useFilters('supervision');
 
-type iProductionProduct = 'Bolinha' | 'Baguete';
+  // Usar o novo hook para buscar e processar os dados
+  const { isLoading, error, productionData } = useProductionAndDiscardsQuery({
+    date,
+    shift: turn,
+  });
 
-const ProductionTable: React.FC<iProductionTableProps> = ({
-  shift,
-  todayString,
-  totalProduction,
-}) => {
-  /* ------------------------------------------- REDUX ------------------------------------------ */
-  const dispatch = useAppDispatch();
+  // Buscar os dados do Redux
+  const {
+    totalByProductBag,
+    totalByProductBol,
+    totalProduction: totalByProduct,
+  } = useAppSelector((state) => state.production);
 
-  /* ----------------------------------------- LOCAL STATE ---------------------------------------- */
-  const [allBagProduction, setAllBagProduction] = useState<iProductionTotal>({});
-  const [allBolProduction, setAllBolProduction] = useState<iProductionTotal>({});
-  const [totalByProduct, setTotalByProduct] = useState<number>(0);
-  const [totalByProductBol, setTotalByProductBol] = useState<number>(0);
-  const [totalByProductBag, setTotalByProductBag] = useState<number>(0);
-
-  /* --------------------------------------------------------------------------------- Funções ---- */
-  const calcAndSetProduction = (data: iProductionTotal, productType: iProductionProduct) => {
-    const isBolinha = productType === 'Bolinha';
-
-    const setProduct = isBolinha ? setAllBolProduction : setAllBagProduction;
-    const setTotalByProduct = isBolinha ? setTotalByProductBol : setTotalByProductBag;
-
-    // Filtra removendo os produtos com descrição ' BOL'
-    const selectedProductionItems = Object.entries(data).reduce((acc, [key, value]) => {
-      const isKey = isBolinha ? key.includes(' BOL') : !key.includes(' BOL');
-      if (isKey) {
-        acc[key] = value;
-      }
-      return acc;
-    }, {} as iProductionTotal);
-
-    if (selectedProductionItems && Object.keys(selectedProductionItems).length > 0) {
-      setProduct(selectedProductionItems);
-      setTotalByProduct(
-        Object.values(selectedProductionItems).reduce((acc, curr) => acc + curr, 0)
-      );
-    } else {
-      setProduct({});
-      setTotalByProduct(0);
-    }
-  };
-  /* ------------------------------------------- EFFECTS ------------------------------------------ */
-  useEffect(() => {
-    void getProduction(todayString).then((data: iProduction[]) => {
-      // Filtra os produtos de acordo com o turno
-      const filteredData = data.filter((prod) => prod.turno === shift);
-
-      /* ------------------------------------------------------------------------------- Descartes ---- */
-      // Mantém apenas as colunas relevantes
-      const discardsData = filteredData.map((item: iProduction): iDescartes => {
-        return {
-          linha: item.linha,
-          produto: item.produto.trim(),
-          descartePaesPasta: item.descarte_paes_pasta,
-          descartePaes: item.descarte_paes,
-          descartePasta: item.descarte_pasta,
-          descarteBdj: item.bdj_vazias,
-          reprocessoBdj: item.bdj_retrabalho,
-        };
-      });
-
-      // Envia os dados de descarte para o Redux
-      dispatch(setDiscardData(discardsData));
-
-      /* -------------------------------------------------------------------------------- Produção ---- */
-      // Calcula a produção total por produto e transforma em caixas
-      const calculateShiftProduction = filteredData.reduce((acc, curr) => {
-        const produto = curr.produto.trim();
-        acc[produto] = (acc[produto] || 0) + curr.total_produzido / 10;
-        return acc;
-      }, {} as iProductionTotal);
-
-      // Produção de Baguete
-      calcAndSetProduction(calculateShiftProduction, 'Baguete');
-      // Produção de Bolinha
-      calcAndSetProduction(calculateShiftProduction, 'Bolinha');
-    });
-  }, [todayString, shift]);
-
-  useEffect(() => {
-    setTotalByProduct(totalByProductBag + totalByProductBol);
-    totalProduction(totalByProductBag + totalByProductBol);
-  }, [totalByProductBag, totalByProductBol]);
+  const { bagProduction: allBagProduction, bolProduction: allBolProduction } = productionData;
 
   /* ---------------------------------------------------------------------------------------------- */
   /*                                             Layout                                             */
   /* ---------------------------------------------------------------------------------------------- */
+  if (isLoading) {
+    return (
+      <Card className='bg-light border-0 h-100'>
+        <div className='text-center p-5'>
+          <Spinner animation='border' />
+        </div>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className='bg-light border-0 h-100'>
+        <div className='text-center p-3 text-danger'>Erro ao carregar dados de produção</div>
+      </Card>
+    );
+  }
+
   return (
-    <Card className='bg-transparent border-0 h-100'>
-      <h5 className='text-center fs-5'>Caixas Produzidas</h5>
-      <Card className='shadow border-0 p-2 h-100'>
+    <Card className='bg-light border-0 h-100'>
+      <h5 className='text-center fs-5 mb-0 p-2'>Caixas Produzidas</h5>
+      <Card.Body className='shadow bg-transparent border-0 p-2'>
         <Table striped responsive>
           <thead>
             <tr>
@@ -173,7 +110,7 @@ const ProductionTable: React.FC<iProductionTableProps> = ({
             )}
           </tbody>
         </Table>
-      </Card>
+      </Card.Body>
     </Card>
   );
 };
