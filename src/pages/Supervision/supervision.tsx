@@ -1,7 +1,7 @@
 // cspell:words superv nivel exibicao
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Button, Card, Col, Container, Row } from 'react-bootstrap';
+import { Button, Col, Container, Row } from 'react-bootstrap';
 import { getAbsenceData, getPresenceData } from '../../api/apiRequests';
 import ActionPlanCards from '../../components/actionPlanCards';
 import DateTurnFilter from '../../components/DateTurnFilter';
@@ -36,9 +36,6 @@ const SupervisionPage: React.FC = () => {
   const dispatch = useAppDispatch();
   // User
   const userName = useAppSelector((state: RootState) => state.user.fullName);
-  // Dados da supervisão no Redux (mantidos para uso em componentes filhos)
-  const totalProduction = useAppSelector((state) => state.production.totalProduction);
-  const totalPresentes = useAppSelector((state) => state.supervision.totalPresentes);
 
   /* -------------------------------------------- HOOK -------------------------------------------- */
   const { userFunctionalLevel } = usePermissions();
@@ -191,12 +188,10 @@ const SupervisionPage: React.FC = () => {
             <ProductionTable />
           </Col>
           <Col>
-            <CaixasPessoa totalProduction={totalProduction} presentes={totalPresentes} />
+            <CaixasPessoa />
           </Col>
           <Col xs={12} xl={5}>
-            <Card className='bg-transparent border-0 h-100'>
-              <CardGauges shift={shift as TurnoID} today={selectedDate} />
-            </Card>
+            <CardGauges />
           </Col>
         </Row>
 
