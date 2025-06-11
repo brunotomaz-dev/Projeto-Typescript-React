@@ -1,10 +1,10 @@
 import React from 'react';
 import { Card, Row, Spinner, Table } from 'react-bootstrap';
-import { useProductionQuery } from '../../../hooks/queries/useProductionQuery';
+import { useCartProductionQuery } from '../../../hooks/queries/useCartProductionQuery';
 import { TurnoType } from '../../../interfaces/Carrinhos.interface';
 
 const HomeCartCountCart: React.FC = () => {
-  const { cartsData, totalCarts, isLoading } = useProductionQuery();
+  const { cartsData, totalCarts, isLoading } = useCartProductionQuery();
 
   const DisplayTurn: Record<TurnoType, string> = {
     MAT: 'Matutino',

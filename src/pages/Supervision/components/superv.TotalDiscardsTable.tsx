@@ -7,7 +7,7 @@ import { iDescartes } from '../interface/Descartes.interface';
 const TotalDiscardsTable: React.FC = () => {
   /* ------------------------------------------- REDUX ------------------------------------------ */
   // Recuperar dados do Redux
-  const discardData = useAppSelector((state) => state.discards.discardData) as iDescartes[];
+  const discardData = useAppSelector((state) => state.production.descartes) as iDescartes[];
 
   /* ------------------------------------------ Funções ----------------------------------------- */
   // Processamento dos dados para a tabela de Descarte de Pasta
@@ -181,10 +181,8 @@ const TotalDiscardsTable: React.FC = () => {
   /* -------------------------------------------------------------------------------------------- */
 
   return (
-    <Card className='border h-100 shadow'>
-      <Card.Header className='bg-light'>
-        <h5 className='text-center fs-5 mb-0'>Descarte Total</h5>
-      </Card.Header>
+    <Card className='border h-100 shadow bg-light'>
+      <h5 className='text-center fs-5 p-2 mb-0'>Descarte Total</h5>
       {hasAnyDescarte ? (
         <Card.Body className='p-2'>
           <DescarteTable

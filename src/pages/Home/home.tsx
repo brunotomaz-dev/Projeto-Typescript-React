@@ -1,9 +1,7 @@
-import { format, parse } from 'date-fns';
 import React, { useEffect } from 'react';
 import { Button, Col, Container, Row, Spinner } from 'react-bootstrap';
-import { CSSTransition } from 'react-transition-group';
 import DateTurnFilter from '../../components/DateTurnFilter';
-import { getTurnoName, TurnoID } from '../../helpers/constants';
+import PersonalizedTransition from '../../components/PersonalizedTransition';
 import { useIndicatorsQuery } from '../../hooks/queries/useIndicatorsQuery';
 import { useFilters } from '../../hooks/useFilters';
 import { useFiltersVisibility } from '../../hooks/useFiltersVisibility';
@@ -22,7 +20,7 @@ const Home: React.FC = () => {
   /* ------------------------------------------------- Hook's ------------------------------------------------ */
   const dispatch = useAppDispatch();
   // Usar o hook com o escopo específico da página
-  const { date, turn, isDefault, resetFilters } = useFilters('home');
+  const { isDefault } = useFilters('home');
   // Hook de visibilidade do filtro
   const { isVisible: showFilters, toggle: toggleFilters, resetVisibility } = useFiltersVisibility('home');
 
@@ -43,12 +41,6 @@ const Home: React.FC = () => {
       resetVisibility();
     };
   }, [resetVisibility]);
-
-  /* ------------------------------------------------ Handles ------------------------------------------------ */
-  const handleResetFilters = () => {
-    resetFilters();
-    resetVisibility();
-  };
 
   /* ----------------------------------------------------------------------------------------------------------- */
   /*                                                    LAYOUT                                                   */
@@ -76,28 +68,8 @@ const Home: React.FC = () => {
 
         <Row className='p-1'>
           <DateTurnFilter show={showFilters} scope='home' />
+          <PersonalizedTransition scope='home' />
         </Row>
-
-        {/* Exibir resumo dos filtros aplicados quando os filtros estão escondidos mas ativos */}
-        <CSSTransition in={!showFilters && !isDefault} timeout={300} classNames='filter-alert' unmountOnExit>
-          <div className='alert alert-info d-flex align-items-center mb-1'>
-            <i className='bi bi-info-circle-fill me-2'></i>
-            <span>
-              Exibindo dados de:{' '}
-              <strong>{format(parse(date, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy')}</strong>
-              {turn !== 'ALL' && (
-                <>
-                  {' '}
-                  - Turno: <strong>{getTurnoName(turn as TurnoID)}</strong>
-                </>
-              )}
-            </span>
-            <Button variant='outline-info' size='sm' className='ms-2' onClick={handleResetFilters}>
-              <i className='bi bi-arrow-clockwise me-2'></i>
-              Limpar Filtros
-            </Button>
-          </div>
-        </CSSTransition>
       </section>
 
       <section className='container-fluid'>

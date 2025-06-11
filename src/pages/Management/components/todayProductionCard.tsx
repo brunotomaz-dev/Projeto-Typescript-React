@@ -2,7 +2,7 @@ import { format, startOfDay } from 'date-fns';
 import React, { useEffect, useState } from 'react';
 import { Card, Col, Row } from 'react-bootstrap';
 import { getEstoqueMovimentacao, getProduction } from '../../../api/apiRequests';
-import { setDailyProductionInWarehouse } from '../../../redux/store/features/productionSlice';
+import { setDailyProductionInWarehouse } from '../../../redux/store/features/productionMonthSlice';
 import { useAppDispatch, useAppSelector } from '../../../redux/store/hooks';
 
 interface iTodayProductionCardsProps {
@@ -25,9 +25,7 @@ interface iProductionCF {
 const TodayProductionCards: React.FC<iTodayProductionCardsProps> = ({ today }) => {
   /* ------------------------------------------------- REDUX ------------------------------------------------ */
   const dispatch = useAppDispatch();
-  const productionCF = useAppSelector(
-    (state) => state.production.dailyProductionInWarehouse
-  );
+  const productionCF = useAppSelector((state) => state.monthlyProduction.dailyProductionInWarehouse);
 
   /* ------------------------------------ INICIALIZAÇÃO DE ESTADOS LOCAIS ----------------------------------- */
   const [production, setProduction] = useState<iProduction[]>([]);
@@ -44,10 +42,11 @@ const TodayProductionCards: React.FC<iTodayProductionCardsProps> = ({ today }) =
   /* ------------------------------------------ REQUISIÇÃO DE DADOS ----------------------------------------- */
   const fetchTodayProduction = async () => {
     // Faz a requisição
-    const production: iProduction[] = await getProduction(
-      format(startOfDay(today), 'yyyy-MM-dd'),
-      ['produto', 'turno', 'total_produzido']
-    );
+    const production: iProduction[] = await getProduction(format(startOfDay(today), 'yyyy-MM-dd'), [
+      'produto',
+      'turno',
+      'total_produzido',
+    ]);
     setProduction(production);
   };
 
@@ -72,8 +71,7 @@ const TodayProductionCards: React.FC<iTodayProductionCardsProps> = ({ today }) =
     return productionCF.filter((item) => {
       const hour = Number(item.hora.split(':')[0]);
       return (
-        hour >= turnos[turno as keyof typeof turnos].start &&
-        hour < turnos[turno as keyof typeof turnos].end
+        hour >= turnos[turno as keyof typeof turnos].start && hour < turnos[turno as keyof typeof turnos].end
       );
     });
   };
@@ -89,15 +87,9 @@ const TodayProductionCards: React.FC<iTodayProductionCardsProps> = ({ today }) =
 
   useEffect(() => {
     setTotalProduction(getAverageProduction(production));
-    setNightProduction(
-      getAverageProduction(production.filter((item) => item.turno === 'NOT'))
-    );
-    setMorningProduction(
-      getAverageProduction(production.filter((item) => item.turno === 'MAT'))
-    );
-    setAfternoonProduction(
-      getAverageProduction(production.filter((item) => item.turno === 'VES'))
-    );
+    setNightProduction(getAverageProduction(production.filter((item) => item.turno === 'NOT')));
+    setMorningProduction(getAverageProduction(production.filter((item) => item.turno === 'MAT')));
+    setAfternoonProduction(getAverageProduction(production.filter((item) => item.turno === 'VES')));
   }, [production]);
 
   useEffect(() => {
@@ -119,43 +111,27 @@ const TodayProductionCards: React.FC<iTodayProductionCardsProps> = ({ today }) =
         <Row>
           <Col className='border-end'>
             <h6>Produção Total</h6>
-            <p className='fs-3'>
-              {Math.floor(totalProduction / 10).toLocaleString('pt-BR')} cxs
-            </p>
+            <p className='fs-3'>{Math.floor(totalProduction / 10).toLocaleString('pt-BR')} cxs</p>
             <h6>Câmara fria</h6>
-            <p className='fs-3 mb-0'>
-              {Math.floor(productionCFTotal).toLocaleString('pt-BR')} cxs
-            </p>
+            <p className='fs-3 mb-0'>{Math.floor(productionCFTotal).toLocaleString('pt-BR')} cxs</p>
           </Col>
           <Col className='border-end'>
             <h6>Produção Noturno</h6>
-            <p className='fs-3'>
-              {Math.floor(nightProduction / 10).toLocaleString('pt-BR')} cxs
-            </p>
+            <p className='fs-3'>{Math.floor(nightProduction / 10).toLocaleString('pt-BR')} cxs</p>
             <h6>Câmara fria</h6>
-            <p className='fs-3 mb-0'>
-              {Math.floor(productionCFNight).toLocaleString('pt-BR')} cxs
-            </p>
+            <p className='fs-3 mb-0'>{Math.floor(productionCFNight).toLocaleString('pt-BR')} cxs</p>
           </Col>
           <Col className='border-end'>
             <h6>Produção Matutino</h6>
-            <p className='fs-3'>
-              {Math.floor(morningProduction / 10).toLocaleString('pt-BR')} cxs
-            </p>
+            <p className='fs-3'>{Math.floor(morningProduction / 10).toLocaleString('pt-BR')} cxs</p>
             <h6>Câmara fria</h6>
-            <p className='fs-3 mb-0'>
-              {Math.floor(productionCFMorning).toLocaleString('pt-BR')} cxs
-            </p>
+            <p className='fs-3 mb-0'>{Math.floor(productionCFMorning).toLocaleString('pt-BR')} cxs</p>
           </Col>
           <Col>
             <h6>Produção Vespertino</h6>
-            <p className='fs-3'>
-              {Math.floor(afternoonProduction / 10).toLocaleString('pt-BR')} cxs
-            </p>
+            <p className='fs-3'>{Math.floor(afternoonProduction / 10).toLocaleString('pt-BR')} cxs</p>
             <h6>Câmara fria</h6>
-            <p className='fs-3 mb-0'>
-              {Math.floor(productionCFAfternoon).toLocaleString('pt-BR')} cxs
-            </p>
+            <p className='fs-3 mb-0'>{Math.floor(productionCFAfternoon).toLocaleString('pt-BR')} cxs</p>
           </Col>
         </Row>
       </Card.Body>

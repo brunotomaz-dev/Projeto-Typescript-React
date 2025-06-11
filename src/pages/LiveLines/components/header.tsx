@@ -1,9 +1,7 @@
-import { format, parse, startOfDay } from 'date-fns';
+import { format, startOfDay } from 'date-fns';
 import React, { useState } from 'react';
 import { Button, Row, Stack } from 'react-bootstrap';
-import { CSSTransition } from 'react-transition-group';
-import { getTurnoName, TurnoID } from '../../../helpers/constants';
-import { useFilters } from '../../../hooks/useFilters';
+import PersonalizedTransition from '../../../components/PersonalizedTransition';
 import { useFiltersVisibility } from '../../../hooks/useFiltersVisibility';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { setIsOpenedUpdateStops } from '../../../redux/store/features/liveLinesSlice';
@@ -16,7 +14,6 @@ const LiveLinesHeader: React.FC = () => {
   const canView = hasResourcePermission('ihm_appointments', 'view');
   const hasBtnHistAccess = hasElementAccess('btn_OS_preventive_history');
   const dispatch = useAppDispatch();
-  const { isDefault, turn, date, resetFilters } = useFilters('liveLines');
 
   // Hook para gerenciar visibilidade de filtros
   const {
@@ -39,10 +36,6 @@ const LiveLinesHeader: React.FC = () => {
   /* ------------------------------------------------ Handlers ----------------------------------------------- */
   const handleToggleUpdateStops = () => {
     dispatch(setIsOpenedUpdateStops(!isOpenedUpdateStops));
-  };
-
-  const handleResetFilters = () => {
-    resetFilters();
   };
 
   /* ------------------------------------------------ Effects ------------------------------------------------ */
@@ -87,28 +80,7 @@ const LiveLinesHeader: React.FC = () => {
             </Button>
           )}
         </Stack>
-        {/* Exibir resumo dos filtros aplicados quando os filtros estão escondidos mas ativos */}
-        <CSSTransition in={!showFilters && !isDefault} timeout={300} classNames='filter-alert' unmountOnExit>
-          <div className='m-0 p-0'>
-            <span className='badge bg-info text-dark ms-2 my-1'>Filtros ativos</span>
-            <div className='alert alert-info d-flex align-items-center m-0'>
-              <i className='bi bi-info-circle-fill me-2'></i>
-              <span>
-                Exibindo dados salvos de:{' '}
-                <strong>{format(parse(date, 'yyyy-MM-dd', new Date()), 'dd/MM/yyyy')}</strong>
-                {turn !== 'ALL' && (
-                  <>
-                    {' '}
-                    - Turno: <strong>{getTurnoName(turn as TurnoID)}</strong>
-                  </>
-                )}
-              </span>
-              <Button variant='outline-info' size='sm' className='ms-2' onClick={handleResetFilters}>
-                <i className='bi bi-arrow-counterclockwise'></i> Resetar Filtros
-              </Button>
-            </div>
-          </div>
-        </CSSTransition>
+        <PersonalizedTransition scope='liveLines' />
       </Row>
       <ModalServiceHistory isOpened={isOpened} onHide={() => setIsOpened(false)} />
     </>

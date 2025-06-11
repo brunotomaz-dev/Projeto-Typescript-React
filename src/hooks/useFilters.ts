@@ -2,7 +2,13 @@ import { format } from 'date-fns';
 import { useCallback, useMemo } from 'react';
 import { TurnoID } from '../helpers/constants';
 import { getShift } from '../helpers/turn';
-import { copyFilters, resetDateTurnFilter, setDate, setTurn } from '../redux/store/features/filterSlice';
+import {
+  alternativeScopes,
+  copyFilters,
+  resetDateTurnFilter,
+  setDate,
+  setTurn,
+} from '../redux/store/features/filterSlice';
 import { useAppDispatch, useAppSelector } from '../redux/store/hooks';
 
 export const useFilters = (scope = 'home') => {
@@ -29,7 +35,7 @@ export const useFilters = (scope = 'home') => {
     const shift = getShift();
     const today = format(new Date(), 'yyyy-MM-dd');
     const isDefaultDate = date === today;
-    const isDefaultTurn = scope === 'liveLines' ? turn === shift : turn === 'ALL';
+    const isDefaultTurn = alternativeScopes.includes(scope) ? turn === shift : turn === 'ALL';
     return isDefaultDate && isDefaultTurn;
   }, [date, turn]);
 
