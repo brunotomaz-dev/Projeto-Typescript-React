@@ -10,6 +10,9 @@ export interface iProduction {
   descarte_paes: number;
   descarte_pasta: number;
   descarte_paes_pasta: number;
+  reprocesso_pasta: number;
+  reprocesso_paes: number;
+  reprocesso_paes_pasta: number;
   total_ciclos: number;
   total_produzido_sensor: number;
   total_produzido: number;

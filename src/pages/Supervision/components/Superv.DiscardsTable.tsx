@@ -1,8 +1,8 @@
 // cSpell: words superv
 import React from 'react';
 import { Col } from 'react-bootstrap';
+import DiscardsPerLine from './superv.DiscardsPerLine';
 import MaxDiscardsTable from './superv.MaxDiscardsTable';
-import NoDiscardsTable from './superv.NoDIscardsTable';
 import TotalDiscardsTable from './superv.TotalDiscardsTable';
 
 const SupervDiscardsTable: React.FC = () => {
@@ -18,7 +18,7 @@ const SupervDiscardsTable: React.FC = () => {
         <MaxDiscardsTable />
       </Col>
       <Col xl={4}>
-        <NoDiscardsTable />
+        <DiscardsPerLine />
       </Col>
     </>
   );

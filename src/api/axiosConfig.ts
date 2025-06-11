@@ -1,8 +1,9 @@
 // cSpell: disable
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 import { logout } from './auth';
 
-const HOME_APP_TOKEN = import.meta.env.VITE_HOME_APP_TOKEN
+const HOME_APP_TOKEN = import.meta.env.VITE_HOME_APP_TOKEN;
 
 // Lista de endpoints usados na página Home
 const homeEndpoints = [
@@ -18,6 +19,12 @@ const homeEndpoints = [
   // Adicione outros endpoints usados pelo componente Home
 ];
 
+// Interface para o token decodificado
+interface DecodedToken {
+  user_id: string;
+  exp: number;
+}
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000', // URL do backend
   headers: {
@@ -26,55 +33,101 @@ const api = axios.create({
 });
 
 const isHomeEndpoint = (url = '') => {
-  return homeEndpoints.some(endpoint => url.includes(endpoint));
+  return homeEndpoints.some((endpoint) => url.includes(endpoint));
 };
 
+// Função para verificar se um token está próximo de expirar (menos de 5 minutos)
+const isTokenAlmostExpired = (token: string): boolean => {
+  try {
+    const decoded = jwtDecode<DecodedToken>(token);
+    const currentTime = Date.now() / 1000;
+    return decoded.exp - currentTime < 300; // 5 minutos em segundos
+  } catch {
+    return true;
+  }
+};
+
+// Função para renovar o token
+const renewToken = async (): Promise<string | null> => {
+  try {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) return null;
+
+    const response = await axios.post('http://localhost:8000/api/token/refresh/', {
+      refresh: refreshToken,
+    });
+
+    const { access } = response.data;
+    localStorage.setItem('access_token', access);
+    return access;
+  } catch (error) {
+    console.error('Erro ao renovar token:', error);
+    return null;
+  }
+};
 
 /**
  * Interceptador de requisições para adicionar o token de acesso ao cabeçalho.
- * @param config - A configuração da requisição.
- * @returns A configuração da requisição com o token de acesso adicionado.
+ * Também verifica proativamente se o token está próximo de expirar.
  */
 api.interceptors.request.use(
-  (config) => {
-   // Verifica se tem URL
-   if (!config.url) return config;
-    
-   // Se for um endpoint da Home
-   if (isHomeEndpoint(config.url)) {
-     
-     // Tenta usar o token do usuário se estiver disponível
-     const userToken = localStorage.getItem('access_token');
-     
-     if (userToken) {
-       // Se tem usuário autenticado, usa o token dele
-       config.headers.Authorization = `Bearer ${userToken}`;
+  async (config) => {
+    // Verifica se tem URL
+    if (!config.url) return config;
+
+    // Se for um endpoint da Home
+    if (isHomeEndpoint(config.url)) {
+      // Tenta usar o token do usuário se estiver disponível
+      const userToken = localStorage.getItem('access_token');
+
+      if (userToken) {
+        // Verificar se o token está próximo de expirar
+        if (isTokenAlmostExpired(userToken)) {
+          // Tentar renovar o token silenciosamente
+          const newToken = await renewToken();
+          if (newToken) {
+            config.headers.Authorization = `Bearer ${newToken}`;
+          } else {
+            // Se não conseguiu renovar e é usuário logado, usa o token antigo
+            config.headers.Authorization = `Bearer ${userToken}`;
+          }
+        } else {
+          // Token ainda válido
+          config.headers.Authorization = `Bearer ${userToken}`;
+        }
       } else {
-       // Se não tem usuário autenticado, usa o token específico para a Home
-       config.headers.Authorization = `Bearer ${HOME_APP_TOKEN}`;
-     }
-   } else {
-     // Para outros endpoints, exige token de usuário como antes
-     const token = localStorage.getItem('access_token');
-     if (token) {
-       config.headers.Authorization = `Bearer ${token}`;
-     }
-   }
-   
-   return config;
- },
- (error) => {
-   return Promise.reject(error);
- }
+        // Se não tem usuário autenticado, usa o token específico para a Home
+        config.headers.Authorization = `Bearer ${HOME_APP_TOKEN}`;
+      }
+    } else {
+      // Para outros endpoints, exige token de usuário
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        // Verificar se o token está próximo de expirar
+        if (isTokenAlmostExpired(token)) {
+          // Tentar renovar o token silenciosamente
+          const newToken = await renewToken();
+          if (newToken) {
+            config.headers.Authorization = `Bearer ${newToken}`;
+          } else {
+            // Se não conseguiu renovar, usa o token antigo
+            config.headers.Authorization = `Bearer ${token}`;
+          }
+        } else {
+          // Token ainda válido
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      }
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
-
-
-/**
- * Interceptador de respostas para tratar erros de autenticação.
- * @param response - A resposta da requisição.
- * @param error - O erro da requisição.
- */
+// O interceptor de resposta permanece basicamente o mesmo
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -86,13 +139,17 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     // Se o erro for 401 e não for uma tentativa de refresh
-    if (error.response.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       try {
         const refreshToken = localStorage.getItem('refresh_token');
+        if (!refreshToken) {
+          throw new Error('Não há refresh token disponível');
+        }
+
         const response = await axios.post('http://localhost:8000/api/token/refresh/', {
-          refresh: refreshToken
+          refresh: refreshToken,
         });
 
         const { access } = response.data;
@@ -107,7 +164,7 @@ api.interceptors.response.use(
         return Promise.reject(refreshError);
       }
     }
-    
+
     return Promise.reject(error);
   }
 );

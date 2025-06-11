@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { format } from 'date-fns';
+import { useEffect, useMemo } from 'react';
 import { getProduction } from '../../api/apiRequests';
 import { TurnoID } from '../../helpers/constants';
 import { iProduction } from '../../pages/ProductionLive/interfaces/production.interface';
@@ -20,11 +21,16 @@ interface iProductionTotal {
 interface UseProductionAndDiscardsOptions {
   date?: string;
   shift?: TurnoID | 'ALL';
-  enabled?: boolean;
 }
 
 export const useProductionAndDiscardsQuery = (options: UseProductionAndDiscardsOptions = {}) => {
-  const { date = new Date().toISOString().split('T')[0], shift, enabled = true } = options;
+  const { date = new Date().toISOString().split('T')[0], shift } = options;
+
+  // Determinar se a data selecionada é hoje
+  const isToday = useMemo(() => {
+    const today = new Date();
+    return date === format(today, 'yyyy-MM-dd');
+  }, [date]);
 
   const dispatch = useAppDispatch();
 
@@ -33,20 +39,20 @@ export const useProductionAndDiscardsQuery = (options: UseProductionAndDiscardsO
     data: rawData,
     isLoading,
     error,
-    refetch,
+    isFetching,
   } = useQuery({
     queryKey: ['production', date],
     queryFn: () => getProduction(date),
-    enabled,
+    refetchInterval: isToday ? 60000 : false, // Atualiza a cada 60 segundos se for hoje
   });
 
-  // Processa os dados quando disponíveis
-  useMemo(() => {
+  // Processamento para um efeito em vez de fazer durante a renderização
+  useEffect(() => {
     if (!rawData) return;
 
     // Filtrar dados pelo turno se especificado e não for ALL
     const filteredData: iProduction[] =
-      shift && shift !== 'ALL' ? rawData.filter((prod: iProduction) => prod.turno === shift) : rawData; // Se for ALL ou undefined, usa todos os dados
+      shift && shift !== 'ALL' ? rawData.filter((prod: iProduction) => prod.turno === shift) : rawData;
 
     // Armazena os dados brutos no Redux
     dispatch(setRawProductionData(filteredData));
@@ -61,6 +67,9 @@ export const useProductionAndDiscardsQuery = (options: UseProductionAndDiscardsO
         descartePasta: item.descarte_pasta,
         descarteBdj: item.bdj_vazias,
         reprocessoBdj: item.bdj_retrabalho,
+        reprocessoPaes: item.reprocesso_paes,
+        reprocessoPaesPasta: item.reprocesso_paes_pasta,
+        reprocessoPasta: item.reprocesso_pasta,
       };
     });
 
@@ -99,13 +108,19 @@ export const useProductionAndDiscardsQuery = (options: UseProductionAndDiscardsO
     dispatch(setTotalProduction(totalAll));
   }, [rawData, shift, dispatch]);
 
-  // Valores computados específicos por escopo
+  // Memoizar os dados de produção para evitar recálculos desnecessários
   const productionData = useMemo(() => {
-    if (!rawData) return { bagProduction: {}, bolProduction: {}, allProduction: {} };
+    if (!rawData) {
+      return {
+        bagProduction: {},
+        bolProduction: {},
+        allProduction: {},
+      };
+    }
 
-    // Filtra os dados por turno se solicitado e não for ALL
+    // Filtrar dados pelo turno se especificado
     const filteredData: iProduction[] =
-      shift && shift !== 'ALL' ? rawData.filter((prod: iProduction) => prod.turno === shift) : rawData; // Se for ALL ou undefined, usa todos os dados
+      shift && shift !== 'ALL' ? rawData.filter((prod: iProduction) => prod.turno === shift) : rawData;
 
     // Calcula a produção e converte para caixas
     const productionByType = filteredData.reduce((acc, curr) => {
@@ -136,7 +151,7 @@ export const useProductionAndDiscardsQuery = (options: UseProductionAndDiscardsO
   return {
     productionData,
     isLoading,
+    isFetching,
     error: error ? String(error) : null,
-    refetch,
   };
 };

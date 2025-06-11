@@ -8,6 +8,7 @@ import { Highlighter } from 'react-bootstrap-typeahead';
 import DatePicker from 'react-datepicker';
 import { getAbsenceNames } from '../../../api/apiRequests';
 import { TurnosObj } from '../../../helpers/constants';
+import { AbsenceTypesArray } from '../interface/Absence.interface';
 import { iAbsenceForm } from '../interface/AbsenceForm.interface';
 
 // Tipos que precisam de data de retorno
@@ -88,7 +89,6 @@ const normalizarNomeCompleto = (nome: string): string => {
 };
 
 // Tipos de Absenteísmo
-const absenceTypes = ['Atraso', 'Saída Antecipada', 'Falta', 'Afastamento', 'Férias', 'Remanejamento'];
 const absenceSetores = ['Recheio', 'Panificação', 'Embalagem', 'Pasta', 'Forno', 'Farofa', 'Liderança'];
 
 // Interface de Props
@@ -322,7 +322,7 @@ const AbsenceFormModal: React.FC<iModalAbsProps> = ({
             <FormGroup className='mb-3 w-25'>
               <Form.Label>Tipo</Form.Label>
               <Form.Select name='tipo' value={formData.tipo} onChange={handleInputChange} required>
-                {absenceTypes.map((type) => (
+                {AbsenceTypesArray.map((type) => (
                   <option key={type} value={type}>
                     {type}
                   </option>

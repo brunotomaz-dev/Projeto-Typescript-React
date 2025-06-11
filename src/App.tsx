@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { initAuth } from './api/auth';
 import PrivateRoute from './api/PrivateRoute';
 import PageLayout from './components/pageLayout';
+import { useTokenManager } from './hooks/useTokenManager';
 import { queryClient } from './lib/react-query';
 import Home from './pages/Home/home';
 import LiveLines from './pages/LiveLines/liveLines';
@@ -20,6 +21,10 @@ import ShopFloor from './pages/ShopFloor/sfm';
 import SupervisionPage from './pages/Supervision/supervision';
 
 function App() {
+  // Hook para gerenciar o token de autenticação
+  useTokenManager();
+
+  // Inicializa a autenticação ao carregar o aplicativo
   useEffect(() => {
     initAuth();
   }, []);

@@ -19,7 +19,7 @@ const dispatch = store.dispatch;
  * Interface que representa um token JWT decodificado.
  * Contém o ID do usuário e a data de expiração.
  */
-interface DecodedToken {
+export interface DecodedToken {
   user_id: string;
   exp: number;
 }
@@ -182,10 +182,7 @@ export const initAuth = (): boolean => {
   }
 };
 
-export const changePassword = async (
-  oldPassword: string,
-  newPassword: string
-): Promise<void> => {
+export const changePassword = async (oldPassword: string, newPassword: string): Promise<void> => {
   try {
     await axios.post('/api/change-password/', {
       old_password: oldPassword,

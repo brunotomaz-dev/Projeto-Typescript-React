@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Alert, Card, Col, OverlayTrigger, Row, Tooltip } from 'react-bootstrap';
 import { useAppSelector } from '../../../redux/store/hooks';
 import { iDescartes } from '../interface/Descartes.interface';
@@ -38,11 +38,14 @@ const MaxDiscardsTable: React.FC = () => {
   };
 
   // Obter os 3 maiores valores de descarte para cada tipo de descarte
-  const topPastaDiscards = getTopDiscards(discardData, 'descartePasta', 3);
-  const topPaesDiscards = getTopDiscards(discardData, 'descartePaes', 3);
-  const topPaesPastaDiscards = getTopDiscards(discardData, 'descartePaesPasta', 3);
-  const topBdjDiscards = getTopDiscards(discardData, 'descarteBdj', 3);
-  const topReprocessoDiscards = getTopDiscards(discardData, 'reprocessoBdj', 3);
+  const topPastaDiscards = useMemo(() => getTopDiscards(discardData, 'descartePasta', 3), [discardData]);
+  const topPaesDiscards = useMemo(() => getTopDiscards(discardData, 'descartePaes', 3), [discardData]);
+  const topPaesPastaDiscards = useMemo(
+    () => getTopDiscards(discardData, 'descartePaesPasta', 3),
+    [discardData]
+  );
+  const topBdjDiscards = useMemo(() => getTopDiscards(discardData, 'descarteBdj', 3), [discardData]);
+  const topReprocessoDiscards = useMemo(() => getTopDiscards(discardData, 'reprocessoBdj', 3), [discardData]);
 
   /* ---------------------------------------- Constantes ---------------------------------------- */
   const hasPastaDiscards = topPastaDiscards.length > 0;
@@ -88,10 +91,9 @@ const MaxDiscardsTable: React.FC = () => {
   /*                                            LAYOUT                                            */
   /* -------------------------------------------------------------------------------------------- */
   return (
-    <Card className='border-0 h-100 shadow'>
-      <Card.Header>
-        <h5 className='text-center fs-5 mb-0'>Top 3 Linhas com Maior Descarte</h5>
-      </Card.Header>
+    <Card className='border-0 h-100 shadow bg-light'>
+      <h5 className='text-center fs-5 mb-0 p-2'>Top 3 Linhas com Maior Descarte</h5>
+
       <Card.Body>
         {hasPastaDiscards && (
           <>

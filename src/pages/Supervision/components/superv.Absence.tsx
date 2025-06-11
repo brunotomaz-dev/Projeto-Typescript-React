@@ -5,33 +5,13 @@ import { createAbsenceData, createPresenceData, updateAbsenceData } from '../../
 import { useToast } from '../../../hooks/useToast';
 import { iAbsence, iPresence } from '../../../interfaces/Absence.interface';
 import { useAppSelector } from '../../../redux/store/hooks';
+import { AbsenceCounters, AbsenceKinds } from '../interface/Absence.interface';
 import { iAbsenceForm } from '../interface/AbsenceForm.interface';
 import AbsenceTable from './superv.AbsTable';
 import SuperCardsAbsence from './superv.CardsAbsence';
 import AbsenceFormModal from './superv.ModalAbs';
 import PresenceAddModal from './superv.PresModal';
 import PresenceTable from './superv.PresenceTable';
-
-// Definindo os tipos de ausência como uma constante para reutilização
-export const AbsenceTypes = {
-  FALTA: 'Falta',
-  ATRASO: 'Atraso',
-  AFASTAMENTO: 'Afastamento',
-  SAIDA_ANTECIPADA: 'Saída Antecipada',
-  REMANEJAMENTO: 'Remanejamento',
-  FERIAS: 'Férias',
-} as const;
-
-// Criando um tipo para os contadores de ausência
-interface AbsenceCounters {
-  faltas: number;
-  atrasos: number;
-  afastamentos: number;
-  saidaAntecipada: number;
-  remanejados: number;
-  ferias: number;
-  presencas: number;
-}
 
 interface iAbsenceProps {
   selectedDate: string;
@@ -66,12 +46,12 @@ const SupervAbsence: React.FC<iAbsenceProps> = ({
   // Contagem de faltas, atrasos, presenças, afastamentos, saídas antecipadas, remanejados e férias
   const countersMemo = useMemo<AbsenceCounters>(() => {
     const result = {
-      faltas: absenceData.filter((absence) => absence.tipo === AbsenceTypes.FALTA).length,
-      atrasos: absenceData.filter((absence) => absence.tipo === AbsenceTypes.ATRASO).length,
-      afastamentos: absenceData.filter((absence) => absence.tipo === AbsenceTypes.AFASTAMENTO).length,
-      saidaAntecipada: absenceData.filter((absence) => absence.tipo === AbsenceTypes.SAIDA_ANTECIPADA).length,
-      remanejados: absenceData.filter((absence) => absence.tipo === AbsenceTypes.REMANEJAMENTO).length,
-      ferias: absenceData.filter((absence) => absence.tipo === AbsenceTypes.FERIAS).length,
+      faltas: absenceData.filter((absence) => absence.tipo === AbsenceKinds.FALTA).length,
+      atrasos: absenceData.filter((absence) => absence.tipo === AbsenceKinds.ATRASO).length,
+      afastamentos: absenceData.filter((absence) => absence.tipo === AbsenceKinds.AFASTAMENTO).length,
+      saidaAntecipada: absenceData.filter((absence) => absence.tipo === AbsenceKinds.SAIDA_ANTECIPADA).length,
+      remanejados: absenceData.filter((absence) => absence.tipo === AbsenceKinds.REMANEJAMENTO).length,
+      ferias: absenceData.filter((absence) => absence.tipo === AbsenceKinds.FERIAS).length,
       presencas: 0,
     };
 
@@ -179,32 +159,32 @@ const SupervAbsence: React.FC<iAbsenceProps> = ({
         <SuperCardsAbsence
           title='Atrasos'
           value={countersMemo.atrasos}
-          onClick={() => handleModalOpen(AbsenceTypes.ATRASO)}
+          onClick={() => handleModalOpen(AbsenceKinds.ATRASO)}
         />
         <SuperCardsAbsence
           title='Saída Antecipada'
           value={countersMemo.saidaAntecipada}
-          onClick={() => handleModalOpen(AbsenceTypes.SAIDA_ANTECIPADA)}
+          onClick={() => handleModalOpen(AbsenceKinds.SAIDA_ANTECIPADA)}
         />
         <SuperCardsAbsence
           title='Faltas'
           value={countersMemo.faltas}
-          onClick={() => handleModalOpen(AbsenceTypes.FALTA)}
+          onClick={() => handleModalOpen(AbsenceKinds.FALTA)}
         />
         <SuperCardsAbsence
           title='Afastamentos'
           value={countersMemo.afastamentos}
-          onClick={() => handleModalOpen(AbsenceTypes.AFASTAMENTO)}
+          onClick={() => handleModalOpen(AbsenceKinds.AFASTAMENTO)}
         />
         <SuperCardsAbsence
           title='Férias'
           value={countersMemo.ferias}
-          onClick={() => handleModalOpen(AbsenceTypes.FERIAS)}
+          onClick={() => handleModalOpen(AbsenceKinds.FERIAS)}
         />
         <SuperCardsAbsence
           title='Remanejados'
           value={countersMemo.remanejados}
-          onClick={() => handleModalOpen(AbsenceTypes.REMANEJAMENTO)}
+          onClick={() => handleModalOpen(AbsenceKinds.REMANEJAMENTO)}
         />
         <SuperCardsAbsence
           title='Presenças'
