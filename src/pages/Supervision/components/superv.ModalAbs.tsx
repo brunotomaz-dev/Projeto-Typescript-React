@@ -8,7 +8,7 @@ import { Highlighter } from 'react-bootstrap-typeahead';
 import DatePicker from 'react-datepicker';
 import { getAbsenceNames } from '../../../api/apiRequests';
 import { TurnosObj } from '../../../helpers/constants';
-import { AbsenceTypesArray } from '../interface/Absence.interface';
+import { AbsenceTypesArray } from '../../../interfaces/Absence.interface';
 import { iAbsenceForm } from '../interface/AbsenceForm.interface';
 
 // Tipos que precisam de data de retorno

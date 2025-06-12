@@ -1,9 +1,11 @@
 import React, { useMemo } from 'react';
-import { Alert, Card, Row, Table } from 'react-bootstrap';
+import { Alert, Button, Card, Row, Table } from 'react-bootstrap';
 import { useProductionAndDiscardsQuery } from '../../../hooks/queries/useProductionAndDiscardsQuery';
 import { useFilters } from '../../../hooks/useFilters';
-import { useAppSelector } from '../../../redux/store/hooks';
+import { setIsModalOpen } from '../../../redux/store/features/discardsSlice';
+import { useAppDispatch, useAppSelector } from '../../../redux/store/hooks';
 import { iDescartes } from '../interface/Descartes.interface';
+import DiscardsModalCreate from './superv.DiscardsModalCreate';
 
 // Interface para representar os dados agrupados por linha
 interface iLineDiscard extends iDescartes {
@@ -21,6 +23,7 @@ interface TableDataProps {
 
 const DiscardsPerLine: React.FC = () => {
   const { date, turn } = useFilters('supervision');
+  const dispatch = useAppDispatch();
 
   const { isLoading, isFetching, error } = useProductionAndDiscardsQuery({
     date,
@@ -213,10 +216,19 @@ const DiscardsPerLine: React.FC = () => {
           </div>
         </Row>
       )}
+      <Button
+        variant='link'
+        onClick={() => dispatch(setIsModalOpen(true))}
+        size='sm'
+        className='position-absolute top-0 end-0 rounded-5'
+      >
+        <i className='bi bi-plus-circle fs-4'></i>
+      </Button>
+      <DiscardsModalCreate />
       {!isLoading && (
         <Card.Body className='p-2'>
           <>
-            <h5 className='text-center my-2'>Descartes por Linha</h5>
+            <h5 className='text-center mb-2'>Descartes por Linha</h5>
             {/* Tabela de Descartes */}
             {hasDiscardData ? (
               <>

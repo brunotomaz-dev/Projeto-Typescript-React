@@ -2,19 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { useMemo } from 'react';
 import { getAbsenceData, getPresenceData } from '../../api/apiRequests';
-import { iAbsence, iPresence } from '../../interfaces/Absence.interface';
+import { AbsenceKinds, iAbsence, iPresence } from '../../interfaces/Absence.interface';
 import { useFilters } from '../useFilters';
-
-// Constantes para tipos de ausência
-const ABSENCE_TYPES = {
-  FALTA: 'Falta',
-  ATESTADO: 'Atestado',
-  ATRASO: 'Atraso',
-  AFASTAMENTO: 'Afastamento',
-  SAIDA_ANTECIPADA: 'Saída Antecipada',
-  REMANEJAMENTO: 'Remanejamento',
-  FERIAS: 'Férias',
-};
 
 export const useAbsenceQuery = (scope = 'home') => {
   const { date, turn } = useFilters(scope);
@@ -79,13 +68,12 @@ export const useAbsenceQuery = (scope = 'home') => {
   // Calcular contadores
   const counters = useMemo(() => {
     return {
-      faltas: absenceData.filter((item) => item.tipo === ABSENCE_TYPES.FALTA).length,
-      atestados: absenceData.filter((item) => item.tipo === ABSENCE_TYPES.ATESTADO).length,
-      ferias: absenceData.filter((item) => item.tipo === ABSENCE_TYPES.FERIAS).length,
-      afastamentos: absenceData.filter((item) => item.tipo === ABSENCE_TYPES.AFASTAMENTO).length,
-      atrasos: absenceData.filter((item) => item.tipo === ABSENCE_TYPES.ATRASO).length,
-      saidaAntecipada: absenceData.filter((item) => item.tipo === ABSENCE_TYPES.SAIDA_ANTECIPADA).length,
-      remanejados: absenceData.filter((item) => item.tipo === ABSENCE_TYPES.REMANEJAMENTO).length,
+      faltas: absenceData.filter((item) => item.tipo === AbsenceKinds.FALTA).length,
+      ferias: absenceData.filter((item) => item.tipo === AbsenceKinds.FERIAS).length,
+      afastamentos: absenceData.filter((item) => item.tipo === AbsenceKinds.AFASTAMENTO).length,
+      atrasos: absenceData.filter((item) => item.tipo === AbsenceKinds.ATRASO).length,
+      saidaAntecipada: absenceData.filter((item) => item.tipo === AbsenceKinds.SAIDA_ANTECIPADA).length,
+      remanejados: absenceData.filter((item) => item.tipo === AbsenceKinds.REMANEJAMENTO).length,
       total: absenceData.length,
     };
   }, [absenceData]);

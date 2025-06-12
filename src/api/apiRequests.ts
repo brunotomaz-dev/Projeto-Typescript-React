@@ -3,6 +3,7 @@ import { addHours, format, startOfDay } from 'date-fns';
 import { iPresence } from '../interfaces/Absence.interface';
 import { iActionPlan } from '../interfaces/ActionPlan.interface';
 import { iCartCount } from '../interfaces/Carrinhos.interface';
+import { iQualidadeIHMCreate } from '../interfaces/QualidadeIHM.interface';
 import { iMaquinaIHM } from '../pages/LiveLines/interfaces/maquinaIhm.interface';
 import { iAbsenceForm } from '../pages/Supervision/interface/AbsenceForm.interface';
 import api from './axiosConfig';
@@ -51,6 +52,35 @@ export const getIndicator = async (indicator: string, data: DateParam, fields?: 
     return response.data;
   } catch (error) {
     console.error(`Erro ao buscar dados de ${indicator}`, error);
+    throw error;
+  }
+};
+
+/* ----------------------------------------------------------------------------------------------------------- */
+/*                                            QUALIDADE / DESCARTES                                            */
+/* ----------------------------------------------------------------------------------------------------------- */
+export const getQualityIhmData = async (data: DateParam) => {
+  // Filtro de data
+  const dateFilter = createDateFilter(data);
+
+  // Parametros da requisição
+  const params = { ...dateFilter };
+
+  try {
+    const response = await api.get('api/qualidade_ihm/', { params: params });
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao buscar dados de qualidade IHM', error);
+    throw error;
+  }
+};
+
+export const createQualityIhmData = async (data: iQualidadeIHMCreate) => {
+  try {
+    const response = await api.post('api/qualidade_ihm/', data);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao criar dados de qualidade IHM', error);
     throw error;
   }
 };
