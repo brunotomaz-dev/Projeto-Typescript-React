@@ -3,7 +3,7 @@ import { addHours, format, startOfDay } from 'date-fns';
 import { iPresence } from '../interfaces/Absence.interface';
 import { iActionPlan } from '../interfaces/ActionPlan.interface';
 import { iCartCount } from '../interfaces/Carrinhos.interface';
-import { iQualidadeIHMCreate } from '../interfaces/QualidadeIHM.interface';
+import { iQualidadeIHM, iQualidadeIHMCreate } from '../interfaces/QualidadeIHM.interface';
 import { iMaquinaIHM } from '../pages/LiveLines/interfaces/maquinaIhm.interface';
 import { iAbsenceForm } from '../pages/Supervision/interface/AbsenceForm.interface';
 import api from './axiosConfig';
@@ -59,7 +59,7 @@ export const getIndicator = async (indicator: string, data: DateParam, fields?: 
 /* ----------------------------------------------------------------------------------------------------------- */
 /*                                            QUALIDADE / DESCARTES                                            */
 /* ----------------------------------------------------------------------------------------------------------- */
-export const getQualityIhmData = async (data: DateParam) => {
+export const getQualityIhmData = async (data: DateParam): Promise<iQualidadeIHM[]> => {
   // Filtro de data
   const dateFilter = createDateFilter(data);
 

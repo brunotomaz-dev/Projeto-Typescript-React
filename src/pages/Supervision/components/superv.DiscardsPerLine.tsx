@@ -1,14 +1,13 @@
 import React, { useMemo } from 'react';
 import { Alert, Button, Card, Row, Table } from 'react-bootstrap';
-import { useProductionAndDiscardsQuery } from '../../../hooks/queries/useProductionAndDiscardsQuery';
-import { useFilters } from '../../../hooks/useFilters';
+import useDiscardsData from '../../../hooks/useDiscardsData';
+import { iQualDescartesGroupedByLine } from '../../../interfaces/QualidadeIHM.interface';
 import { setIsModalOpen } from '../../../redux/store/features/discardsSlice';
-import { useAppDispatch, useAppSelector } from '../../../redux/store/hooks';
-import { iDescartes } from '../interface/Descartes.interface';
+import { useAppDispatch } from '../../../redux/store/hooks';
 import DiscardsModalCreate from './superv.DiscardsModalCreate';
 
 // Interface para representar os dados agrupados por linha
-interface iLineDiscard extends iDescartes {
+interface iLineDiscard extends iQualDescartesGroupedByLine {
   total: number;
 }
 
@@ -22,16 +21,9 @@ interface TableDataProps {
 }
 
 const DiscardsPerLine: React.FC = () => {
-  const { date, turn } = useFilters('supervision');
   const dispatch = useAppDispatch();
 
-  const { isLoading, isFetching, error } = useProductionAndDiscardsQuery({
-    date,
-    shift: turn,
-  });
-  /* ------------------------------------------- REDUX ------------------------------------------ */
-  // Recuperar dados do Redux
-  const discardData = useAppSelector((state) => state.production.descartes) as iDescartes[];
+  const { isLoading, error, isFetching, data: discardData } = useDiscardsData('supervision');
 
   /* ------------------------------------------ PROCESSAMENTO ----------------------------------------- */
   // Agrupar os dados por linha de produção
@@ -47,7 +39,8 @@ const DiscardsPerLine: React.FC = () => {
       if (!lineDiscards[item.linha]) {
         lineDiscards[item.linha] = {
           linha: item.linha,
-          produto: item.produto,
+          data_registro: item.data_registro,
+          maquina_id: item.maquina_id,
           descartePasta: 0,
           descartePaes: 0,
           descartePaesPasta: 0,
@@ -155,15 +148,15 @@ const DiscardsPerLine: React.FC = () => {
             <tr key={`${type}-${line.linha}`}>
               <td>{line.linha}</td>
               <td className='text-end'>
-                {type === 'descarte' ? line.descartePasta.toFixed(1) : line.reprocessoPasta.toFixed(1)}
+                {type === 'descarte' ? line.descartePasta.toFixed(3) : line.reprocessoPasta.toFixed(3)}
               </td>
               <td className='text-end'>
-                {type === 'descarte' ? line.descartePaes.toFixed(1) : line.reprocessoPaes.toFixed(1)}
+                {type === 'descarte' ? line.descartePaes.toFixed(3) : line.reprocessoPaes.toFixed(3)}
               </td>
               <td className='text-end'>
                 {type === 'descarte'
-                  ? line.descartePaesPasta.toFixed(1)
-                  : line.reprocessoPaesPasta.toFixed(1)}
+                  ? line.descartePaesPasta.toFixed(3)
+                  : line.reprocessoPaesPasta.toFixed(3)}
               </td>
               <td className='text-end'>{type === 'descarte' ? line.descarteBdj : line.reprocessoBdj}</td>
             </tr>
@@ -172,15 +165,15 @@ const DiscardsPerLine: React.FC = () => {
             <tr className='table-secondary'>
               <td className='fw-bold'>Total</td>
               <td className='text-end fw-bold'>
-                {type === 'descarte' ? totals.descartePasta.toFixed(1) : totals.reprocessoPasta.toFixed(1)}
+                {type === 'descarte' ? totals.descartePasta.toFixed(3) : totals.reprocessoPasta.toFixed(3)}
               </td>
               <td className='text-end fw-bold'>
-                {type === 'descarte' ? totals.descartePaes.toFixed(1) : totals.reprocessoPaes.toFixed(1)}
+                {type === 'descarte' ? totals.descartePaes.toFixed(3) : totals.reprocessoPaes.toFixed(3)}
               </td>
               <td className='text-end fw-bold'>
                 {type === 'descarte'
-                  ? totals.descartePaesPasta.toFixed(1)
-                  : totals.reprocessoPaesPasta.toFixed(1)}
+                  ? totals.descartePaesPasta.toFixed(3)
+                  : totals.reprocessoPaesPasta.toFixed(3)}
               </td>
               <td className='text-end fw-bold'>
                 {type === 'descarte' ? totals.descarteBdj : totals.reprocessoBdj}

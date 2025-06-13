@@ -17,3 +17,20 @@ export interface iQualidadeIHMCreate {
 export interface iQualidadeIHM extends iQualidadeIHMCreate {
   recno: number;
 }
+
+export interface iQualDescartesGroupedByLine extends iQualDescartes {
+  linha: number;
+  data_registro: string;
+  maquina_id: string;
+}
+
+interface iQualDescartes {
+  descarteBdj: number;
+  descartePaes: number;
+  descartePaesPasta: number;
+  descartePasta: number;
+  reprocessoBdj: number;
+  reprocessoPaes: number;
+  reprocessoPaesPasta: number;
+  reprocessoPasta: number;
+}

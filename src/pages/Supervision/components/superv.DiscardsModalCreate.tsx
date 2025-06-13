@@ -110,7 +110,6 @@ const DiscardsModalCreate: React.FC = () => {
   };
 
   const handleSubmit = () => {
-    // TODO - Criar a lógica para enviar os dados do formulário para a API - aproveitar o hook de criação de descartes
     createData(formData);
     // Verifica se a criação foi bem-sucedida
     if (isCreateSuccess) {
@@ -232,9 +231,6 @@ const DiscardsModalCreate: React.FC = () => {
       <ToastDisplay />
     </>
   );
-
-  //TODO - Criar nova lógica de obtenção de dados direto da tabela descartes e não da de produção como atualmente
-  //TODO - Criar a lógica para atualizar os dados do Redux com os novos descartes
 };
 
 export default DiscardsModalCreate;

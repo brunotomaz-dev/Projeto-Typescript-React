@@ -20,7 +20,29 @@ export const useQualityIhmQuery = (scope: string = 'home') => {
   const qualityIhmQuery = useQuery({
     queryKey: ['qualityIhm', date, turn],
     queryFn: async () => {
-      return await getQualityIhmData(date);
+      const response = await getQualityIhmData(date);
+
+      // Se o turno for diferente de ALL, aplica filtro
+      if (turn !== 'ALL') {
+        const filteredData = response?.filter((item) => {
+          // Recebe hora de registro e converte para número
+          const itemHour = parseInt(item.hora_registro.split(':')[0], 10);
+
+          if (turn === 'NOT') {
+            return itemHour >= 0 && itemHour < 8;
+          } else if (turn === 'MAT') {
+            return itemHour >= 8 && itemHour < 16;
+          } else if (turn === 'VES') {
+            return itemHour >= 16 && itemHour < 24;
+          }
+          return false;
+        });
+        // Retorna os dados filtrados
+        return filteredData;
+      } else {
+        // Se o turno for ALL, retorna todos os dados
+        return response;
+      }
     },
     refetchInterval: isToday ? 60000 : false, // Atualiza a cada 60 segundos se for hoje
   });
