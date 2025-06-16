@@ -5,7 +5,7 @@ import { getIndicator } from '../../api/apiRequests';
 import { iEficiencia, iPerformance, iRepair } from '../../interfaces/Indicators.interfaces';
 import { useFilters } from '../useFilters';
 
-export const useIndicatorsQuery = (scope = 'home') => {
+export const useIndicatorsQuery = (scope = 'home', enabled = true) => {
   const { date, turn } = useFilters(scope);
 
   // Determinar se a data selecionada é hoje
@@ -21,6 +21,7 @@ export const useIndicatorsQuery = (scope = 'home') => {
       const data: iEficiencia[] = await getIndicator('eficiencia', date);
       return turn === 'ALL' ? data : data.filter((item) => item.turno === turn);
     },
+    enabled,
     refetchInterval: isToday ? 60000 : false, // Atualiza a cada minuto se for hoje
   });
 
@@ -31,6 +32,7 @@ export const useIndicatorsQuery = (scope = 'home') => {
       const data: iPerformance[] = await getIndicator('performance', date);
       return turn === 'ALL' ? data : data.filter((item) => item.turno === turn);
     },
+    enabled,
     refetchInterval: isToday ? 60000 : false,
   });
 
@@ -41,6 +43,7 @@ export const useIndicatorsQuery = (scope = 'home') => {
       const data: iRepair[] = await getIndicator('repair', date);
       return turn === 'ALL' ? data : data.filter((item) => item.turno === turn);
     },
+    enabled,
     refetchInterval: isToday ? 60000 : false,
   });
 

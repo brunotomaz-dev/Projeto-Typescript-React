@@ -1,10 +1,12 @@
 import { format } from 'date-fns';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Form, InputGroup, Modal, Stack } from 'react-bootstrap';
+import { useIndicatorsQuery } from '../../../hooks/queries/useIndicatorsQuery';
 import { useQualityIhmQuery } from '../../../hooks/queries/useQualityIhmQuery';
 import { useToast } from '../../../hooks/useToast';
 import { iQualidadeIHMCreate } from '../../../interfaces/QualidadeIHM.interface';
 import { setIsModalOpen } from '../../../redux/store/features/discardsSlice';
+import { setLineMachine } from '../../../redux/store/features/homeSlice';
 import { useAppDispatch, useAppSelector } from '../../../redux/store/hooks';
 
 const DiscardsModalCreate: React.FC = () => {
@@ -12,6 +14,33 @@ const DiscardsModalCreate: React.FC = () => {
   const dispatch = useAppDispatch();
   const { isModalOpen } = useAppSelector((state) => state.discards);
   const { lineMachine } = useAppSelector((state) => state.home);
+
+  /* ------------------------------------------------- Hooks ------------------------------------------------- */
+  const { createData, isCreateError, isCreateSuccess } = useQualityIhmQuery('supervision');
+  const { showToast, ToastDisplay } = useToast();
+
+  // Obter os dados de linha/máquina caso não estejam disponíveis no Redux
+  const { lineMachineMap } = useIndicatorsQuery('supervision', Object.keys(lineMachine).length === 0);
+
+  /* ------------------------------------------------ Effects ------------------------------------------------ */
+  // Sincronizar o mapa de máquinas/linhas com o Redux se não estiver disponível
+  useEffect(() => {
+    if (Object.keys(lineMachine).length === 0 && Object.keys(lineMachineMap).length > 0) {
+      dispatch(setLineMachine(lineMachineMap));
+
+      // Atualizar o formulário com a nova linha inicial após carregar os dados
+      if (lineMachineMap) {
+        const firstLine = Object.values(lineMachineMap)[0] || 1;
+        const firstMachine = Object.keys(lineMachineMap)[0] || '';
+
+        setFormData((prev) => ({
+          ...prev,
+          linha: firstLine,
+          maquina_id: firstMachine,
+        }));
+      }
+    }
+  }, [lineMachineMap, lineMachine, dispatch]);
 
   /* ----------------------------------------------- Functions ----------------------------------------------- */
   // Função para identificar a máquina através da linha (Obj - { maquina: linha })
@@ -66,14 +95,12 @@ const DiscardsModalCreate: React.FC = () => {
     descarte_paes_pasta: 0,
     reprocesso_paes_pasta: 0,
   };
-  /* ------------------------------------------------- Hook's ------------------------------------------------ */
+
+  /* ---------------------------------------------- Estado Local --------------------------------------------- */
   // Estado local para o formulário
   const [formData, setFormData] = useState<iQualidadeIHMCreate>({
     ...formInitialValues,
   });
-
-  const { createData, isCreateError, isCreateSuccess } = useQualityIhmQuery('supervision');
-  const { showToast, ToastDisplay } = useToast();
 
   /* ------------------------------------------------ Handles ------------------------------------------------ */
   const handleClose = () => {
