@@ -2,18 +2,20 @@ import React, { useState } from 'react';
 import { Button, Card, Form, Table } from 'react-bootstrap';
 import { BsCheck2, BsFillPeopleFill, BsX } from 'react-icons/bs';
 
-import { updatePresenceData } from '../../../api/apiRequests';
+import { useAbsenceMutation } from '../../../hooks/queries/useAbsenceMutation';
+import { useAbsenceQuery } from '../../../hooks/queries/useAbsenceQuery';
 import { useToast } from '../../../hooks/useToast';
 import { iPresence, iPresenceSectors } from '../../../interfaces/Absence.interface';
 
 // cSpell: words panificacao lideranca usuario
 
-interface iPresenceTableProps {
-  presenceData: iPresence[];
-  onDataChange: () => void;
-}
+const PresenceTable: React.FC = () => {
+  /* ------------------------------------------------- Hooks ------------------------------------------------- */
+  const { updatePresence, error, isSuccess } = useAbsenceMutation('supervision');
+  const { presenceData } = useAbsenceQuery('supervision');
+  const { showToast, ToastDisplay } = useToast();
 
-const PresenceTable: React.FC<iPresenceTableProps> = ({ presenceData, onDataChange }) => {
+  /* -------------------------------------------------- Maps ------------------------------------------------- */
   // Mapeamento dos setores para exibição mais legível
   const setorMap = {
     panificacao: 'Panificação',
@@ -41,7 +43,6 @@ const PresenceTable: React.FC<iPresenceTableProps> = ({ presenceData, onDataChan
   /* ---------------------------------------- ESTADO LOCAL ---------------------------------------- */
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<iPresence | null>(null);
-  const { showToast, ToastDisplay } = useToast();
 
   /* ------------------------------------------- HANDLES ------------------------------------------ */
   // Inicializa o modo de edição com os dados atuais
@@ -70,131 +71,132 @@ const PresenceTable: React.FC<iPresenceTableProps> = ({ presenceData, onDataChan
   const handleSave = async () => {
     if (!editData || !presence) return;
 
-    try {
-      // Adicionamos o recno para garantir que estamos atualizando o registro correto
-      const dataToUpdate = {
-        ...editData,
-        recno: presence.recno,
-      };
+    // Adicionamos o recno para garantir que estamos atualizando o registro correto
+    const dataToUpdate = {
+      ...editData,
+      recno: presence.recno,
+    };
 
-      // Enviar os dados para a API
-      await updatePresenceData(dataToUpdate);
+    // Enviar os dados para a API
+    updatePresence(dataToUpdate);
 
-      // Atualizar os dados na tela
-      onDataChange();
-
+    if (isSuccess) {
       // Mensagem de sucesso
       showToast('Dados atualizados com sucesso!', 'success');
-
-      // Sair do modo de edição
-      setIsEditing(false);
-      setEditData(null);
-    } catch (error) {
-      console.error('Erro ao atualizar dados de presença:', error);
-      showToast('Erro ao atualizar dados. Tente novamente.', 'danger');
     }
+    if (error) {
+      // Mensagem de erro
+      showToast('Erro ao atualizar dados. Tente novamente.', 'danger');
+      console.error('Erro ao atualizar dados de presença:', error);
+    }
+
+    // Sair do modo de edição
+    setIsEditing(false);
+    setEditData(null);
   };
 
   /* ---------------------------------------------------------------------------------------------- */
   /*                                             Layout                                             */
   /* ---------------------------------------------------------------------------------------------- */
   return (
-    <Card className='bg-transparent border-0 py-2 h-100'>
-      <h5 className='text-center fs-5'>Presenças por Setor</h5>
-      <Card className='shadow border-0 p-2 h-100'>
-        {isEditing && (
-          <div className='d-flex justify-content-end align-items-center mb-3'>
-            <Button
-              size='sm'
-              variant='outline-secondary'
-              className='me-2 d-inline-flex align-items-center'
-              onClick={handleCancel}
-            >
-              <BsX className='me-1' /> Cancelar
-            </Button>
-            <Button
-              size='sm'
-              variant='success'
-              className='d-inline-flex align-items-center'
-              onClick={handleSave}
-            >
-              <BsCheck2 className='me-1' /> Salvar
-            </Button>
-          </div>
-        )}
-        <Table className='table table-striped table-hover table-responsive'>
-          <thead>
-            <tr>
-              <th>Setor</th>
-              <th className='text-center'>
-                {hasData && !isEditing ? (
-                  <div className='d-flex justify-content-end gap-1 align-items-center'>
-                    Presentes{' '}
-                    <Button
-                      size='sm'
-                      variant='link'
-                      onClick={handleEdit}
-                      className='d-flex align-items-center'
-                    >
-                      <i className='me-1 bi bi-pencil-square' />
-                    </Button>
-                  </div>
-                ) : (
-                  <span>Presentes</span>
-                )}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {hasData && presence ? (
-              setorKeys.map((key) => (
-                <tr key={key}>
-                  <td>
-                    <div className='d-flex align-items-center'>
-                      {/* React Icons */}
-                      <BsFillPeopleFill className='me-2 text-secondary' /> {setorMap[key]}
+    <>
+      <Card className='bg-transparent border-0 py-2 h-100'>
+        <h5 className='text-center fs-5'>Presenças por Setor</h5>
+        <Card className='shadow border-0 p-2 h-100'>
+          {isEditing && (
+            <div className='d-flex justify-content-end align-items-center mb-3'>
+              <Button
+                size='sm'
+                variant='outline-secondary'
+                className='me-2 d-inline-flex align-items-center'
+                onClick={handleCancel}
+              >
+                <BsX className='me-1' /> Cancelar
+              </Button>
+              <Button
+                size='sm'
+                variant='success'
+                className='d-inline-flex align-items-center'
+                onClick={handleSave}
+              >
+                <BsCheck2 className='me-1' /> Salvar
+              </Button>
+            </div>
+          )}
+          <Table className='table table-striped table-hover table-responsive'>
+            <thead>
+              <tr>
+                <th>Setor</th>
+                <th className='text-center'>
+                  {hasData && !isEditing ? (
+                    <div className='d-flex justify-content-end gap-1 align-items-center'>
+                      Presentes{' '}
+                      <Button
+                        size='sm'
+                        variant='link'
+                        onClick={handleEdit}
+                        className='d-flex align-items-center'
+                      >
+                        <i className='me-1 bi bi-pencil-square' />
+                      </Button>
                     </div>
-                  </td>
-                  <td className='text-center fw-bold'>
-                    {isEditing ? (
-                      <Form.Control
-                        type='number'
-                        min='0'
-                        value={editData?.[key] || 0}
-                        onChange={(e) => handleChange(key, e.target.value)}
-                        className='text-center form-control-sm'
-                        style={{ maxWidth: '80px', margin: '0 auto' }}
-                      />
-                    ) : (
-                      presence[key]
-                    )}
+                  ) : (
+                    <span>Presentes</span>
+                  )}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {hasData && presence ? (
+                setorKeys.map((key) => (
+                  <tr key={key}>
+                    <td>
+                      <div className='d-flex align-items-center'>
+                        {/* React Icons */}
+                        <BsFillPeopleFill className='me-2 text-secondary' /> {setorMap[key]}
+                      </div>
+                    </td>
+                    <td className='text-center fw-bold'>
+                      {isEditing ? (
+                        <Form.Control
+                          type='number'
+                          min='0'
+                          value={editData?.[key] || 0}
+                          onChange={(e) => handleChange(key, e.target.value)}
+                          className='text-center form-control-sm'
+                          style={{ maxWidth: '80px', margin: '0 auto' }}
+                        />
+                      ) : (
+                        presence[key]
+                      )}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={2} className='text-center text-muted py-3'>
+                    Nenhum registro de presença encontrado.
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={2} className='text-center text-muted py-3'>
-                  Nenhum registro de presença encontrado.
-                </td>
-              </tr>
+              )}
+            </tbody>
+            {hasData && (
+              <tfoot className='table-light'>
+                <tr>
+                  <td className='fw-bold'>Total</td>
+                  <td className='text-center fw-bold'>
+                    {isEditing
+                      ? setorKeys.reduce((total, key) => total + (editData?.[key] || 0), 0)
+                      : setorKeys.reduce((total, key) => total + (presence?.[key] || 0), 0)}
+                  </td>
+                </tr>
+              </tfoot>
             )}
-          </tbody>
-          {hasData && (
-            <tfoot className='table-light'>
-              <tr>
-                <td className='fw-bold'>Total</td>
-                <td className='text-center fw-bold'>
-                  {isEditing
-                    ? setorKeys.reduce((total, key) => total + (editData?.[key] || 0), 0)
-                    : setorKeys.reduce((total, key) => total + (presence?.[key] || 0), 0)}
-                </td>
-              </tr>
-            </tfoot>
-          )}
-        </Table>
-        {ToastDisplay && <ToastDisplay />}
+          </Table>
+        </Card>
       </Card>
-    </Card>
+      <ToastDisplay />
+    </>
   );
 };
 

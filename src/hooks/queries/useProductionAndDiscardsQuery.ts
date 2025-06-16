@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { useEffect, useMemo } from 'react';
 import { getProduction } from '../../api/apiRequests';
-import { TurnoID } from '../../helpers/constants';
 import { iProduction } from '../../pages/ProductionLive/interfaces/production.interface';
 import { iDescartes } from '../../pages/Supervision/interface/Descartes.interface';
 import {
@@ -13,18 +12,16 @@ import {
   setTotalProduction,
 } from '../../redux/store/features/productionSlice';
 import { useAppDispatch } from '../../redux/store/hooks';
+import { useFilters } from '../useFilters';
 
 interface iProductionTotal {
   [key: string]: number;
 }
 
-interface UseProductionAndDiscardsOptions {
-  date?: string;
-  shift?: TurnoID | 'ALL';
-}
-
-export const useProductionAndDiscardsQuery = (options: UseProductionAndDiscardsOptions = {}) => {
-  const { date = new Date().toISOString().split('T')[0], shift } = options;
+export const useProductionAndDiscardsQuery = (scope = 'home') => {
+  /* ------------------------------------------------- Hook's ------------------------------------------------ */
+  // Busca os dados do filtro de data e turno conforme o escopo
+  const { date, turn: shift } = useFilters(scope);
 
   // Determinar se a data selecionada é hoje
   const isToday = useMemo(() => {

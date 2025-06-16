@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { Button, Card, Spinner, Table } from 'react-bootstrap';
 import { useProductionAndDiscardsQuery } from '../../../hooks/queries/useProductionAndDiscardsQuery';
-import { useFilters } from '../../../hooks/useFilters';
 import { useAppSelector } from '../../../redux/store/hooks';
 
 const HomeProductionCard: React.FC = () => {
   // Utilizar o hook compartilhado
-  const { date, turn } = useFilters('home');
-  const { productionData, isLoading } = useProductionAndDiscardsQuery({ date, shift: turn });
+  const { productionData, isLoading } = useProductionAndDiscardsQuery('home');
   const [showDetails, setShowDetails] = useState(false);
   const { totalByProductBag, totalByProductBol, totalProduction } = useAppSelector(
     (state) => state.production

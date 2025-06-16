@@ -1,17 +1,11 @@
 import React from 'react';
 import { Card, Row, Table } from 'react-bootstrap';
 import { useProductionAndDiscardsQuery } from '../../../hooks/queries/useProductionAndDiscardsQuery';
-import { useFilters } from '../../../hooks/useFilters';
 import { useAppSelector } from '../../../redux/store/hooks';
 
 const ProductionTable: React.FC = () => {
-  const { date, turn } = useFilters('supervision');
-
   // Usar o novo hook para buscar e processar os dados
-  const { isLoading, isFetching, error, productionData } = useProductionAndDiscardsQuery({
-    date,
-    shift: turn,
-  });
+  const { isLoading, isFetching, error, productionData } = useProductionAndDiscardsQuery('supervision');
 
   // Buscar os dados do Redux
   const {

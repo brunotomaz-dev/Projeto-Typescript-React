@@ -127,7 +127,7 @@ api.interceptors.request.use(
   }
 );
 
-// O interceptor de resposta permanece basicamente o mesmo
+// O interceptor de resposta modificado para tratar erros 401 e 403
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -138,7 +138,7 @@ api.interceptors.response.use(
 
     const originalRequest = error.config;
 
-    // Se o erro for 401 e não for uma tentativa de refresh
+    // Se o erro for 401 (Não Autorizado) e não for uma tentativa de refresh
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
@@ -163,6 +163,46 @@ api.interceptors.response.use(
         logout();
         return Promise.reject(refreshError);
       }
+    }
+
+    // Se o erro for 403 (Proibido)
+    if (error.response?.status === 403) {
+      console.warn('Acesso proibido:', error.config.url);
+
+      // Verifica se o erro é devido à expiração ou invalidação do token
+      const errorMessage = error.response.data?.detail || '';
+      if (
+        errorMessage.includes('token') ||
+        errorMessage.includes('authentication') ||
+        errorMessage.includes('credential')
+      ) {
+        try {
+          // Tentar renovar o token em caso de erro que sugere problema de autenticação
+          const refreshToken = localStorage.getItem('refresh_token');
+          if (!refreshToken) {
+            throw new Error('Não há refresh token disponível');
+          }
+
+          const response = await axios.post('http://localhost:8000/api/token/refresh/', {
+            refresh: refreshToken,
+          });
+
+          const { access } = response.data;
+          localStorage.setItem('access_token', access);
+
+          // Atualiza o token na requisição original e tenta novamente
+          originalRequest.headers.Authorization = `Bearer ${access}`;
+          return api(originalRequest);
+        } catch (refreshError) {
+          // Se o refresh falhar, faz logout
+          logout();
+          return Promise.reject(refreshError);
+        }
+      }
+
+      // Se o 403 for por questões de permissão (não problema do token)
+      // Apenas propaga o erro para que a aplicação possa lidar com ele
+      // e possivelmente mostrar uma mensagem de "Sem permissão"
     }
 
     return Promise.reject(error);
