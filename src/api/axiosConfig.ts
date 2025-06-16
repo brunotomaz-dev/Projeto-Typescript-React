@@ -161,6 +161,10 @@ api.interceptors.response.use(
       } catch (refreshError) {
         // Se o refresh falhar, faz logout
         logout();
+
+        // Redirecionar para a página de login
+        window.location.href = '/login';
+
         return Promise.reject(refreshError);
       }
     }
@@ -196,13 +200,13 @@ api.interceptors.response.use(
         } catch (refreshError) {
           // Se o refresh falhar, faz logout
           logout();
+
+          // Redirecionar para a página de login
+          window.location.href = '/login';
+
           return Promise.reject(refreshError);
         }
       }
-
-      // Se o 403 for por questões de permissão (não problema do token)
-      // Apenas propaga o erro para que a aplicação possa lidar com ele
-      // e possivelmente mostrar uma mensagem de "Sem permissão"
     }
 
     return Promise.reject(error);
