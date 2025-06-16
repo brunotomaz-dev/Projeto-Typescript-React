@@ -49,7 +49,7 @@ export const useQualityIhmQuery = (scope: string = 'home') => {
 
   // Criar dados de qualidade IHM
   const createQualityIhm = useMutation({
-    mutationFn: async (data: any) => createQualityIhmData(data),
+    mutationFn: async (data: any) => await createQualityIhmData(data),
     onSuccess: () => {
       // Invalida a query para forçar uma nova busca
       queryClient.invalidateQueries({

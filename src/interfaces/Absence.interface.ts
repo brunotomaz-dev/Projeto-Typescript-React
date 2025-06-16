@@ -1,17 +1,20 @@
 // cSpell: words recno usuario presencas saida panificacao lideranca
 
-export interface iAbsence {
+export interface iAbsence extends iAbsenceForm {
   data_registro: string;
   hora_registro: string;
-  turno: string;
-  motivo: string;
-  setor: string;
-  nome: string;
+}
+
+export interface iAbsenceForm {
   recno?: number;
-  tipo: string;
-  usuario: string;
   data_occ: string;
-  data_retorno: string;
+  turno: string;
+  tipo: string;
+  nome: string;
+  setor: string;
+  motivo: string;
+  usuario?: string;
+  data_retorno?: string;
 }
 
 export const AbsenceKinds = {

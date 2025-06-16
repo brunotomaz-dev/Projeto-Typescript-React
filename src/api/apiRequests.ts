@@ -1,11 +1,10 @@
 //cSpell: words movimentacao absenteismo conclusao maquinaihm
 import { addHours, format, startOfDay } from 'date-fns';
-import { iPresence } from '../interfaces/Absence.interface';
+import { iAbsenceForm, iPresence } from '../interfaces/Absence.interface';
 import { iActionPlan } from '../interfaces/ActionPlan.interface';
 import { iCartCount } from '../interfaces/Carrinhos.interface';
 import { iQualidadeIHM, iQualidadeIHMCreate } from '../interfaces/QualidadeIHM.interface';
 import { iMaquinaIHM } from '../pages/LiveLines/interfaces/maquinaIhm.interface';
-import { iAbsenceForm } from '../pages/Supervision/interface/AbsenceForm.interface';
 import api from './axiosConfig';
 type DateParam = string | string[];
 

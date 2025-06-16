@@ -2,20 +2,20 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import React, { useState } from 'react';
 import { Button, Card, Modal } from 'react-bootstrap';
-import { deleteAbsenceData } from '../../../api/apiRequests';
+import { useAbsenceMutation } from '../../../hooks/queries/useAbsenceMutation';
+import { useAbsenceQuery } from '../../../hooks/queries/useAbsenceQuery';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { useToast } from '../../../hooks/useToast';
 import { iAbsence } from '../../../interfaces/Absence.interface';
+import { setAbsenceModal } from '../../../redux/store/features/supervisionSlice';
+import { useAppDispatch } from '../../../redux/store/hooks';
 
-interface iAbsenceTableProps {
-  absenceData: iAbsence[];
-  onDataChange: () => void;
-  onEdit: (absence: iAbsence) => void; // Nova prop para lidar com edição
-}
-
-const AbsenceTable: React.FC<iAbsenceTableProps> = ({ absenceData, onDataChange, onEdit }) => {
+const AbsenceTable: React.FC = () => {
   /* -------------------------------------------- ROOK -------------------------------------------- */
   const { hasResourcePermission } = usePermissions();
+  const dispatch = useAppDispatch();
+  const { absenceData } = useAbsenceQuery('supervision');
+  const { deleteAbsence, error, isSuccess } = useAbsenceMutation('supervision');
 
   /* ---------------------------------------- ESTADO LOCAL ---------------------------------------- */
   const [selectedAbsence, setSelectedAbsence] = useState<iAbsence | null>(null);
@@ -55,7 +55,24 @@ const AbsenceTable: React.FC<iAbsenceTableProps> = ({ absenceData, onDataChange,
 
   // Abrir modal de edição - Agora apenas repassa para o componente pai
   const handleEditClick = (absence: iAbsence) => {
-    onEdit(absence);
+    const editData = {
+      recno: absence.recno,
+      data_occ: absence.data_occ,
+      turno: absence.turno,
+      tipo: absence.tipo,
+      nome: absence.nome,
+      setor: absence.setor,
+      motivo: absence.motivo,
+      data_retorno: absence.data_retorno,
+    };
+    dispatch(
+      setAbsenceModal({
+        absenceModalEdit: true,
+        absenceModalType: absence.tipo,
+        absenceModalVisible: true,
+        absenceModalData: editData,
+      })
+    );
   };
 
   // Confirmar exclusão
@@ -66,22 +83,19 @@ const AbsenceTable: React.FC<iAbsenceTableProps> = ({ absenceData, onDataChange,
 
     setIsDeleting(true);
 
-    try {
-      await deleteAbsenceData(selectedAbsence.recno);
+    deleteAbsence(selectedAbsence.recno);
 
-      // Atualiza estado local removendo o item
-      onDataChange();
-
+    if (isSuccess) {
       // Mostrar mensagem de sucesso
       showToast?.('Registro excluído com sucesso', 'success');
-
-      handleCloseModal();
-    } catch (error) {
+    }
+    // Se houver erro, exibir mensagem de erro
+    if (error) {
       console.error('Erro ao excluir registro:', error);
       showToast?.('Erro ao excluir registro', 'danger');
-    } finally {
-      setIsDeleting(false);
     }
+    handleCloseModal();
+    setIsDeleting(false);
   };
 
   /* ---------------------------------------------------------------------------------------------- */

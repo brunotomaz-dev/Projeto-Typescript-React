@@ -16,7 +16,16 @@ type DataType = 'descarte' | 'reprocesso';
 interface TableDataProps {
   type: DataType;
   data: iLineDiscard[];
-  totals: any;
+  totals: {
+    descartePasta: number;
+    descartePaes: number;
+    descartePaesPasta: number;
+    descarteBdj: number;
+    reprocessoBdj: number;
+    reprocessoPaes: number;
+    reprocessoPaesPasta: number;
+    reprocessoPasta: number;
+  } | null;
   filter?: (item: iLineDiscard) => boolean;
 }
 
@@ -158,7 +167,11 @@ const DiscardsPerLine: React.FC = () => {
                   ? line.descartePaesPasta.toFixed(3)
                   : line.reprocessoPaesPasta.toFixed(3)}
               </td>
-              <td className='text-end'>{type === 'descarte' ? line.descarteBdj : line.reprocessoBdj}</td>
+              <td className='text-end'>
+                {type === 'descarte'
+                  ? line.descarteBdj.toLocaleString('pt-BR')
+                  : line.reprocessoBdj.toLocaleString('pt-BR')}
+              </td>
             </tr>
           ))}
           {totals && (
@@ -176,7 +189,9 @@ const DiscardsPerLine: React.FC = () => {
                   : totals.reprocessoPaesPasta.toFixed(3)}
               </td>
               <td className='text-end fw-bold'>
-                {type === 'descarte' ? totals.descarteBdj : totals.reprocessoBdj}
+                {type === 'descarte'
+                  ? totals.descarteBdj.toLocaleString('pt-BR')
+                  : totals.reprocessoBdj.toLocaleString('pt-BR')}
               </td>
             </tr>
           )}

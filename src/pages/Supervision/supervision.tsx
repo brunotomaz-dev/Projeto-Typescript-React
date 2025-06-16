@@ -1,8 +1,7 @@
 // cspell:words superv nivel exibicao
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Button, Col, Container, Row } from 'react-bootstrap';
-import { getAbsenceData, getPresenceData } from '../../api/apiRequests';
 import ActionPlanCards from '../../components/actionPlanCards';
 import DateTurnFilter from '../../components/DateTurnFilter';
 import PersonalizedTransition from '../../components/PersonalizedTransition';
@@ -12,7 +11,6 @@ import { useFilters } from '../../hooks/useFilters';
 import { useFiltersVisibility } from '../../hooks/useFiltersVisibility';
 import { usePermissions } from '../../hooks/usePermissions';
 import { useToast } from '../../hooks/useToast';
-import { iAbsence, iPresence } from '../../interfaces/Absence.interface';
 import { setTotalPresentes } from '../../redux/store/features/supervisionSlice';
 import { useAppDispatch, useAppSelector } from '../../redux/store/hooks';
 import { RootState } from '../../redux/store/store';
@@ -39,7 +37,7 @@ const SupervisionPage: React.FC = () => {
 
   /* -------------------------------------------- HOOK -------------------------------------------- */
   const { userFunctionalLevel } = usePermissions();
-  const { showToast, ToastDisplay } = useToast();
+  const { ToastDisplay } = useToast();
 
   // Hooks para gerenciar filtros através do Redux
   const {
@@ -47,68 +45,13 @@ const SupervisionPage: React.FC = () => {
     toggle: toggleFilters,
     resetVisibility,
   } = useFiltersVisibility('supervision');
-  const { date: selectedDate, turn: shift, setTurnFilter } = useFilters('supervision');
+  const { turn: shift, setTurnFilter } = useFilters('supervision');
 
   // Status filter para planos de ação
   const statusFilter = useMemo(() => [ActionPlanStatus.Aberto, ActionPlanStatus.PDCA], []);
 
   // Hook para gerenciar os planos de ação (usando Redux)
   const { fetchActionPlans, setActionPlanData } = useActionPlansQuery(statusFilter);
-
-  /* ----------------------------------------- LOCAL STATE ---------------------------------------- */
-  const [absenceData, setAbsenceData] = useState<iAbsence[]>([]);
-  const [presenceData, setPresenceData] = useState<iPresence[]>([]);
-
-  /* ------------------------------------------ FUNCTIONS ----------------------------------------- */
-  // Função para carregar dados de ausência - modificada para não filtrar durante o carregamento
-  const loadAbsenceData = async () => {
-    Promise.allSettled([getAbsenceData(selectedDate), getAbsenceData(selectedDate, true)])
-      .then((results: PromiseSettledResult<iAbsence[]>[]) => {
-        const [absData, absDaysOff] = results.map((result) => {
-          if (result.status === 'fulfilled') {
-            return result.value;
-          } else {
-            console.error('Erro ao carregar dados de ausência:', result.reason);
-            showToast('Erro ao carregar dados de ausência', 'danger');
-            return [];
-          }
-        });
-
-        // Une os dados de ausência e dias de ausencia, evitando duplicatas
-        const combinedData = [...absData, ...absDaysOff].reduce((acc: iAbsence[], curr: iAbsence) => {
-          const exists = acc.find((item) => item.recno === curr.recno);
-          if (!exists) {
-            acc.push(curr);
-          }
-          return acc;
-        }, []);
-
-        // Armazenamos todos os dados, a filtragem é feita pelo useMemo
-        setAbsenceData(combinedData);
-      })
-      .catch((error) => {
-        console.error('Erro ao carregar dados de ausência:', error);
-        showToast('Erro ao carregar dados de ausência', 'danger');
-      });
-  };
-
-  // Função para carregar dados de presença - modificada para não filtrar durante o carregamento
-  const loadPresenceData = async () => {
-    try {
-      const data: iPresence[] = await getPresenceData(selectedDate);
-      // Armazenamos todos os dados, a filtragem é feita pelo useMemo
-      setPresenceData(data);
-    } catch (error) {
-      console.error('Erro ao carregar dados de presença:', error);
-      showToast('Erro ao carregar dados de presença', 'danger');
-    }
-  };
-
-  // Função para recarregar os dados após operações
-  const refreshData = () => {
-    loadAbsenceData();
-    loadPresenceData();
-  };
 
   const handlePresentesTotal = (total: number) => {
     dispatch(setTotalPresentes(total));
@@ -118,15 +61,6 @@ const SupervisionPage: React.FC = () => {
   // Valores derivados memoizados
   const isLeadership = useMemo(() => userFunctionalLevel === 1, [userFunctionalLevel]);
   const isSupervisor = useMemo(() => userFunctionalLevel === 2, [userFunctionalLevel]);
-
-  // Filtragem dos dados de ausências e presenças
-  const filteredAbsenceData = useMemo(() => {
-    return absenceData.filter((absence) => absence.turno === shift);
-  }, [absenceData, shift]);
-
-  const filteredPresenceData = useMemo(() => {
-    return presenceData.filter((presence) => presence.turno === shift);
-  }, [presenceData, shift]);
 
   /* ------------------------------------------- EFFECTS ------------------------------------------ */
   // Efeito para definir o turno padrão com base no usuário
@@ -138,10 +72,8 @@ const SupervisionPage: React.FC = () => {
 
   // Efeito para carregar dados quando muda a data ou turno
   useEffect(() => {
-    loadAbsenceData();
-    loadPresenceData();
-    fetchActionPlans(); // Agora usando o hook para carregar os planos de ação
-  }, [selectedDate, fetchActionPlans]); // Removida a dependência de superTurn para evitar recarregar desnecessariamente
+    fetchActionPlans();
+  }, [fetchActionPlans]);
 
   // Cleanup ao desmontar o componente
   useEffect(() => {
@@ -199,21 +131,10 @@ const SupervisionPage: React.FC = () => {
           <SupervDiscardsTable />
         </Row>
 
-        <SupervAbsence
-          selectedDate={selectedDate}
-          selectedTurno={shift as TurnoID}
-          absenceData={filteredAbsenceData} // Usando os dados filtrados pelo useMemo
-          presenceData={filteredPresenceData} // Usando os dados filtrados pelo useMemo
-          onDataChange={refreshData}
-          onPresenceChange={handlePresentesTotal}
-        />
+        <SupervAbsence onPresenceChange={handlePresentesTotal} />
 
         <Row>
-          <ActionPlanCards
-            status={statusFilter}
-            shift={shift as TurnoID}
-            onDataChange={setActionPlanData} // Agora usando o setter do hook
-          />
+          <ActionPlanCards status={statusFilter} shift={shift as TurnoID} onDataChange={setActionPlanData} />
         </Row>
       </Container>
       {ToastDisplay && <ToastDisplay />}
