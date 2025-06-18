@@ -71,11 +71,54 @@ export const useAbsenceMutation = (scope = 'home') => {
   });
 
   return {
-    createAbsence: createAbsence.mutate,
-    updateAbsence: updateAbsence.mutate,
-    deleteAbsence: deleteAbsence.mutate,
-    createPresence: createPresence.mutate,
-    updatePresence: updatePresence.mutate,
+    createAbsence: (data: iAbsenceForm, options?: { onSuccess?: () => void; onError?: () => void }) =>
+      createAbsence.mutate(data, {
+        onSuccess: () => {
+          options?.onSuccess?.();
+        },
+        onError: () => {
+          options?.onError?.();
+        },
+      }),
+    updateAbsence: (
+      data: iAbsenceForm & { recno: number },
+      options?: { onSuccess?: () => void; onError?: () => void }
+    ) =>
+      updateAbsence.mutate(data, {
+        onSuccess: () => {
+          options?.onSuccess?.();
+        },
+        onError: () => {
+          options?.onError?.();
+        },
+      }),
+    deleteAbsence: (recno: number, options?: { onSuccess?: () => void; onError?: () => void }) =>
+      deleteAbsence.mutate(recno, {
+        onSuccess: () => {
+          options?.onSuccess?.();
+        },
+        onError: () => {
+          options?.onError?.();
+        },
+      }),
+    createPresence: (data: iPresence, options?: { onSuccess?: () => void; onError?: () => void }) =>
+      createPresence.mutate(data, {
+        onSuccess: () => {
+          options?.onSuccess?.();
+        },
+        onError: () => {
+          options?.onError?.();
+        },
+      }),
+    updatePresence: (data: iPresence, options?: { onSuccess?: () => void; onError?: () => void }) =>
+      updatePresence.mutate(data, {
+        onSuccess: () => {
+          options?.onSuccess?.();
+        },
+        onError: () => {
+          options?.onError?.();
+        },
+      }),
     isSuccess:
       createAbsence.isSuccess ||
       updateAbsence.isSuccess ||

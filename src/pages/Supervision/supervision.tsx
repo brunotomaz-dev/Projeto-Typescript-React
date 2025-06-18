@@ -1,5 +1,3 @@
-// cspell:words superv nivel exibicao
-
 import React, { useEffect, useMemo } from 'react';
 import { Button, Col, Container, Row } from 'react-bootstrap';
 import ActionPlanCards from '../../components/actionPlanCards';
@@ -21,9 +19,6 @@ import CaixasPessoa from './components/superv.CxsPessoa';
 import SupervDiscardsTable from './components/Superv.DiscardsTable';
 import ProductionTable from './components/superv.prodTable';
 
-/* ----------------------------------------------------------------------------------------------------------- */
-/*                                             COMPONENTE PRINCIPAL                                            */
-/* ----------------------------------------------------------------------------------------------------------- */
 /**
  * Página de Supervisão
  * Exibe dados de supervisão, incluindo ausências, presenças, produção e planos de ação.

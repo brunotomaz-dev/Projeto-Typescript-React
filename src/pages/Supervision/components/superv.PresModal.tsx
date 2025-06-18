@@ -17,7 +17,7 @@ const PresenceAddModal: React.FC = () => {
 
   /* ------------------------------------------------- Hooks ------------------------------------------------- */
   const { date: inicialDate, turn: inicialTurno } = useFilters('supervision');
-  const { createPresence, isSuccess, error } = useAbsenceMutation('supervision');
+  const { createPresence, error } = useAbsenceMutation('supervision');
   const { showToast, ToastDisplay } = useToast();
 
   /* ---------------------------------------- ESTADO LOCAL ---------------------------------------- */
@@ -55,16 +55,15 @@ const PresenceAddModal: React.FC = () => {
     };
 
     // Envia os dados para a mutação de criação de presença
-    createPresence(data);
-
-    // Retorno visual em caso de sucesso ou erro
-    if (isSuccess) {
-      showToast('Dados salvos com sucesso!', 'success');
-    } else if (error) {
-      showToast(`Erro ao salvar dados: ${error.message}`, 'danger');
-    }
-
-    handleClose();
+    createPresence(data, {
+      onSuccess: () => {
+        showToast('Dados salvos com sucesso!', 'success');
+        handleClose();
+      },
+      onError: () => {
+        showToast(`Erro ao salvar dados: ${error?.message || 'Erro desconhecido'}`, 'danger');
+      },
+    });
   };
 
   /* ---------------------------------------------------------------------------------------------- */

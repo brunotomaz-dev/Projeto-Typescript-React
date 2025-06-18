@@ -11,7 +11,7 @@ import { iPresence, iPresenceSectors } from '../../../interfaces/Absence.interfa
 
 const PresenceTable: React.FC = () => {
   /* ------------------------------------------------- Hooks ------------------------------------------------- */
-  const { updatePresence, error, isSuccess } = useAbsenceMutation('supervision');
+  const { updatePresence } = useAbsenceMutation('supervision');
   const { presenceData } = useAbsenceQuery('supervision');
   const { showToast, ToastDisplay } = useToast();
 
@@ -78,21 +78,18 @@ const PresenceTable: React.FC = () => {
     };
 
     // Enviar os dados para a API
-    updatePresence(dataToUpdate);
-
-    if (isSuccess) {
-      // Mensagem de sucesso
-      showToast('Dados atualizados com sucesso!', 'success');
-    }
-    if (error) {
-      // Mensagem de erro
-      showToast('Erro ao atualizar dados. Tente novamente.', 'danger');
-      console.error('Erro ao atualizar dados de presença:', error);
-    }
-
-    // Sair do modo de edição
-    setIsEditing(false);
-    setEditData(null);
+    updatePresence(dataToUpdate, {
+      onSuccess: () => {
+        // Mensagem de sucesso
+        showToast('Dados atualizados com sucesso!', 'success');
+        // Sair do modo de edição
+        handleCancel();
+      },
+      onError: () => {
+        // Mensagem de erro
+        showToast('Erro ao atualizar dados. Tente novamente.', 'danger');
+      },
+    });
   };
 
   /* ---------------------------------------------------------------------------------------------- */

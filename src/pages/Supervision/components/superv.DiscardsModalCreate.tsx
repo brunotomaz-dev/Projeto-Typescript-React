@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 import React, { useEffect, useState } from 'react';
 import { Button, Form, InputGroup, Modal, Stack } from 'react-bootstrap';
 import { useIndicatorsQuery } from '../../../hooks/queries/useIndicatorsQuery';
-import { useQualityIhmQuery } from '../../../hooks/queries/useQualityIhmQuery';
+import { useQualityIhmMutation } from '../../../hooks/queries/useQualityIhmMutation';
 import { useToast } from '../../../hooks/useToast';
 import { iQualidadeIHMCreate } from '../../../interfaces/QualidadeIHM.interface';
 import { setIsModalOpen } from '../../../redux/store/features/discardsSlice';
@@ -16,7 +16,7 @@ const DiscardsModalCreate: React.FC = () => {
   const { lineMachine } = useAppSelector((state) => state.home);
 
   /* ------------------------------------------------- Hooks ------------------------------------------------- */
-  const { createData, isCreateError, isCreateSuccess } = useQualityIhmQuery('supervision');
+  const { createData } = useQualityIhmMutation('supervision');
   const { showToast, ToastDisplay } = useToast();
 
   // Obter os dados de linha/máquina caso não estejam disponíveis no Redux
@@ -137,19 +137,18 @@ const DiscardsModalCreate: React.FC = () => {
   };
 
   const handleSubmit = () => {
-    createData(formData);
-    // Verifica se a criação foi bem-sucedida
-    if (isCreateSuccess) {
-      // Exibe mensagem de sucesso
-      showToast('Apontamento de descarte criado com sucesso!', 'success');
+    createData(formData, {
+      onSuccess: () => {
+        // Exibe mensagem de sucesso
+        showToast('Apontamento de descarte criado com sucesso!', 'success');
 
-      // Fecha o modal
-      handleClose();
-    }
-    // Exibe mensagem de erro se houver falha na criação
-    if (isCreateError) {
-      showToast('Erro ao criar apontamento de descarte', 'danger');
-    }
+        // Fecha o modal
+        handleClose();
+      },
+      onError: () => {
+        showToast('Erro ao criar apontamento de descarte', 'danger');
+      },
+    });
   };
 
   /* --------------------------------------------------------------------------------------------------------- */

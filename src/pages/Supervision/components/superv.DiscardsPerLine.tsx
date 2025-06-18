@@ -6,16 +6,11 @@ import { setIsModalOpen } from '../../../redux/store/features/discardsSlice';
 import { useAppDispatch } from '../../../redux/store/hooks';
 import DiscardsModalCreate from './superv.DiscardsModalCreate';
 
-// Interface para representar os dados agrupados por linha
-interface iLineDiscard extends iQualDescartesGroupedByLine {
-  total: number;
-}
-
 // Definição dos tipos para as métricas
 type DataType = 'descarte' | 'reprocesso';
 interface TableDataProps {
   type: DataType;
-  data: iLineDiscard[];
+  data: iQualDescartesGroupedByLine[];
   totals: {
     descartePasta: number;
     descartePaes: number;
@@ -26,7 +21,7 @@ interface TableDataProps {
     reprocessoPaesPasta: number;
     reprocessoPasta: number;
   } | null;
-  filter?: (item: iLineDiscard) => boolean;
+  filter?: (item: iQualDescartesGroupedByLine) => boolean;
 }
 
 const DiscardsPerLine: React.FC = () => {
@@ -35,61 +30,12 @@ const DiscardsPerLine: React.FC = () => {
   const { isLoading, error, isFetching, data: discardData } = useDiscardsData('supervision');
 
   /* ------------------------------------------ PROCESSAMENTO ----------------------------------------- */
-  // Agrupar os dados por linha de produção
-  const discardsPerLine = useMemo(() => {
-    if (!discardData || discardData.length === 0) return [];
-
-    // Criar um objeto para armazenar os descartes por linha
-    const lineDiscards: Record<string, iLineDiscard> = {};
-
-    // Processar cada item de descarte
-    discardData.forEach((item) => {
-      // Se a linha não existir no objeto, cria um novo registro
-      if (!lineDiscards[item.linha]) {
-        lineDiscards[item.linha] = {
-          linha: item.linha,
-          data_registro: item.data_registro,
-          maquina_id: item.maquina_id,
-          descartePasta: 0,
-          descartePaes: 0,
-          descartePaesPasta: 0,
-          descarteBdj: 0,
-          reprocessoBdj: 0,
-          reprocessoPaes: 0,
-          reprocessoPaesPasta: 0,
-          reprocessoPasta: 0,
-          total: 0,
-        };
-      }
-
-      // Soma os descartes para a linha
-      lineDiscards[item.linha].descartePasta += item.descartePasta || 0;
-      lineDiscards[item.linha].descartePaes += item.descartePaes || 0;
-      lineDiscards[item.linha].descartePaesPasta += item.descartePaesPasta || 0;
-      lineDiscards[item.linha].descarteBdj += item.descarteBdj || 0;
-      lineDiscards[item.linha].reprocessoBdj += item.reprocessoBdj || 0;
-      lineDiscards[item.linha].reprocessoPaes += item.reprocessoPaes || 0;
-      lineDiscards[item.linha].reprocessoPaesPasta += item.reprocessoPaesPasta || 0;
-      lineDiscards[item.linha].reprocessoPasta += item.reprocessoPasta || 0;
-    });
-
-    // Calcular o total por linha
-    Object.values(lineDiscards).forEach((line) => {
-      line.total = line.descartePasta + line.descartePaes + line.descartePaesPasta;
-      // Não incluímos descarteBdj e reprocessoBdj no total pois são medidos em unidades, não em kg
-    });
-
-    // Converter para array e ordenar por linha (crescente)
-    return Object.values(lineDiscards)
-      .filter((line) => line.total > 0 || line.descarteBdj > 0 || line.reprocessoBdj > 0) // Remover linhas sem descarte ou reprocesso
-      .sort((a, b) => a.linha - b.linha);
-  }, [discardData]);
 
   // Calcular totais gerais para a linha de rodapé da tabela
   const totals = useMemo(() => {
-    if (discardsPerLine.length === 0) return null;
+    if (discardData.length === 0) return null;
 
-    return discardsPerLine.reduce(
+    return discardData.reduce(
       (acc, curr) => {
         acc.descartePasta += curr.descartePasta;
         acc.descartePaes += curr.descartePaes;
@@ -112,26 +58,41 @@ const DiscardsPerLine: React.FC = () => {
         reprocessoPasta: 0,
       }
     );
-  }, [discardsPerLine]);
+  }, [discardData]);
 
   // Verificar se há algum dado de reprocesso para mostrar a tabela
   const hasReprocessData = useMemo(() => {
-    return discardsPerLine.some(
+    return discardData.some(
       (line) =>
         line.reprocessoBdj > 0 ||
         line.reprocessoPaes > 0 ||
         line.reprocessoPasta > 0 ||
         line.reprocessoPaesPasta > 0
     );
-  }, [discardsPerLine]);
+  }, [discardData]);
 
   // Verificar se há algum dado de descarte para mostrar a tabela
   const hasDiscardData = useMemo(() => {
-    return discardsPerLine.some(
+    return discardData.some(
       (line) =>
         line.descartePasta > 0 || line.descartePaes > 0 || line.descartePaesPasta > 0 || line.descarteBdj > 0
     );
-  }, [discardsPerLine]);
+  }, [discardData]);
+
+  // Filtro de dados de descarte
+  const discardFilter = useMemo(() => {
+    return (line: iQualDescartesGroupedByLine) =>
+      line.descarteBdj > 0 || line.descartePaes > 0 || line.descartePasta > 0 || line.descartePaesPasta > 0;
+  }, []);
+
+  // Filtro de dados de reprocesso
+  const reprocessFilter = useMemo(() => {
+    return (line: iQualDescartesGroupedByLine) =>
+      line.reprocessoBdj > 0 ||
+      line.reprocessoPaes > 0 ||
+      line.reprocessoPasta > 0 ||
+      line.reprocessoPaesPasta > 0;
+  }, []);
 
   // Componente de tabela reutilizável
   const MetricsTable: React.FC<TableDataProps> = ({ type, data, totals, filter }) => {
@@ -240,7 +201,7 @@ const DiscardsPerLine: React.FC = () => {
             {/* Tabela de Descartes */}
             {hasDiscardData ? (
               <>
-                <MetricsTable type='descarte' data={discardsPerLine} totals={totals} />
+                <MetricsTable type='descarte' data={discardData} totals={totals} filter={discardFilter} />
               </>
             ) : (
               <Alert variant='warning' className='text-center p-2 mx-2 mt-3'>
@@ -252,17 +213,7 @@ const DiscardsPerLine: React.FC = () => {
             {/* Tabela de Reprocesso */}
             {hasReprocessData ? (
               <>
-                <MetricsTable
-                  type='reprocesso'
-                  data={discardsPerLine}
-                  totals={totals}
-                  filter={(line) =>
-                    line.reprocessoBdj > 0 ||
-                    line.reprocessoPaes > 0 ||
-                    line.reprocessoPasta > 0 ||
-                    line.reprocessoPaesPasta > 0
-                  }
-                />
+                <MetricsTable type='reprocesso' data={discardData} totals={totals} filter={reprocessFilter} />
               </>
             ) : (
               <Alert variant='warning' className='text-center p-2 mx-2 mt-3 text-muted'>

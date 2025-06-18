@@ -83,7 +83,7 @@ const AbsenceFormModal: React.FC = () => {
   const dispatch = useAppDispatch();
 
   /* ------------------------------------------------- Hooks ------------------------------------------------- */
-  const { createAbsence, updateAbsence, isSuccess, error } = useAbsenceMutation('supervision');
+  const { createAbsence, updateAbsence, error } = useAbsenceMutation('supervision');
   const { showToast, ToastDisplay } = useToast();
   const { date, turn } = useFilters('supervision');
 
@@ -264,20 +264,27 @@ const AbsenceFormModal: React.FC = () => {
     // Faz a criação ou atualização do registro
     if (absenceModalEdit && absenceData.recno) {
       // Atualizar registro existente
-      updateAbsence({ ...formDataToSubmit, recno: absenceData.recno });
-      if (isSuccess) {
-        showToast('Registro atualizado com sucesso!', 'success');
-      }
+      updateAbsence(
+        { ...formDataToSubmit, recno: absenceData.recno },
+        {
+          onSuccess: () => {
+            showToast('Registro atualizado com sucesso!', 'success');
+          },
+          onError: () => {
+            showToast(`Erro ao atualizar registro: ${error?.message || 'Erro desconhecido'}`, 'danger');
+          },
+        }
+      );
     } else {
       // Criar novo registro
-      createAbsence(formDataToSubmit);
-      if (isSuccess) {
-        showToast('Registro criado com sucesso!', 'success');
-      }
-    }
-
-    if (error) {
-      showToast(`Erro ao salvar dados de ausência: ${error.message}`, 'danger');
+      createAbsence(formDataToSubmit, {
+        onSuccess: () => {
+          showToast('Registro criado com sucesso!', 'success');
+        },
+        onError: () => {
+          showToast(`Erro ao criar registro: ${error?.message || 'Erro desconhecido'}`, 'danger');
+        },
+      });
     }
 
     resetModalState();
