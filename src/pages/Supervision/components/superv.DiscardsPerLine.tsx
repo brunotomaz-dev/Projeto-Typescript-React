@@ -110,7 +110,7 @@ const DiscardsPerLine: React.FC = () => {
             <th className='text-end'>Pasta (kg)</th>
             <th className='text-end'>Pães (kg)</th>
             <th className='text-end'>Pães c/ Pasta (kg)</th>
-            <th className='text-end'>Bandejas (un)</th>
+            <th className='text-end'>Bandejas {type === 'descarte' ? '(kg)' : '(un)'}</th>
           </tr>
         </thead>
         <tbody>
@@ -130,7 +130,7 @@ const DiscardsPerLine: React.FC = () => {
               </td>
               <td className='text-end'>
                 {type === 'descarte'
-                  ? line.descarteBdj.toLocaleString('pt-BR')
+                  ? line.descarteBdj.toFixed(3)
                   : line.reprocessoBdj.toLocaleString('pt-BR')}
               </td>
             </tr>
@@ -151,7 +151,7 @@ const DiscardsPerLine: React.FC = () => {
               </td>
               <td className='text-end fw-bold'>
                 {type === 'descarte'
-                  ? totals.descarteBdj.toLocaleString('pt-BR')
+                  ? totals.descarteBdj.toFixed(3)
                   : totals.reprocessoBdj.toLocaleString('pt-BR')}
               </td>
             </tr>

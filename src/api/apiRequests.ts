@@ -66,7 +66,7 @@ export const getQualityIhmData = async (data: DateParam): Promise<iQualidadeIHM[
   const params = { ...dateFilter };
 
   try {
-    const response = await api.get('api/qualidade_ihm/', { params: params });
+    const response = await api.get('api/qualidade_ihm/raw/', { params: params });
     return response.data;
   } catch (error) {
     console.error('Erro ao buscar dados de qualidade IHM', error);
