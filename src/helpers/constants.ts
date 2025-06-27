@@ -26,8 +26,6 @@ export const superTurns: Record<string, TurnoID> = {
   ['Rogério Inácio']: 'MAT',
   ['Renan Oliveira']: 'VES',
   ['Leandro Moraes']: 'NOT',
-  ['Teste - Supervisor']: 'MAT',
-  ['Teste - Líder']: 'NOT',
   ['Rogério Pereira']: 'MAT',
   ['Marcos Gomes']: 'MAT',
   ['Eduardo Silva']: 'MAT',
@@ -42,6 +40,7 @@ export const superTurns: Record<string, TurnoID> = {
   ['Bruno Rosa']: 'VES',
   ['João Batista']: 'VES',
   ['Lizete Maia']: 'MAT',
+  ['Developer Teste']: 'MAT',
 };
 
 export enum ActionPlanStatus {
@@ -126,4 +125,14 @@ export const NOT_EFF = [
   'Revezamento',
   'Manutenção Preventiva',
   'Manutenção Corretiva Programada',
+];
+
+export const DETECTORES_ID = [
+  { id: 1, name: 'Detector Linha 1' },
+  { id: 2, name: 'Detector Linha 2' },
+  { id: 3, name: 'Detector Linha 3' },
+  { id: 4, name: 'Detector Linha 4' },
+  { id: 5, name: 'Detector Linha 5' },
+  { id: 6, name: 'Detector Linha 6' },
+  { id: 7, name: 'Detector Linha 7' },
 ];

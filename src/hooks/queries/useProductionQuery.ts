@@ -1,8 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { useMemo } from 'react';
-import { getProduction } from '../../api/apiRequests';
+import { getProductionByProduct } from '../../api/apiRequests';
 import { iProduction } from '../../pages/ProductionLive/interfaces/production.interface';
+import {
+  setRawProductionData,
+  setTotalByProductBag,
+  setTotalByProductBol,
+  setTotalProduction,
+} from '../../redux/store/features/productionSlice';
+import { useAppDispatch } from '../../redux/store/hooks';
 import { useFilters } from '../useFilters';
 
 interface ProductionItem {
@@ -13,6 +20,7 @@ interface ProductionItem {
 
 export const useProductionQuery = (scope = 'home') => {
   const { date, turn } = useFilters(scope);
+  const dispatch = useAppDispatch();
 
   // Determinar se a data selecionada é hoje
   const isToday = useMemo(() => {
@@ -24,7 +32,7 @@ export const useProductionQuery = (scope = 'home') => {
   const productionQuery = useQuery({
     queryKey: ['production', date, turn],
     queryFn: async () => {
-      const data: iProduction[] = await getProduction(date);
+      const data: iProduction[] = await getProductionByProduct([date, date]);
       return turn === 'ALL' ? data : data.filter((item) => item.turno === turn);
     },
     refetchInterval: isToday ? 60000 : false,
@@ -33,6 +41,8 @@ export const useProductionQuery = (scope = 'home') => {
   // Agrupar produção por produto individual (em vez de apenas por tipo)
   const productionDetails = useMemo(() => {
     const data = productionQuery.data || [];
+
+    dispatch(setRawProductionData(data)); // Armazenar dados brutos no Redux
 
     // Agrupar por produto específico
     const productMap = new Map<string, number>();
@@ -64,6 +74,10 @@ export const useProductionQuery = (scope = 'home') => {
     const baguete = productionDetails
       .filter((item) => item.tipo === 'baguete')
       .reduce((sum, item) => sum + item.quantidade, 0);
+
+    dispatch(setTotalProduction(bolinha + baguete)); // Armazenar total de produção no Redux
+    dispatch(setTotalByProductBag(baguete));
+    dispatch(setTotalByProductBol(bolinha));
 
     return {
       bolinha,

@@ -31,6 +31,7 @@ export const useQualityIhmMutation = (scope: string = 'home') => {
         },
       }),
     isSuccess: createQualityIhm.isSuccess,
-    Error: createQualityIhm.isError,
+    isError: createQualityIhm.isError,
+    error: createQualityIhm.error,
   };
 };

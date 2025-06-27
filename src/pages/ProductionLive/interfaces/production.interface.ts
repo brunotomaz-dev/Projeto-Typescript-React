@@ -1,10 +1,16 @@
 export interface iProduction {
-  recno: number;
+  recno?: number;
   linha: number;
   maquina_id: string;
   data_registro: string;
   turno: string;
   produto: string;
+  total_ciclos: number;
+  total_produzido_sensor: number;
+  total_produzido: number;
+}
+
+export interface iProdDescartes extends iProduction {
   bdj_retrabalho: number;
   bdj_vazias: number;
   descarte_paes: number;
@@ -13,7 +19,4 @@ export interface iProduction {
   reprocesso_pasta: number;
   reprocesso_paes: number;
   reprocesso_paes_pasta: number;
-  total_ciclos: number;
-  total_produzido_sensor: number;
-  total_produzido: number;
 }

@@ -16,6 +16,7 @@ import SupervActionCards from './components/super.ActionCards';
 import SupervAbsence from './components/superv.Absence';
 import CardGauges from './components/Superv.CardGauges';
 import CaixasPessoa from './components/superv.CxsPessoa';
+import DetectorTable from './components/superv.DetectorTable';
 import SupervDiscardsTable from './components/Superv.DiscardsTable';
 import ProductionTable from './components/superv.prodTable';
 
@@ -120,6 +121,10 @@ const SupervisionPage: React.FC = () => {
           <Col xs={12} xl={5}>
             <CardGauges />
           </Col>
+        </Row>
+
+        <Row>
+          <DetectorTable />
         </Row>
 
         <Row className='mb-3'>

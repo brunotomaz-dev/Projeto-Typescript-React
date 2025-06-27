@@ -10,7 +10,8 @@ const CaixasPessoa: React.FC = () => {
   const totalPresentes = useAppSelector((state) => state.supervision.totalPresentes);
 
   const caixasPessoa = useMemo(() => {
-    return totalPresentes > 0 ? Math.floor(totalProduction / totalPresentes) : 0;
+    const totalProdCsx = Math.floor(totalProduction / 10);
+    return totalPresentes > 0 ? Math.floor(totalProdCsx / totalPresentes) : 0;
   }, [totalProduction, totalPresentes]);
 
   /* --------------------------------------------------------------------------------------------------------- */

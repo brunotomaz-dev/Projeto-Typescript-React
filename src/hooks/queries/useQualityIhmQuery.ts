@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { useMemo } from 'react';
 import { getQualityIhmData } from '../../api/apiRequests';
+import { getShiftByTime } from '../../helpers/turn';
 import { useFilters } from '../useFilters';
 
 export const useQualityIhmQuery = (scope: string = 'home') => {
@@ -24,17 +25,10 @@ export const useQualityIhmQuery = (scope: string = 'home') => {
       // Se o turno for diferente de ALL, aplica filtro
       if (turn !== 'ALL') {
         const filteredData = response?.filter((item) => {
-          // Recebe hora de registro e converte para número
-          const itemHour = parseInt(item.hora_registro.split(':')[0], 10);
-
-          if (turn === 'NOT') {
-            return itemHour >= 0 && itemHour < 8;
-          } else if (turn === 'MAT') {
-            return itemHour >= 8 && itemHour < 16;
-          } else if (turn === 'VES') {
-            return itemHour >= 16 && itemHour < 24;
-          }
-          return false;
+          // Turno conforme horário
+          const itemTurn = getShiftByTime(item.hora_registro);
+          // Retorna itens que correspondem ao turno selecionado
+          return itemTurn === turn;
         });
         // Retorna os dados filtrados
         return filteredData;
