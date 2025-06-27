@@ -1,7 +1,8 @@
 import { format } from 'date-fns';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Form, InputGroup, Modal, Stack } from 'react-bootstrap';
 import { useIndicatorsQuery } from '../../../hooks/queries/useIndicatorsQuery';
+import { useProductionQuery } from '../../../hooks/queries/useProductionQuery';
 import { useQualityIhmMutation } from '../../../hooks/queries/useQualityIhmMutation';
 import { useToast } from '../../../hooks/useToast';
 import { iQualidadeIHMCreate } from '../../../interfaces/QualidadeIHM.interface';
@@ -16,11 +17,20 @@ const DiscardsModalCreate: React.FC = () => {
   const { lineMachine } = useAppSelector((state) => state.home);
 
   /* ------------------------------------------------- Hooks ------------------------------------------------- */
-  const { createData } = useQualityIhmMutation('supervision');
+  const { createData, error } = useQualityIhmMutation('supervision');
+  const { productionDetails } = useProductionQuery('supervision');
   const { showToast, ToastDisplay } = useToast();
 
   // Obter os dados de linha/máquina caso não estejam disponíveis no Redux
   const { lineMachineMap } = useIndicatorsQuery('supervision', Object.keys(lineMachine).length === 0);
+
+  const productOptions = useMemo(() => {
+    if (!productionDetails) return [];
+    return productionDetails.map((prod) => ({
+      value: prod.produto,
+      label: prod.produto,
+    }));
+  }, [productionDetails]);
 
   /* ------------------------------------------------ Effects ------------------------------------------------ */
   // Sincronizar o mapa de máquinas/linhas com o Redux se não estiver disponível
@@ -94,6 +104,7 @@ const DiscardsModalCreate: React.FC = () => {
     reprocesso_paes: 0,
     descarte_paes_pasta: 0,
     reprocesso_paes_pasta: 0,
+    produto: '',
   };
 
   /* ---------------------------------------------- Estado Local --------------------------------------------- */
@@ -101,16 +112,21 @@ const DiscardsModalCreate: React.FC = () => {
   const [formData, setFormData] = useState<iQualidadeIHMCreate>({
     ...formInitialValues,
   });
+  const [isSubmitDisabled, setIsSubmitDisabled] = useState(false);
+  const [validated, setValidated] = useState(false);
+  const [produtoError, setProdutoError] = useState(false);
 
   /* ------------------------------------------------ Handles ------------------------------------------------ */
   const handleClose = () => {
     // Reseta os dados do formulário ao fechar o modal
     setFormData({ ...formInitialValues });
+    setValidated(false);
+    setProdutoError(false);
     // Fecha o modal
     dispatch(setIsModalOpen(false));
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     // Recebe o nome e o valor do campo do formulário
     const { name, value } = e.target;
 
@@ -127,6 +143,20 @@ const DiscardsModalCreate: React.FC = () => {
     }));
   };
 
+  // Handler específico para o campo de produto
+  const handleProdutoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // Resetar erro de produto se um valor for selecionado
+    if (value) {
+      setProdutoError(false);
+    }
+  };
+
   const handleLineChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedLine = parseInt(e.target.value, 10);
     setFormData((prevData) => ({
@@ -137,6 +167,16 @@ const DiscardsModalCreate: React.FC = () => {
   };
 
   const handleSubmit = () => {
+    // Validação do formulário
+    if (!formData.produto) {
+      setProdutoError(true);
+      setValidated(true);
+      showToast('Por favor, selecione um produto.', 'warning');
+      return;
+    }
+
+    setIsSubmitDisabled(true);
+
     createData(formData, {
       onSuccess: () => {
         // Exibe mensagem de sucesso
@@ -144,9 +184,11 @@ const DiscardsModalCreate: React.FC = () => {
 
         // Fecha o modal
         handleClose();
+        setIsSubmitDisabled(false);
       },
       onError: () => {
-        showToast('Erro ao criar apontamento de descarte', 'danger');
+        showToast(`Erro ao criar apontamento de descarte: ${error?.message}`, 'danger');
+        setIsSubmitDisabled(false);
       },
     });
   };
@@ -161,7 +203,7 @@ const DiscardsModalCreate: React.FC = () => {
           <Modal.Title>Criar Apontamento de Descarte</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form>
+          <Form noValidate validated={validated}>
             <Stack direction='horizontal' gap={3} className='mb-3'>
               <Form.Group>
                 <Form.Label>Data do Registro</Form.Label>
@@ -190,6 +232,24 @@ const DiscardsModalCreate: React.FC = () => {
                     </option>
                   ))}
                 </Form.Select>
+              </Form.Group>
+              <Form.Group>
+                <Form.Label>Produto</Form.Label>
+                <Form.Select
+                  name='produto'
+                  value={formData.produto}
+                  onChange={handleProdutoChange}
+                  isInvalid={produtoError && validated}
+                  required
+                >
+                  <option value=''>Selecione o Produto</option>
+                  {productOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </Form.Select>
+                <Form.Control.Feedback type='invalid'>Por favor, selecione um produto.</Form.Control.Feedback>
               </Form.Group>
             </Stack>
             <Stack direction='horizontal' gap={3}>
@@ -249,7 +309,7 @@ const DiscardsModalCreate: React.FC = () => {
           <Button variant='secondary' onClick={handleClose}>
             Cancelar
           </Button>
-          <Button variant='primary' onClick={handleSubmit}>
+          <Button variant='primary' onClick={handleSubmit} disabled={isSubmitDisabled}>
             Criar
           </Button>
         </Modal.Footer>

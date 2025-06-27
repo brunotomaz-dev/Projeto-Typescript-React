@@ -1,20 +1,19 @@
 import React from 'react';
 import { Card, Row, Table } from 'react-bootstrap';
-import { useProductionAndDiscardsQuery } from '../../../hooks/queries/useProductionAndDiscardsQuery';
-import { useAppSelector } from '../../../redux/store/hooks';
+import { useProductionQuery } from '../../../hooks/queries/useProductionQuery';
 
 const ProductionTable: React.FC = () => {
   // Usar o novo hook para buscar e processar os dados
-  const { isLoading, isFetching, error, productionData } = useProductionAndDiscardsQuery('supervision');
+  const { productionByType, productionDetails, isLoading, isFetching, error } =
+    useProductionQuery('supervision');
 
-  // Buscar os dados do Redux
-  const {
-    totalByProductBag,
-    totalByProductBol,
-    totalProduction: totalByProduct,
-  } = useAppSelector((state) => state.production);
+  const { baguete, bolinha, total } = productionByType;
+  const allBagProduction = productionDetails.filter((item) => item.tipo === 'baguete');
+  const allBolProduction = productionDetails.filter((item) => item.tipo === 'bolinha');
 
-  const { bagProduction: allBagProduction, bolProduction: allBolProduction } = productionData;
+  const totalByProductBag = Math.floor(baguete / 10);
+  const totalByProductBol = Math.floor(bolinha / 10);
+  const totalByProduct = Math.floor(total / 10);
 
   /* ---------------------------------------------------------------------------------------------- */
   /*                                             Layout                                             */
@@ -50,12 +49,12 @@ const ProductionTable: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {Object.entries(allBagProduction)
-                .sort(([prodA], [prodB]) => prodA.localeCompare(prodB))
-                .map(([produto, total]) => (
+              {allBagProduction
+                .sort((a, b) => a.produto.localeCompare(b.produto))
+                .map(({ produto, quantidade }) => (
                   <tr key={produto}>
                     <td>{produto}</td>
-                    <td className='text-end'>{Math.floor(total).toLocaleString('pt-BR')}</td>
+                    <td className='text-end'>{Math.floor(quantidade / 10).toLocaleString('pt-BR')}</td>
                   </tr>
                 ))}
               {totalByProductBag > 0 && (
@@ -64,16 +63,16 @@ const ProductionTable: React.FC = () => {
                     <strong>Total de Baguete</strong>
                   </td>
                   <td className='text-end'>
-                    <strong>{Math.floor(totalByProductBag).toLocaleString('pt-BR')}</strong>
+                    <strong>{totalByProductBag.toLocaleString('pt-BR')}</strong>
                   </td>
                 </tr>
               )}
-              {Object.entries(allBolProduction)
-                .sort(([prodA], [prodB]) => prodA.localeCompare(prodB))
-                .map(([produto, total]) => (
+              {allBolProduction
+                .sort((a, b) => a.produto.localeCompare(b.produto))
+                .map(({ produto, quantidade }) => (
                   <tr key={produto}>
                     <td>{produto}</td>
-                    <td className='text-end'>{Math.floor(total).toLocaleString('pt-BR')}</td>
+                    <td className='text-end'>{Math.floor(quantidade / 10).toLocaleString('pt-BR')}</td>
                   </tr>
                 ))}
               {totalByProductBol > 0 && (
@@ -82,7 +81,7 @@ const ProductionTable: React.FC = () => {
                     <strong>Total de Bolinha</strong>
                   </td>
                   <td className='text-end'>
-                    <strong>{Math.floor(totalByProductBol).toLocaleString('pt-BR')}</strong>
+                    <strong>{totalByProductBol.toLocaleString('pt-BR')}</strong>
                   </td>
                 </tr>
               )}
@@ -92,7 +91,7 @@ const ProductionTable: React.FC = () => {
                     <strong>Total</strong>
                   </td>
                   <td className='text-end'>
-                    <strong>{Math.floor(totalByProduct).toLocaleString('pt-BR')}</strong>
+                    <strong>{totalByProduct.toLocaleString('pt-BR')}</strong>
                   </td>
                 </tr>
               )}

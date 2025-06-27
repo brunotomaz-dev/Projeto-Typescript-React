@@ -21,6 +21,10 @@ interface SupervisionState {
     presenceModalEdit?: boolean;
     presenceModalData: iPresence;
   };
+  // Modal do detector de metais
+  detectorModal: {
+    detectorModalVisible: boolean;
+  };
 
   // Dados da supervisão
   totalProduction: number;
@@ -43,6 +47,9 @@ const initialState: SupervisionState = {
     presenceModalVisible: false,
     presenceModalEdit: false,
     presenceModalData: {} as iPresence,
+  },
+  detectorModal: {
+    detectorModalVisible: false,
   },
   totalProduction: 0,
   totalPresentes: 0,
@@ -68,6 +75,9 @@ export const supervisionSlice = createSlice({
     setPresenceModal: (state, action: PayloadAction<Partial<SupervisionState['presenceModal']>>) => {
       state.presenceModal = { ...state.presenceModal, ...action.payload };
     },
+    setDetectorModal: (state, action: PayloadAction<Partial<SupervisionState['detectorModal']>>) => {
+      state.detectorModal = { ...state.detectorModal, ...action.payload };
+    },
     resetSupervisionState: () => initialState,
   },
 });
@@ -79,6 +89,7 @@ export const {
   resetSupervisionState,
   setAbsenceModal,
   setPresenceModal,
+  setDetectorModal,
 } = supervisionSlice.actions;
 
 export default supervisionSlice.reducer;

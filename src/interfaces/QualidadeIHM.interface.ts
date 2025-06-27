@@ -12,6 +12,7 @@ export interface iQualidadeIHMCreate {
   reprocesso_bdj: number;
   data_registro: string;
   hora_registro: string;
+  produto: string;
 }
 
 export interface iQualidadeIHM extends iQualidadeIHMCreate {

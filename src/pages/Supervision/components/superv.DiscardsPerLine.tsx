@@ -118,19 +118,23 @@ const DiscardsPerLine: React.FC = () => {
             <tr key={`${type}-${line.linha}`}>
               <td>{line.linha}</td>
               <td className='text-end'>
-                {type === 'descarte' ? line.descartePasta.toFixed(3) : line.reprocessoPasta.toFixed(3)}
-              </td>
-              <td className='text-end'>
-                {type === 'descarte' ? line.descartePaes.toFixed(3) : line.reprocessoPaes.toFixed(3)}
+                {type === 'descarte'
+                  ? line.descartePasta.toLocaleString('pt-BR')
+                  : line.reprocessoPasta.toLocaleString('pt-BR')}
               </td>
               <td className='text-end'>
                 {type === 'descarte'
-                  ? line.descartePaesPasta.toFixed(3)
-                  : line.reprocessoPaesPasta.toFixed(3)}
+                  ? line.descartePaes.toLocaleString('pt-BR')
+                  : line.reprocessoPaes.toLocaleString('pt-BR')}
               </td>
               <td className='text-end'>
                 {type === 'descarte'
-                  ? line.descarteBdj.toFixed(3)
+                  ? line.descartePaesPasta.toLocaleString('pt-BR')
+                  : line.reprocessoPaesPasta.toLocaleString('pt-BR')}
+              </td>
+              <td className='text-end'>
+                {type === 'descarte'
+                  ? line.descarteBdj.toLocaleString('pt-BR')
                   : line.reprocessoBdj.toLocaleString('pt-BR')}
               </td>
             </tr>
@@ -139,19 +143,23 @@ const DiscardsPerLine: React.FC = () => {
             <tr className='table-secondary'>
               <td className='fw-bold'>Total</td>
               <td className='text-end fw-bold'>
-                {type === 'descarte' ? totals.descartePasta.toFixed(3) : totals.reprocessoPasta.toFixed(3)}
-              </td>
-              <td className='text-end fw-bold'>
-                {type === 'descarte' ? totals.descartePaes.toFixed(3) : totals.reprocessoPaes.toFixed(3)}
+                {type === 'descarte'
+                  ? totals.descartePasta.toLocaleString('pt-BR')
+                  : totals.reprocessoPasta.toLocaleString('pt-BR')}
               </td>
               <td className='text-end fw-bold'>
                 {type === 'descarte'
-                  ? totals.descartePaesPasta.toFixed(3)
-                  : totals.reprocessoPaesPasta.toFixed(3)}
+                  ? totals.descartePaes.toLocaleString('pt-BR')
+                  : totals.reprocessoPaes.toLocaleString('pt-BR')}
               </td>
               <td className='text-end fw-bold'>
                 {type === 'descarte'
-                  ? totals.descarteBdj.toFixed(3)
+                  ? totals.descartePaesPasta.toLocaleString('pt-BR')
+                  : totals.reprocessoPaesPasta.toLocaleString('pt-BR')}
+              </td>
+              <td className='text-end fw-bold'>
+                {type === 'descarte'
+                  ? totals.descarteBdj.toLocaleString('pt-BR')
                   : totals.reprocessoBdj.toLocaleString('pt-BR')}
               </td>
             </tr>

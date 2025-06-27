@@ -84,6 +84,32 @@ export const createQualityIhmData = async (data: iQualidadeIHMCreate) => {
   }
 };
 
+/* ----------------------------------------------------------------------------------------------------------- */
+/*                                              DETECTOR DE METAIS                                             */
+/* ----------------------------------------------------------------------------------------------------------- */
+export const getDetectorData = async (data: DateParam) => {
+  // Cria o filtro de data
+  const dateFilter = createDateFilter(data);
+
+  try {
+    const response = await api.get('api/detector_metal/', { params: dateFilter });
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao buscar dados do detector de metais', error);
+    throw error;
+  }
+};
+
+export const createDetectorData = async (data: any) => {
+  try {
+    const response = await api.post('api/detector_metal/', data);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao criar dados do detector de metais', error);
+    throw error;
+  }
+};
+
 /* ---------------------------------------------------------------------------------------------- */
 /*                                            PRODUÇÃO                                            */
 /* ---------------------------------------------------------------------------------------------- */
@@ -98,6 +124,19 @@ export const getProduction = async (data: DateParam, fields?: string[]) => {
     return response.data;
   } catch (error) {
     console.error('Erro ao buscar dados de produção', error);
+    throw error;
+  }
+};
+
+export const getProductionByProduct = async (data: string[]) => {
+  // Define os parâmetros caso a data possua 2 valores
+  const params = { period: data.join(',') };
+
+  try {
+    const response = await api.get('api/maquinainfo_production/by-product', { params });
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao buscar dados de produção por produto', error);
     throw error;
   }
 };

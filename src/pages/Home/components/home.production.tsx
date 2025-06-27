@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
 import { Button, Card, Spinner, Table } from 'react-bootstrap';
-import { useProductionAndDiscardsQuery } from '../../../hooks/queries/useProductionAndDiscardsQuery';
+import { useProductionQuery } from '../../../hooks/queries/useProductionQuery';
 import { useAppSelector } from '../../../redux/store/hooks';
 
 const HomeProductionCard: React.FC = () => {
   // Utilizar o hook compartilhado
-  const { productionData, isLoading } = useProductionAndDiscardsQuery('home');
+  const { productionByType, productionDetails, isLoading } = useProductionQuery('home');
   const [showDetails, setShowDetails] = useState(false);
-  const { totalByProductBag, totalByProductBol, totalProduction } = useAppSelector(
-    (state) => state.production
-  );
+  const {} = useAppSelector((state) => state.production);
 
-  const { bagProduction: bagueteProducts, bolProduction: bolinhaProducts } = productionData;
+  const { baguete, bolinha, total } = productionByType;
+  const bagueteProducts = productionDetails.filter((item) => item.tipo === 'baguete');
+  const bolinhaProducts = productionDetails.filter((item) => item.tipo === 'bolinha');
+
+  const totalByProductBag = Math.floor(baguete / 10);
+  const totalByProductBol = Math.floor(bolinha / 10);
+  const totalProduction = Math.floor(total / 10);
 
   return (
     <Card className='bg-light shadow border-0 p-1'>
@@ -37,18 +41,18 @@ const HomeProductionCard: React.FC = () => {
           <tbody>
             <tr>
               <td>Bolinhas</td>
-              <td className='text-end'>{Math.floor(totalByProductBol).toLocaleString('pt-BR')}</td>
+              <td className='text-end'>{totalByProductBol.toLocaleString('pt-BR')}</td>
             </tr>
             <tr>
               <td>Baguetes</td>
-              <td className='text-end'>{Math.floor(totalByProductBag).toLocaleString('pt-BR')}</td>
+              <td className='text-end'>{totalByProductBag.toLocaleString('pt-BR')}</td>
             </tr>
             <tr className='table-success'>
               <td>
                 <strong>Total</strong>
               </td>
               <td className='text-end'>
-                <strong>{Math.floor(totalProduction).toLocaleString('pt-BR')}</strong>
+                <strong>{totalProduction.toLocaleString('pt-BR')}</strong>
               </td>
             </tr>
           </tbody>
@@ -66,19 +70,19 @@ const HomeProductionCard: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {Object.entries(bolinhaProducts).length > 0 && (
+              {bolinhaProducts.length > 0 && (
                 <>
                   <tr className='table-secondary'>
                     <td colSpan={2}>
                       <strong>Bolinhas</strong>
                     </td>
                   </tr>
-                  {Object.entries(bolinhaProducts)
-                    .sort(([prodA], [prodB]) => prodA.localeCompare(prodB))
-                    .map(([produto, total]) => (
+                  {bolinhaProducts
+                    .sort((a, b) => a.produto.localeCompare(b.produto))
+                    .map(({ produto, quantidade }) => (
                       <tr key={produto}>
                         <td>{produto}</td>
-                        <td className='text-end'>{Math.floor(total).toLocaleString('pt-BR')}</td>
+                        <td className='text-end'>{Math.floor(quantidade / 10).toLocaleString('pt-BR')}</td>
                       </tr>
                     ))}
                   <tr className='table-light'>
@@ -86,25 +90,25 @@ const HomeProductionCard: React.FC = () => {
                       <em>Subtotal Bolinhas</em>
                     </td>
                     <td className='text-end'>
-                      <em>{Math.floor(totalByProductBol).toLocaleString('pt-BR')}</em>
+                      <em>{totalByProductBol.toLocaleString('pt-BR')}</em>
                     </td>
                   </tr>
                 </>
               )}
 
-              {Object.entries(bagueteProducts).length > 0 && (
+              {bagueteProducts.length > 0 && (
                 <>
                   <tr className='table-secondary'>
                     <td colSpan={2}>
                       <strong>Baguetes</strong>
                     </td>
                   </tr>
-                  {Object.entries(bagueteProducts)
-                    .sort(([prodA], [prodB]) => prodA.localeCompare(prodB))
-                    .map(([produto, total]) => (
+                  {bagueteProducts
+                    .sort((a, b) => a.produto.localeCompare(b.produto))
+                    .map(({ produto, quantidade }) => (
                       <tr key={produto}>
                         <td>{produto}</td>
-                        <td className='text-end'>{Math.floor(total).toLocaleString('pt-BR')}</td>
+                        <td className='text-end'>{Math.floor(quantidade / 10).toLocaleString('pt-BR')}</td>
                       </tr>
                     ))}
                   <tr className='table-light'>
@@ -112,7 +116,7 @@ const HomeProductionCard: React.FC = () => {
                       <em>Subtotal Baguetes</em>
                     </td>
                     <td className='text-end'>
-                      <em>{Math.floor(totalByProductBag).toLocaleString('pt-BR')}</em>
+                      <em>{totalByProductBag.toLocaleString('pt-BR')}</em>
                     </td>
                   </tr>
                 </>
@@ -123,7 +127,7 @@ const HomeProductionCard: React.FC = () => {
                   <strong>Total Geral</strong>
                 </td>
                 <td className='text-end'>
-                  <strong>{Math.floor(totalProduction).toLocaleString('pt-BR')}</strong>
+                  <strong>{totalProduction.toLocaleString('pt-BR')}</strong>
                 </td>
               </tr>
             </tbody>

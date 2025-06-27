@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Alert, Card, Table } from 'react-bootstrap';
 import { extrairTipoPao, extrairTipoPasta, toTitleCase } from '../../../helpers/helper.functions';
+import { useProductionAndDiscardsQuery } from '../../../hooks/queries/useProductionAndDiscardsQuery';
 import { useAppSelector } from '../../../redux/store/hooks';
 import { iDescartes } from '../interface/Descartes.interface';
 
@@ -8,6 +9,7 @@ const TotalDiscardsTable: React.FC = () => {
   /* ------------------------------------------- REDUX ------------------------------------------ */
   // Recuperar dados do Redux
   const discardData = useAppSelector((state) => state.production.descartes) as iDescartes[];
+  useProductionAndDiscardsQuery('supervision'); // NOTE - Ainda em uso por causa do redux e compatibilidade
 
   /* ------------------------------------------ Funções ----------------------------------------- */
   // Processamento dos dados para a tabela de Descarte de Pasta
