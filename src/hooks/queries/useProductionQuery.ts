@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { getProductionByProduct } from '../../api/apiRequests';
 import { iProduction } from '../../pages/ProductionLive/interfaces/production.interface';
 import {
@@ -42,8 +42,6 @@ export const useProductionQuery = (scope = 'home') => {
   const productionDetails = useMemo(() => {
     const data = productionQuery.data || [];
 
-    dispatch(setRawProductionData(data)); // Armazenar dados brutos no Redux
-
     // Agrupar por produto específico
     const productMap = new Map<string, number>();
 
@@ -61,34 +59,43 @@ export const useProductionQuery = (scope = 'home') => {
       })
       .sort((a, b) => a.produto.localeCompare(b.produto));
 
-    return products;
+    return { data, products }; // Retornar tanto os dados brutos quanto processados
   }, [productionQuery.data]);
 
   // Calcular total de produção por tipo
   const productionByType = useMemo(() => {
-    // Calcular totais a partir dos detalhes de produtos
-    const bolinha = productionDetails
+    const bolinha = productionDetails.products
       .filter((item) => item.tipo === 'bolinha')
       .reduce((sum, item) => sum + item.quantidade, 0);
 
-    const baguete = productionDetails
+    const baguete = productionDetails.products
       .filter((item) => item.tipo === 'baguete')
       .reduce((sum, item) => sum + item.quantidade, 0);
-
-    dispatch(setTotalProduction(bolinha + baguete)); // Armazenar total de produção no Redux
-    dispatch(setTotalByProductBag(baguete));
-    dispatch(setTotalByProductBol(bolinha));
 
     return {
       bolinha,
       baguete,
       total: bolinha + baguete,
     };
-  }, [productionDetails]);
+  }, [productionDetails.products]);
+
+  useEffect(() => {
+    if (productionQuery.data) {
+      // Dispatch dos dados brutos
+      dispatch(setRawProductionData(productionDetails.data));
+    }
+  }, [productionQuery.data, productionDetails.data, dispatch]);
+
+  useEffect(() => {
+    // Dispatch dos totais calculados
+    dispatch(setTotalProduction(productionByType.total));
+    dispatch(setTotalByProductBag(productionByType.baguete));
+    dispatch(setTotalByProductBol(productionByType.bolinha));
+  }, [productionByType, dispatch]);
 
   return {
     productionData: productionQuery.data || [],
-    productionDetails, // Nova propriedade com detalhes por produto
+    productionDetails: productionDetails.products,
     isLoading: productionQuery.isLoading,
     isFetching: productionQuery.isFetching,
     error: productionQuery.error,
