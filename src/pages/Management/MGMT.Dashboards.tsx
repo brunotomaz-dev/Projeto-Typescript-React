@@ -1,11 +1,11 @@
 //cSpell: words linepicker
-import { format, startOfDay } from 'date-fns';
 import React, { useEffect, useState } from 'react';
 import { Card, Col, Container, Form, Row, Stack } from 'react-bootstrap';
 import { getInfoIHM } from '../../api/apiRequests';
 import SegmentedTurnBtn from '../../components/SegmentedTurnBtn';
 import { TurnoID } from '../../helpers/constants';
 import { iInfoIHM } from '../../interfaces/InfoIHM.interface';
+import { useAppSelector } from '../../redux/store/hooks';
 import DashBar from './components/Dash.Bar';
 import DashTimeline from './components/Dash.Timeline';
 import DashYamazumi from './components/Dash.Yamazumi';
@@ -19,13 +19,14 @@ interface DateRange {
 }
 
 const ManagementDashboards: React.FC = () => {
+  /* ------------------------------------------- Redux -------------------------------------------- */
+  const {
+    selectedDate,
+    selectedRange,
+    type: dateType,
+  } = useAppSelector((state) => state.management.filterState);
+
   /* ----------------------------------------- Local State ---------------------------------------- */
-  const [dateMode, setDateMode] = useState<'single' | 'range'>('single');
-  const [selectedDate, setSelectedDate] = useState<string>(format(startOfDay(new Date()), 'yyyy-MM-dd'));
-  const [dateRange, setDateRange] = useState<DateRange>({
-    startDate: format(startOfDay(new Date()), 'yyyy-MM-dd'),
-    endDate: format(startOfDay(new Date()), 'yyyy-MM-dd'),
-  });
   const [selectedLines, setSelectedLines] = useState<number[]>([]);
   const [turn, setTurn] = useState<TurnoID>('ALL');
   const [infoIhmData, setInfoIhmData] = useState<iInfoIHM[]>([]);
@@ -33,7 +34,8 @@ const ManagementDashboards: React.FC = () => {
 
   /* ------------------------------------------- Effect ------------------------------------------- */
   useEffect(() => {
-    const dateChoice = dateMode === 'single' ? selectedDate : [dateRange.startDate, dateRange.endDate];
+    const dateChoice =
+      dateType === 'single' ? selectedDate : [selectedRange.startDate, selectedRange.endDate];
 
     void getInfoIHM(dateChoice).then((res: iInfoIHM[]) => {
       // Filtrar dados pela linha, se não for [] ou length = 14
@@ -47,19 +49,7 @@ const ManagementDashboards: React.FC = () => {
 
       setInfoIhmData(res);
     });
-  }, [dateMode, selectedDate, dateRange, selectedLines, turn]);
-
-  /* ------------------------------------------- Handles ------------------------------------------ */
-  // Manipular mudanças de data (única ou range)
-  const handleDateChange = (value: string | DateRange) => {
-    if (typeof value === 'string') {
-      setSelectedDate(value);
-      setDateMode('single');
-    } else {
-      setDateRange(value);
-      setDateMode('range');
-    }
-  };
+  }, [dateType, selectedDate, selectedRange, selectedLines, turn]);
 
   /* ---------------------------------------------------------------------------------------------- */
   /*                                             LAYOUT                                             */
@@ -67,12 +57,7 @@ const ManagementDashboards: React.FC = () => {
   return (
     <Container fluid className='p-1'>
       <Stack direction='horizontal' gap={3} className='mb-5 justify-content-around'>
-        <DashboardDatePicker
-          selectedDate={dateMode === 'single' ? selectedDate : undefined}
-          selectedRange={dateMode === 'range' ? dateRange : undefined}
-          onChange={handleDateChange}
-          initialMode={dateMode}
-        />
+        <DashboardDatePicker />
         <span style={{ width: 'fit-content' }}>
           <SegmentedTurnBtn
             onTurnChange={(turno) => setTurn(turno)}
@@ -154,7 +139,7 @@ const ManagementDashboards: React.FC = () => {
           </Card>
         </Col>
       </Row>
-      {dateMode === 'single' && (
+      {dateType === 'single' && (
         <Row>
           <Col xs={12}>
             <Card className='p-2 bg-transparent border-0 shadow-sm'>
