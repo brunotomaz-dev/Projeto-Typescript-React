@@ -2,7 +2,6 @@ import { configureStore } from '@reduxjs/toolkit';
 import useActionPlanReducer from './features/actionPlanSlice';
 import discardsSlice from './features/discardsSlice';
 import filterReducer from './features/filterSlice';
-import filterWithLines from './features/filterWithLineSlice';
 import homeReducer from './features/homeSlice';
 import liveLinesReducer from './features/liveLinesSlice';
 import pinsReducer from './features/pinsSlice';
@@ -29,7 +28,6 @@ export const store = configureStore({
     actionPlans: useActionPlanReducer,
     production: productionSlice,
     discards: discardsSlice,
-    filterWithLines: filterWithLines,
   },
 });
 

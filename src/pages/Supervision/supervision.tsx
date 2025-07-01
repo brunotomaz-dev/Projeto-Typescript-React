@@ -41,7 +41,7 @@ const SupervisionPage: React.FC = () => {
     toggle: toggleFilters,
     resetVisibility,
   } = useFiltersVisibility('supervision');
-  const { turn: shift, setTurnFilter } = useFilters('supervision');
+  const { turn: shift, updateTurn } = useFilters('supervision');
 
   // Status filter para planos de ação
   const statusFilter = useMemo(() => [ActionPlanStatus.Aberto, ActionPlanStatus.PDCA], []);
@@ -62,9 +62,9 @@ const SupervisionPage: React.FC = () => {
   // Efeito para definir o turno padrão com base no usuário
   useEffect(() => {
     if (userName in superTurns) {
-      setTurnFilter(superTurns[userName]);
+      updateTurn(superTurns[userName]);
     }
-  }, [userName, setTurnFilter, superTurns]);
+  }, [userName, updateTurn, superTurns]);
 
   // Efeito para carregar dados quando muda a data ou turno
   useEffect(() => {

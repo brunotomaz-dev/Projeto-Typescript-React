@@ -2,10 +2,10 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
 import { getInfoIHM } from '../../api/apiRequests';
-import DateTurnLineFilter from '../../components/DateTurnLineFilter';
+import DateTurnFilter from '../../components/DateTurnFilter';
 import PersonalizedTransition from '../../components/PersonalizedTransition';
+import { useFilters } from '../../hooks/useFilters';
 import { useFiltersVisibility } from '../../hooks/useFiltersVisibility';
-import { useFiltersWithLines } from '../../hooks/useFiltersWithLines';
 import { iInfoIHM } from '../../interfaces/InfoIHM.interface';
 import DashBar from './components/Dash.Bar';
 import DashTimeline from './components/Dash.Timeline';
@@ -13,13 +13,7 @@ import DashYamazumi from './components/Dash.Yamazumi';
 
 const ManagementDashboards: React.FC = () => {
   /* ------------------------------------------- Redux -------------------------------------------- */
-  const {
-    selectedDate,
-    selectedLines,
-    turn,
-    selectedRange,
-    type: dateType,
-  } = useFiltersWithLines('management');
+  const { date, selectedLines, turn, selectedRange, type: dateType } = useFilters('management');
 
   const {
     isVisible: isFilterVisible,
@@ -33,8 +27,7 @@ const ManagementDashboards: React.FC = () => {
 
   /* ------------------------------------------- Effect ------------------------------------------- */
   useEffect(() => {
-    const dateChoice =
-      dateType === 'single' ? selectedDate : [selectedRange.startDate, selectedRange.endDate];
+    const dateChoice = dateType === 'single' ? date : [selectedRange.startDate, selectedRange.endDate];
 
     void getInfoIHM(dateChoice).then((res: iInfoIHM[]) => {
       // Filtrar dados pela linha, se não for [] ou length = 14
@@ -48,7 +41,7 @@ const ManagementDashboards: React.FC = () => {
 
       setInfoIhmData(res);
     });
-  }, [dateType, selectedDate, selectedRange, selectedLines, turn]);
+  }, [dateType, date, selectedRange, selectedLines, turn]);
 
   useEffect(() => {
     // Resetar visibilidade dos filtros quando a página for montada
@@ -75,8 +68,14 @@ const ManagementDashboards: React.FC = () => {
         </Col>
       </Row>
 
-      <DateTurnLineFilter show={isFilterVisible} />
-      <PersonalizedTransition scope='management' filtersWithLines />
+      <DateTurnFilter
+        show={isFilterVisible}
+        scope='management'
+        showLineSelector={true}
+        useAdvancedDatePicker={true}
+        layout='horizontal'
+      />
+      <PersonalizedTransition scope='management' />
 
       <Row className='mb-3 mt-2'>
         <Col>
@@ -102,7 +101,7 @@ const ManagementDashboards: React.FC = () => {
               data={infoIhmData}
               selectedLines={selectedLines}
               selectedShift={turn}
-              selectedDate={selectedDate}
+              selectedDate={date}
               dataType={'ALL'}
               notAffBar={notAffBar}
             />
@@ -114,7 +113,7 @@ const ManagementDashboards: React.FC = () => {
               data={infoIhmData}
               selectedLines={selectedLines}
               selectedShift={turn}
-              selectedDate={selectedDate}
+              selectedDate={date}
               dataType={'Primeiro'}
               notAffBar={notAffBar}
             />
@@ -128,7 +127,7 @@ const ManagementDashboards: React.FC = () => {
               data={infoIhmData}
               selectedLines={selectedLines}
               selectedShift={turn}
-              selectedDate={selectedDate}
+              selectedDate={date}
               dataType={'Segundo'}
               notAffBar={notAffBar}
             />
@@ -140,7 +139,7 @@ const ManagementDashboards: React.FC = () => {
               data={infoIhmData}
               selectedLines={selectedLines}
               selectedShift={turn}
-              selectedDate={selectedDate}
+              selectedDate={date}
               dataType={'Terceiro'}
               notAffBar={notAffBar}
             />

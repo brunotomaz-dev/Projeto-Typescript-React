@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Button, ButtonGroup, Offcanvas } from 'react-bootstrap';
-import { useFiltersWithLines } from '../../../hooks/useFiltersWithLines';
+import { useFilters } from '../../../hooks/useFilters';
 
 interface ManagementLinePickerProps {
   onChange?: (selectedLines: number[]) => void;
@@ -11,7 +11,7 @@ interface ManagementLinePickerProps {
 const ManagementLinePicker: React.FC<ManagementLinePickerProps> = ({ onChange, initialValue, scope }) => {
   /* ------------------------------------------- Hooks -------------------------------------------- */
   if (scope) {
-    const { isResetLines } = useFiltersWithLines(scope);
+    const { isResetLines } = useFilters(scope);
 
     // Resetar a seleção temporária quando resetLines for chamado
     useEffect(() => {

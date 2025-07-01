@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Button, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { useFiltersWithLines } from '../../../hooks/useFiltersWithLines';
+import { useFilters } from '../../../hooks/useFilters';
 
 interface iDatePickerProps {
   scope?: string;
@@ -16,10 +16,10 @@ const DashboardDatePicker: React.FC<iDatePickerProps> = ({ scope = 'management' 
     updateFilterType,
     updateSelectedDate,
     updateSelectedDateRange,
-    selectedDate,
+    date,
     selectedRange,
     type: dateType,
-  } = useFiltersWithLines(scope);
+  } = useFilters(scope);
 
   /* ----------------------------------------- Estado Local ---------------------------------------- */
 
@@ -72,11 +72,11 @@ const DashboardDatePicker: React.FC<iDatePickerProps> = ({ scope = 'management' 
       updateSelectedDate(startDate);
     }
     // Se alternar para modo range e tivermos uma data única, criar um range com a mesma data
-    else if (newMode === 'range' && selectedDate) {
-      const dateObj = parseISO(selectedDate);
+    else if (newMode === 'range' && date) {
+      const dateObj = parseISO(date);
       setStartDateObj(dateObj);
       setEndDateObj(dateObj);
-      updateSelectedDateRange(selectedDate, selectedDate);
+      updateSelectedDateRange(date, date);
     }
   };
 
@@ -100,10 +100,10 @@ const DashboardDatePicker: React.FC<iDatePickerProps> = ({ scope = 'management' 
       return (
         <DatePicker
           {...commonProps}
-          selected={parseISO(selectedDate)}
+          selected={parseISO(date)}
           onChange={handleSingleDateChange}
           placeholderText='Selecione uma data'
-          key={`single-${selectedDate}`}
+          key={`single-${date}`}
         />
       );
     } else {
