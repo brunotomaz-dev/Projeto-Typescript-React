@@ -11,6 +11,7 @@ interface iDefaultState {
   };
   turn: TurnoID;
   selectedLines: number[];
+  isResetLines?: boolean;
 }
 
 interface iFilterState {
@@ -27,6 +28,7 @@ export const defaultFilterWithLinesState = (): iDefaultState => ({
   },
   turn: 'ALL',
   selectedLines: [],
+  isResetLines: false,
 });
 
 const initialState: iFilterState = {
@@ -86,6 +88,18 @@ const managementSlice = createSlice({
       state.scopeState[scope].selectedLines = lines;
     },
 
+    setIsResetLines(state, action: PayloadAction<{ scope: string; reset: boolean }>) {
+      const { scope, reset } = action.payload;
+
+      // Se o escopo não existir, cria com valores padrão
+      if (!state.scopeState[scope]) {
+        state.scopeState[scope] = defaultFilterWithLinesState();
+      }
+
+      // Atualiza o estado de isResetLines
+      state.scopeState[scope].isResetLines = reset;
+    },
+
     resetFilterWithLine(state, action: PayloadAction<string>) {
       const scope = action.payload;
 
@@ -107,6 +121,7 @@ export const {
   setTurn,
   setSelectedLines,
   resetFilterWithLine,
+  setIsResetLines,
 } = managementSlice.actions;
 
 export default managementSlice.reducer;

@@ -1,24 +1,33 @@
 //cSpell: words linepicker
 import React, { useEffect, useState } from 'react';
-import { Card, Col, Container, Form, Row, Stack } from 'react-bootstrap';
+import { Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
 import { getInfoIHM } from '../../api/apiRequests';
-import SegmentedTurnBtn from '../../components/SegmentedTurnBtn';
-import { TurnoID } from '../../helpers/constants';
+import DateTurnLineFilter from '../../components/DateTurnLineFilter';
+import PersonalizedTransition from '../../components/PersonalizedTransition';
+import { useFiltersVisibility } from '../../hooks/useFiltersVisibility';
 import { useFiltersWithLines } from '../../hooks/useFiltersWithLines';
 import { iInfoIHM } from '../../interfaces/InfoIHM.interface';
 import DashBar from './components/Dash.Bar';
 import DashTimeline from './components/Dash.Timeline';
 import DashYamazumi from './components/Dash.Yamazumi';
-import DashboardDatePicker from './components/management.d.datepicker';
-import ManagementLinePicker from './components/management.d.linepicker';
 
 const ManagementDashboards: React.FC = () => {
   /* ------------------------------------------- Redux -------------------------------------------- */
-  const { selectedDate, selectedRange, type: dateType } = useFiltersWithLines('management');
+  const {
+    selectedDate,
+    selectedLines,
+    turn,
+    selectedRange,
+    type: dateType,
+  } = useFiltersWithLines('management');
+
+  const {
+    isVisible: isFilterVisible,
+    toggle: toggleFilterVisibility,
+    resetVisibility: resetFilterVisibility,
+  } = useFiltersVisibility('management');
 
   /* ----------------------------------------- Local State ---------------------------------------- */
-  const [selectedLines, setSelectedLines] = useState<number[]>([]);
-  const [turn, setTurn] = useState<TurnoID>('ALL');
   const [infoIhmData, setInfoIhmData] = useState<iInfoIHM[]>([]);
   const [notAffBar, setNotAffBar] = useState<boolean>(false);
 
@@ -41,26 +50,35 @@ const ManagementDashboards: React.FC = () => {
     });
   }, [dateType, selectedDate, selectedRange, selectedLines, turn]);
 
+  useEffect(() => {
+    // Resetar visibilidade dos filtros quando a página for montada
+    return () => resetFilterVisibility();
+  }, [resetFilterVisibility]);
+
   /* ---------------------------------------------------------------------------------------------- */
   /*                                             LAYOUT                                             */
   /* ---------------------------------------------------------------------------------------------- */
   return (
     <Container fluid className='p-1'>
-      <Stack direction='horizontal' gap={3} className='mb-5 justify-content-around'>
-        <DashboardDatePicker />
-        <span style={{ width: 'fit-content' }}>
-          <SegmentedTurnBtn
-            onTurnChange={(turno) => setTurn(turno)}
-            turn={turn}
-            all
-            key={'dashboards-turn'}
-            small
-            width={100}
-          />
-        </span>
-        <ManagementLinePicker onChange={setSelectedLines} />
-      </Stack>
-      <Row className='mb-3'>
+      <h1 className='text-center'>Dashboards</h1>
+      <Row className='mb-1'>
+        <Col>
+          <Button
+            variant={isFilterVisible ? 'secondary' : 'outline-secondary'}
+            size='sm'
+            onClick={toggleFilterVisibility}
+            className='d-flex align-items-center mb-1'
+          >
+            <i className={`bi ${isFilterVisible ? 'bi-funnel-fill' : 'bi-funnel'} me-2`}></i>
+            {isFilterVisible ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+          </Button>
+        </Col>
+      </Row>
+
+      <DateTurnLineFilter show={isFilterVisible} />
+      <PersonalizedTransition scope='management' filtersWithLines />
+
+      <Row className='mb-3 mt-2'>
         <Col>
           <Card className='p-2 bg-transparent border-0 shadow-sm'>
             <DashYamazumi data={infoIhmData} />

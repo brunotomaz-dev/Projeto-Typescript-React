@@ -3,7 +3,9 @@ import { useCallback, useMemo } from 'react';
 import { TurnoID } from '../helpers/constants';
 import {
   defaultFilterWithLinesState,
+  resetFilterWithLine,
   setFilterType,
+  setIsResetLines,
   setSelectedDate,
   setSelectedLines,
   setSelectedRange,
@@ -12,10 +14,9 @@ import {
 import { useAppDispatch, useAppSelector } from '../redux/store/hooks';
 
 export const useFiltersWithLines = (scope = 'management') => {
-  console.log('useFiltersWithLines render:', scope);
   const dispatch = useAppDispatch();
 
-  const { type, selectedDate, selectedRange, turn, selectedLines } = useAppSelector((state) => {
+  const { type, selectedDate, selectedRange, turn, selectedLines, isResetLines } = useAppSelector((state) => {
     return state.filterWithLines.scopeState[scope] || defaultFilterWithLinesState();
   });
 
@@ -75,17 +76,26 @@ export const useFiltersWithLines = (scope = 'management') => {
     [dispatch, scope]
   );
 
+  const resetFilters = useCallback(() => {
+    setTimeout(() => {
+      dispatch(setIsResetLines({ scope, reset: true }));
+    }, 10);
+    dispatch(resetFilterWithLine(scope));
+  }, [dispatch, scope]);
+
   return {
     type,
     selectedDate,
     selectedRange,
     turn,
     selectedLines,
+    isResetLines,
     updateFilterType,
     updateSelectedDate,
     updateSelectedDateRange,
     updateTurn,
     updateSelectedLines,
+    resetFilters,
     isDefault,
   };
 };

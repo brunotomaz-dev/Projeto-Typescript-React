@@ -1,15 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Button, ButtonGroup, Offcanvas } from 'react-bootstrap';
+import { useFiltersWithLines } from '../../../hooks/useFiltersWithLines';
 
 interface ManagementLinePickerProps {
   onChange?: (selectedLines: number[]) => void;
   initialValue?: number[];
+  scope?: string;
 }
 
-const ManagementLinePicker: React.FC<ManagementLinePickerProps> = ({
-  onChange,
-  initialValue,
-}) => {
+const ManagementLinePicker: React.FC<ManagementLinePickerProps> = ({ onChange, initialValue, scope }) => {
+  /* ------------------------------------------- Hooks -------------------------------------------- */
+  if (scope) {
+    const { isResetLines } = useFiltersWithLines(scope);
+
+    // Resetar a seleção temporária quando resetLines for chamado
+    useEffect(() => {
+      console.log('Entrou no useEffect de triggerReset:', isResetLines);
+      if (isResetLines) {
+        resetLines();
+      }
+    }, [isResetLines]);
+  }
+
   /* ----------------------------------------- Constantes ----------------------------------------- */
   // Um array de linhas que é um range de 1 a 14
   const allLines = Array.from({ length: 14 }, (_, i) => i + 1);
@@ -26,9 +38,7 @@ const ManagementLinePicker: React.FC<ManagementLinePickerProps> = ({
 
   /* ----------------------------------------- Local State ---------------------------------------- */
   // Estado confirmado (usado externamente)
-  const [confirmedSelection, setConfirmedSelection] = useState<number[]>(
-    initialValue || [...allLines]
-  );
+  const [confirmedSelection, setConfirmedSelection] = useState<number[]>(initialValue || [...allLines]);
   // Estado temporário (usado durante a edição no drawer)
   const [tempSelection, setTempSelection] = useState<number[]>(confirmedSelection);
   // Estado para controlar a exibição do drawer
@@ -50,6 +60,11 @@ const ManagementLinePicker: React.FC<ManagementLinePickerProps> = ({
     setTempSelection(allLinesSelected ? [] : [...allLines]);
   };
 
+  const resetLines = () => {
+    setTempSelection([...allLines]);
+    setConfirmedSelection([...allLines]);
+  };
+
   // Selecionar/desmarcar linhas da fábrica 1
   const toggleFactory1Lines = () => {
     let newSelection: number[];
@@ -59,9 +74,7 @@ const ManagementLinePicker: React.FC<ManagementLinePickerProps> = ({
       newSelection = tempSelection.filter((line) => !factory1Lines.includes(line));
     } else {
       // Adicionar todas as linhas da fábrica 1 e manter outras seleções
-      const currentNonFactory1 = tempSelection.filter(
-        (line) => !factory1Lines.includes(line)
-      );
+      const currentNonFactory1 = tempSelection.filter((line) => !factory1Lines.includes(line));
       newSelection = [...currentNonFactory1, ...factory1Lines];
     }
 
@@ -77,9 +90,7 @@ const ManagementLinePicker: React.FC<ManagementLinePickerProps> = ({
       newSelection = tempSelection.filter((line) => !factory2Lines.includes(line));
     } else {
       // Adicionar todas as linhas da fábrica 2 e manter outras seleções
-      const currentNonFactory2 = tempSelection.filter(
-        (line) => !factory2Lines.includes(line)
-      );
+      const currentNonFactory2 = tempSelection.filter((line) => !factory2Lines.includes(line));
       newSelection = [...currentNonFactory2, ...factory2Lines];
     }
 
@@ -151,7 +162,7 @@ const ManagementLinePicker: React.FC<ManagementLinePickerProps> = ({
       <Button
         variant='light'
         onClick={handleOpenDrawer}
-        className='d-flex align-items-center text-dark'
+        className='d-flex align-items-center text-dark p-2 shadow-sm bg-white'
       >
         <i className='bi bi-grid-3x3 me-2'></i>
         <span>{buttonLabel}</span>
@@ -159,12 +170,7 @@ const ManagementLinePicker: React.FC<ManagementLinePickerProps> = ({
       </Button>
 
       {/* Drawer com o seletor de linhas */}
-      <Offcanvas
-        show={showDrawer}
-        onHide={handleCloseDrawer}
-        placement='end'
-        className='line-picker-drawer'
-      >
+      <Offcanvas show={showDrawer} onHide={handleCloseDrawer} placement='end' className='line-picker-drawer'>
         <Offcanvas.Header closeButton>
           <Offcanvas.Title>{drawerTitle}</Offcanvas.Title>
         </Offcanvas.Header>
@@ -179,9 +185,7 @@ const ManagementLinePicker: React.FC<ManagementLinePickerProps> = ({
                 className='flex-grow-1'
               >
                 <div className='d-flex align-items-center'>
-                  <i
-                    className={`bi ${allLinesSelected ? 'bi-check-all me-2' : 'bi-grid-3x3 me-2'}`}
-                  ></i>
+                  <i className={`bi ${allLinesSelected ? 'bi-check-all me-2' : 'bi-grid-3x3 me-2'}`}></i>
                   {allLinesSelected ? 'Desmarcar Todas' : 'Todas as Linhas'}
                 </div>
               </Button>
@@ -191,9 +195,7 @@ const ManagementLinePicker: React.FC<ManagementLinePickerProps> = ({
                 className='flex-grow-1'
               >
                 <div className='d-flex align-items-center'>
-                  <i
-                    className={`bi ${allFactory1Selected ? 'bi-check-lg me-2' : 'bi-1-square me-2'}`}
-                  ></i>
+                  <i className={`bi ${allFactory1Selected ? 'bi-check-lg me-2' : 'bi-1-square me-2'}`}></i>
                   Fábrica 1 (L1-L9)
                 </div>
               </Button>
@@ -203,9 +205,7 @@ const ManagementLinePicker: React.FC<ManagementLinePickerProps> = ({
                 className='flex-grow-1'
               >
                 <div className='d-flex align-items-center'>
-                  <i
-                    className={`bi ${allFactory2Selected ? 'bi-check-lg me-2' : 'bi-2-square me-2'}`}
-                  ></i>
+                  <i className={`bi ${allFactory2Selected ? 'bi-check-lg me-2' : 'bi-2-square me-2'}`}></i>
                   Fábrica 2 (L10-L14)
                 </div>
               </Button>
@@ -278,12 +278,7 @@ const ManagementLinePicker: React.FC<ManagementLinePickerProps> = ({
           </div>
 
           <div className='d-grid gap-2 mt-4'>
-            <Button
-              variant='primary'
-              size='lg'
-              onClick={handleApplySelection}
-              disabled={!hasChanges()}
-            >
+            <Button variant='primary' size='lg' onClick={handleApplySelection} disabled={!hasChanges()}>
               {hasChanges() ? 'Aplicar Seleção' : 'Confirmar Seleção'}
             </Button>
           </div>

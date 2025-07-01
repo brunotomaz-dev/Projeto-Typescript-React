@@ -5,13 +5,17 @@ import { CSSTransition } from 'react-transition-group';
 import { getTurnoName, TurnoID } from '../helpers/constants';
 import { useFilters } from '../hooks/useFilters';
 import { useFiltersVisibility } from '../hooks/useFiltersVisibility';
+import { useFiltersWithLines } from '../hooks/useFiltersWithLines';
 
 interface iProps {
   scope: string;
+  filtersWithLines?: boolean;
 }
 
-const PersonalizedTransition: React.FC<iProps> = ({ scope }) => {
-  const { date, isDefault, resetFilters, turn } = useFilters(scope);
+const PersonalizedTransition: React.FC<iProps> = ({ scope, filtersWithLines }) => {
+  const { isDefault, resetFilters, turn } = filtersWithLines ? useFiltersWithLines(scope) : useFilters(scope);
+  const date = filtersWithLines ? useFiltersWithLines(scope).selectedDate : useFilters(scope).date;
+
   const { isVisible, resetVisibility } = useFiltersVisibility(scope);
 
   // Criar uma ref para o elemento que será animado

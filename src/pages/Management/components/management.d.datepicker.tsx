@@ -6,7 +6,11 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useFiltersWithLines } from '../../../hooks/useFiltersWithLines';
 
-const DashboardDatePicker: React.FC = () => {
+interface iDatePickerProps {
+  scope?: string;
+}
+
+const DashboardDatePicker: React.FC<iDatePickerProps> = ({ scope = 'management' }) => {
   /* ------------------------------------------------- Hooks ------------------------------------------------- */
   const {
     updateFilterType,
@@ -15,7 +19,7 @@ const DashboardDatePicker: React.FC = () => {
     selectedDate,
     selectedRange,
     type: dateType,
-  } = useFiltersWithLines('management');
+  } = useFiltersWithLines(scope);
 
   /* ----------------------------------------- Estado Local ---------------------------------------- */
 
@@ -26,8 +30,6 @@ const DashboardDatePicker: React.FC = () => {
   const [endDateObj, setEndDateObj] = useState<Date | null>(
     selectedRange?.endDate ? parseISO(selectedRange.endDate) : null
   );
-
-  console.log('🔄 Component render - startDateObj:', startDateObj, 'endDateObj:', endDateObj);
 
   /* -------------------------------------------- Datas ------------------------------------------- */
   const now = new Date();
