@@ -4,27 +4,17 @@ import { Card, Col, Container, Form, Row, Stack } from 'react-bootstrap';
 import { getInfoIHM } from '../../api/apiRequests';
 import SegmentedTurnBtn from '../../components/SegmentedTurnBtn';
 import { TurnoID } from '../../helpers/constants';
+import { useFiltersWithLines } from '../../hooks/useFiltersWithLines';
 import { iInfoIHM } from '../../interfaces/InfoIHM.interface';
-import { useAppSelector } from '../../redux/store/hooks';
 import DashBar from './components/Dash.Bar';
 import DashTimeline from './components/Dash.Timeline';
 import DashYamazumi from './components/Dash.Yamazumi';
 import DashboardDatePicker from './components/management.d.datepicker';
 import ManagementLinePicker from './components/management.d.linepicker';
 
-// Interface para o range de datas
-interface DateRange {
-  startDate: string;
-  endDate: string;
-}
-
 const ManagementDashboards: React.FC = () => {
   /* ------------------------------------------- Redux -------------------------------------------- */
-  const {
-    selectedDate,
-    selectedRange,
-    type: dateType,
-  } = useAppSelector((state) => state.management.filterState);
+  const { selectedDate, selectedRange, type: dateType } = useFiltersWithLines('management');
 
   /* ----------------------------------------- Local State ---------------------------------------- */
   const [selectedLines, setSelectedLines] = useState<number[]>([]);

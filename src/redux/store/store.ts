@@ -2,9 +2,9 @@ import { configureStore } from '@reduxjs/toolkit';
 import useActionPlanReducer from './features/actionPlanSlice';
 import discardsSlice from './features/discardsSlice';
 import filterReducer from './features/filterSlice';
+import filterWithLines from './features/filterWithLineSlice';
 import homeReducer from './features/homeSlice';
 import liveLinesReducer from './features/liveLinesSlice';
-import useManagementReducer from './features/managementSlice';
 import pinsReducer from './features/pinsSlice';
 import preventivaReducer from './features/preventivaSlice';
 import monthlyProductionReducer from './features/productionMonthSlice';
@@ -29,7 +29,7 @@ export const store = configureStore({
     actionPlans: useActionPlanReducer,
     production: productionSlice,
     discards: discardsSlice,
-    management: useManagementReducer,
+    filterWithLines: filterWithLines,
   },
 });
 

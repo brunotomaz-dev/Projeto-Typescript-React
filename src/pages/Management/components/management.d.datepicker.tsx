@@ -4,21 +4,18 @@ import React, { useState } from 'react';
 import { Button, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import {
-  setFilterType,
-  setSelectedDate,
-  setSelectedRange,
-} from '../../../redux/store/features/managementSlice';
-import { useAppDispatch, useAppSelector } from '../../../redux/store/hooks';
+import { useFiltersWithLines } from '../../../hooks/useFiltersWithLines';
 
 const DashboardDatePicker: React.FC = () => {
-  /* ------------------------------------------------- Redux ------------------------------------------------- */
-  const dispatch = useAppDispatch();
+  /* ------------------------------------------------- Hooks ------------------------------------------------- */
   const {
-    type: dateType,
+    updateFilterType,
+    updateSelectedDate,
+    updateSelectedDateRange,
     selectedDate,
     selectedRange,
-  } = useAppSelector((state) => state.management.filterState);
+    type: dateType,
+  } = useFiltersWithLines('management');
 
   /* ----------------------------------------- Estado Local ---------------------------------------- */
 
@@ -30,6 +27,8 @@ const DashboardDatePicker: React.FC = () => {
     selectedRange?.endDate ? parseISO(selectedRange.endDate) : null
   );
 
+  console.log('🔄 Component render - startDateObj:', startDateObj, 'endDateObj:', endDateObj);
+
   /* -------------------------------------------- Datas ------------------------------------------- */
   const now = new Date();
   const minDate = parseISO('2024-08-01');
@@ -39,7 +38,7 @@ const DashboardDatePicker: React.FC = () => {
   const handleSingleDateChange = (date: Date | null): void => {
     if (date) {
       const formattedDate = format(startOfDay(date), 'yyyy-MM-dd');
-      dispatch(setSelectedDate(formattedDate));
+      updateSelectedDate(formattedDate);
     }
   };
 
@@ -50,11 +49,11 @@ const DashboardDatePicker: React.FC = () => {
     setStartDateObj(start);
     setEndDateObj(end);
 
-    // Só notificar o componente pai quando ambas as datas estiverem selecionadas
+    // Só passar para o hook quando ambas as datas estiverem selecionadas
     if (start && end) {
       const startFormatted = format(startOfDay(start), 'yyyy-MM-dd');
       const endFormatted = format(startOfDay(end), 'yyyy-MM-dd');
-      dispatch(setSelectedRange({ startDate: startFormatted, endDate: endFormatted }));
+      updateSelectedDateRange(startFormatted, endFormatted);
     }
   };
 
@@ -62,26 +61,26 @@ const DashboardDatePicker: React.FC = () => {
   const toggleDateMode = () => {
     // Alternar para o outro modo
     const newMode = dateType === 'single' ? 'range' : 'single';
-    dispatch(setFilterType(newMode));
+    updateFilterType(newMode);
 
     // Se alternar para modo único e tivermos um range, usar a data inicial do range
     if (newMode === 'single' && selectedRange?.startDate) {
       const startDate = selectedRange.startDate;
       // setSingleDateObj(parseISO(startDate));
-      dispatch(setSelectedDate(startDate));
+      updateSelectedDate(startDate);
     }
     // Se alternar para modo range e tivermos uma data única, criar um range com a mesma data
     else if (newMode === 'range' && selectedDate) {
       const dateObj = parseISO(selectedDate);
       setStartDateObj(dateObj);
       setEndDateObj(dateObj);
-      dispatch(setSelectedRange({ startDate: selectedDate, endDate: selectedDate }));
+      updateSelectedDateRange(selectedDate, selectedDate);
     }
   };
 
   /* ------------------------------------------- Renders ------------------------------------------ */
   // Renderização condicional do datepicker com base no modo
-  const CustomDatePicker: React.FC = () => {
+  const customDatePicker = () => {
     const commonProps = {
       dateFormat: 'dd/MM/yyyy',
       className: 'form-control text-center',
@@ -102,6 +101,7 @@ const DashboardDatePicker: React.FC = () => {
           selected={parseISO(selectedDate)}
           onChange={handleSingleDateChange}
           placeholderText='Selecione uma data'
+          key={`single-${selectedDate}`}
         />
       );
     } else {
@@ -113,6 +113,7 @@ const DashboardDatePicker: React.FC = () => {
           endDate={endDateObj}
           onChange={handleRangeChange}
           placeholderText='Selecione um período'
+          key={`range-${dateType}`}
         />
       );
     }
@@ -130,7 +131,7 @@ const DashboardDatePicker: React.FC = () => {
     const startFormatted = format(startOfDay(start), 'yyyy-MM-dd');
     const endFormatted = format(startOfDay(end), 'yyyy-MM-dd');
 
-    dispatch(setSelectedRange({ startDate: startFormatted, endDate: endFormatted }));
+    updateSelectedDateRange(startFormatted, endFormatted);
   };
 
   // Botões de predefinição rápida para períodos comuns
@@ -163,7 +164,7 @@ const DashboardDatePicker: React.FC = () => {
     <div className='date-picker-container position-relative'>
       {/* Input do DatePicker */}
       <div className='datepicker-with-toggle align-items-center d-flex'>
-        <CustomDatePicker />
+        {customDatePicker()}
 
         {/* Botão de toggle */}
         <OverlayTrigger
