@@ -15,7 +15,6 @@ const ManagementLinePicker: React.FC<ManagementLinePickerProps> = ({ onChange, i
 
     // Resetar a seleção temporária quando resetLines for chamado
     useEffect(() => {
-      console.log('Entrou no useEffect de triggerReset:', isResetLines);
       if (isResetLines) {
         resetLines();
       }
