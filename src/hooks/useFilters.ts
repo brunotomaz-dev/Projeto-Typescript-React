@@ -56,7 +56,7 @@ export const useFilters = (scope = 'home') => {
     const isDefaultTurn = alternativeScopes.includes(scope) ? turn === shift : turn === 'ALL';
     const isDefaultType = type === 'single';
     const isDefaultRange = selectedRange.startDate === '' && selectedRange.endDate === '';
-    const isDefaultLines = selectedLines.length === 0;
+    const isDefaultLines = selectedLines.length === 0 || selectedLines.length === 14;
 
     return isDefaultDate && isDefaultTurn && isDefaultType && isDefaultRange && isDefaultLines;
   }, [date, turn, type, selectedRange, selectedLines, scope]);

@@ -112,16 +112,6 @@ const ManagementLinePicker: React.FC<ManagementLinePickerProps> = ({ onChange, i
     setTempSelection(newSelection);
   };
 
-  // Função para formatar a exibição das linhas selecionadas
-  const getSelectedLinesLabel = () => {
-    if (confirmedSelection.length === 0) return 'Nenhuma linha';
-    if (confirmedSelection.length === allLines.length) return 'Todas as linhas';
-    if (confirmedSelection.length <= 3 && confirmedSelection.length > 1)
-      return `Linhas: ${confirmedSelection.map((l) => `L${l}`).join(', ')}`;
-    if (confirmedSelection.length === 1) return `Linha: L${confirmedSelection[0]}`;
-    return `${confirmedSelection.length} linhas selecionadas`;
-  };
-
   // Verifica se há mudanças na seleção
   const hasChanges = () => {
     if (tempSelection.length !== confirmedSelection.length) return true;
@@ -166,7 +156,9 @@ const ManagementLinePicker: React.FC<ManagementLinePickerProps> = ({ onChange, i
       >
         <i className='bi bi-grid-3x3 me-2'></i>
         <span>{buttonLabel}</span>
-        <span className='ms-2 badge bg-primary'>{getSelectedLinesLabel()}</span>
+        {confirmedSelection.length > 0 && (
+          <span className='ms-2 badge bg-primary'>{confirmedSelection.length}</span>
+        )}
       </Button>
 
       {/* Drawer com o seletor de linhas */}

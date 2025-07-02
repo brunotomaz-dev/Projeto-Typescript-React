@@ -1,7 +1,7 @@
 import { format, startOfDay } from 'date-fns';
 import React, { useState } from 'react';
 import { Button, Row, Stack } from 'react-bootstrap';
-import PersonalizedTransition from '../../../components/PersonalizedTransition';
+import AnimatedFilterNotification from '../../../components/AnimatedFilterNotification';
 import { useFiltersVisibility } from '../../../hooks/useFiltersVisibility';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { setIsOpenedUpdateStops } from '../../../redux/store/features/liveLinesSlice';
@@ -80,7 +80,7 @@ const LiveLinesHeader: React.FC = () => {
             </Button>
           )}
         </Stack>
-        <PersonalizedTransition scope='liveLines' />
+        <AnimatedFilterNotification scope='liveLines' />
       </Row>
       <ModalServiceHistory isOpened={isOpened} onHide={() => setIsOpened(false)} />
     </>

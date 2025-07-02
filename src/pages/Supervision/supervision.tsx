@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo } from 'react';
 import { Button, Col, Container, Row } from 'react-bootstrap';
 import ActionPlanCards from '../../components/actionPlanCards';
+import AnimatedFilterNotification from '../../components/AnimatedFilterNotification';
 import DateTurnFilter from '../../components/DateTurnFilter';
-import PersonalizedTransition from '../../components/PersonalizedTransition';
 import { ActionPlanStatus, TurnoID, superTurns } from '../../helpers/constants';
 import { useActionPlansQuery } from '../../hooks/queries/useActionPlanQuery';
 import { useFilters } from '../../hooks/useFilters';
@@ -106,7 +106,7 @@ const SupervisionPage: React.FC = () => {
         {/* DateTurnFilter com o escopo supervision */}
         <Row className='mb-1'>
           <DateTurnFilter show={showFilters} scope='supervision' all={false} disabled={{}} />
-          <PersonalizedTransition scope='supervision' />
+          <AnimatedFilterNotification scope='supervision' />
         </Row>
 
         <SupervActionCards />

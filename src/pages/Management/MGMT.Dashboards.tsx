@@ -1,19 +1,18 @@
 //cSpell: words linepicker
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
-import { getInfoIHM } from '../../api/apiRequests';
+import AnimatedFilterNotification from '../../components/AnimatedFilterNotification';
 import DateTurnFilter from '../../components/DateTurnFilter';
-import PersonalizedTransition from '../../components/PersonalizedTransition';
+import { useFullInfoIHMQuery } from '../../hooks/queries/useFullInfoIhmQuery';
 import { useFilters } from '../../hooks/useFilters';
 import { useFiltersVisibility } from '../../hooks/useFiltersVisibility';
-import { iInfoIHM } from '../../interfaces/InfoIHM.interface';
 import DashBar from './components/Dash.Bar';
 import DashTimeline from './components/Dash.Timeline';
 import DashYamazumi from './components/Dash.Yamazumi';
 
 const ManagementDashboards: React.FC = () => {
-  /* ------------------------------------------- Redux -------------------------------------------- */
-  const { date, selectedLines, turn, selectedRange, type: dateType } = useFilters('management');
+  /* ------------------------------------------- Hooks -------------------------------------------- */
+  const { date, selectedLines, turn, type: dateType } = useFilters('management');
 
   const {
     isVisible: isFilterVisible,
@@ -21,28 +20,24 @@ const ManagementDashboards: React.FC = () => {
     resetVisibility: resetFilterVisibility,
   } = useFiltersVisibility('management');
 
+  const { data } = useFullInfoIHMQuery('management');
+
+  const infoIhmData = useMemo(() => {
+    if (data.length === 0) {
+      return [];
+    }
+    // Filtrar dados pela linha, se não for [] ou length = 14
+    if (selectedLines.length > 0 && selectedLines.length !== 14) {
+      return data.filter((item) => selectedLines.includes(item.linha));
+    }
+
+    return data;
+  }, [data, selectedLines]);
+
   /* ----------------------------------------- Local State ---------------------------------------- */
-  const [infoIhmData, setInfoIhmData] = useState<iInfoIHM[]>([]);
   const [notAffBar, setNotAffBar] = useState<boolean>(false);
 
   /* ------------------------------------------- Effect ------------------------------------------- */
-  useEffect(() => {
-    const dateChoice = dateType === 'single' ? date : [selectedRange.startDate, selectedRange.endDate];
-
-    void getInfoIHM(dateChoice).then((res: iInfoIHM[]) => {
-      // Filtrar dados pela linha, se não for [] ou length = 14
-      if (selectedLines.length > 0 && selectedLines.length !== 14) {
-        res = res.filter((item) => selectedLines.includes(item.linha));
-      }
-      // Se o turno for diferente de ALL, filtrar os dados
-      if (turn !== 'ALL') {
-        res = res.filter((item) => item.turno === turn);
-      }
-
-      setInfoIhmData(res);
-    });
-  }, [dateType, date, selectedRange, selectedLines, turn]);
-
   useEffect(() => {
     // Resetar visibilidade dos filtros quando a página for montada
     return () => resetFilterVisibility();
@@ -73,9 +68,9 @@ const ManagementDashboards: React.FC = () => {
         scope='management'
         showLineSelector={true}
         useAdvancedDatePicker={true}
-        layout='horizontal'
+        compact={true}
       />
-      <PersonalizedTransition scope='management' />
+      <AnimatedFilterNotification scope='management' />
 
       <Row className='mb-3 mt-2'>
         <Col>
