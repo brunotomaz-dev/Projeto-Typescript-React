@@ -164,7 +164,7 @@ const Sidebar: React.FC = () => {
       type: 'group',
       label: 'Manutenção',
       icon: <FaTools />,
-      hasAccess: true, // A visibilidade será controlada pelos itens filhos
+      hasAccess: true,
       items: [
         {
           label: 'Solicitações "Ao vivo"',
@@ -207,7 +207,11 @@ const Sidebar: React.FC = () => {
             if (navElement.type === 'item') {
               return (
                 <li key={navElement.label} className='nav-item side-pill-h'>
-                  <Link to={navElement.href || '#'} className='sidebar-link nav-link text-black'>
+                  <Link
+                    to={navElement.href || '#'}
+                    className='sidebar-link nav-link text-black'
+                    title={isCollapsed ? navElement.label : undefined}
+                  >
                     {typeof navElement.icon === 'string' ? (
                       <i className={`${navElement.icon}`}></i>
                     ) : (
@@ -235,6 +239,7 @@ const Sidebar: React.FC = () => {
                       data-bs-toggle='collapse'
                       data-bs-target={`#${navElement.label}`}
                       aria-controls={navElement.label}
+                      title={isCollapsed ? navElement.label : undefined}
                     >
                       <i>
                         {typeof navElement.icon === 'string' ? (
