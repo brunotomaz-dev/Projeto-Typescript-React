@@ -85,7 +85,7 @@ const DateTurnFilter: React.FC<DateTurnFilterProps> = ({
     <Collapse in={show}>
       <div>
         <Row
-          className={`mb-3 px-2 py-3 bg-light rounded shadow ${compact ? 'gap-1' : 'gap-2'} align-items-center justify-content-between flex-nowrap ${className}`}
+          className={`mb-3 px-2 py-3 bg-light rounded shadow ${compact ? 'gap-1' : 'gap-2'} align-items-center justify-content-between ${className}`}
         >
           <Col xs={12} lg={compact ? 'auto' : true} className='mb-2 mb-lg-0 px-0'>
             {renderDatePicker()}

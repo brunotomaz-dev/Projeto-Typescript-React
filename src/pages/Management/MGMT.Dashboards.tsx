@@ -9,6 +9,7 @@ import { useFiltersVisibility } from '../../hooks/useFiltersVisibility';
 import DashBar from './components/Dash.Bar';
 import DashTimeline from './components/Dash.Timeline';
 import DashYamazumi from './components/Dash.Yamazumi';
+import SetupDash from './components/SetupDash';
 
 const ManagementDashboards: React.FC = () => {
   /* ------------------------------------------- Hooks -------------------------------------------- */
@@ -63,14 +64,18 @@ const ManagementDashboards: React.FC = () => {
         </Col>
       </Row>
 
-      <DateTurnFilter
-        show={isFilterVisible}
-        scope='management'
-        showLineSelector={true}
-        useAdvancedDatePicker={true}
-        compact={true}
-      />
-      <AnimatedFilterNotification scope='management' />
+      <Row className='px-2'>
+        <DateTurnFilter
+          show={isFilterVisible}
+          scope='management'
+          showLineSelector={true}
+          useAdvancedDatePicker={true}
+          compact={true}
+        />
+        <AnimatedFilterNotification scope='management' />
+      </Row>
+
+      <SetupDash />
 
       <Row className='mb-3 mt-2'>
         <Col>

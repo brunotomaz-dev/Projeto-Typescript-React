@@ -100,10 +100,8 @@ const LiveLines: React.FC = () => {
   /* -------------------------------------------------------------------------------------------------------- */
   return (
     <>
-      {/* Header agora não recebe mais props */}
       <LiveLinesHeader />
 
-      {/* DateTurnFilter usa visibilidade do Redux */}
       <Row className='mx-2'>
         <DateTurnFilter
           show={showFilters}

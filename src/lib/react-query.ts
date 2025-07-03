@@ -14,11 +14,10 @@ export const queryClient = new QueryClient({
 });
 
 // This code is only for TypeScript
-declare global {
-  interface Window {
-    __TANSTACK_QUERY_CLIENT__: import('@tanstack/query-core').QueryClient;
-  }
-}
-if (typeof window !== 'undefined') {
-  window.__TANSTACK_QUERY_CLIENT__ = queryClient;
-}
+// declare global {
+//   interface Window {
+//     __TANSTACK_QUERY_CLIENT__: import('@tanstack/query-core').QueryClient;
+//   }
+// }
+
+// window.__TANSTACK_QUERY_CLIENT__ = queryClient;
