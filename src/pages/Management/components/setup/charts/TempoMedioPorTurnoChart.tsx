@@ -166,7 +166,7 @@ const TempoMedioPorTurnoChart: React.FC = () => {
   }, [groupedSetups, setupData]);
 
   return (
-    <Card className='shadow-sm border-0 h-100 position-relative'>
+    <Card className='shadow-sm border-0 h-100 position-relative bg-light'>
       {isRefreshing && (
         <div className='position-absolute top-0 end-0 m-3' style={{ zIndex: 10 }}>
           <div className='spinner-border spinner-border-sm text-primary' role='status'>

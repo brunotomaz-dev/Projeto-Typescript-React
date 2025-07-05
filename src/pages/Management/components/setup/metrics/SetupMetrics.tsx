@@ -124,7 +124,7 @@ const SetupMetrics: React.FC = () => {
         <h5 className={`text-center mb-3 ${corTitulo}`}>{tipo}</h5>
         <Row className='mb-4'>
           <Col md={2} className='mb-3'>
-            <Card className='text-center h-100 shadow-sm border-0 position-relative'>
+            <Card className='text-center h-100 shadow-sm border-0 position-relative bg-light'>
               {isRefreshing && (
                 <div className='position-absolute top-0 end-0 m-2'>
                   <div className='spinner-border spinner-border-sm text-primary' role='status'>
@@ -139,7 +139,7 @@ const SetupMetrics: React.FC = () => {
             </Card>
           </Col>
           <Col md={2} className='mb-3'>
-            <Card className='text-center h-100 shadow-sm border-0 position-relative'>
+            <Card className='text-center h-100 shadow-sm border-0 position-relative bg-light'>
               {isRefreshing && (
                 <div className='position-absolute top-0 end-0 m-2'>
                   <div className='spinner-border spinner-border-sm text-primary' role='status'>
@@ -154,7 +154,7 @@ const SetupMetrics: React.FC = () => {
             </Card>
           </Col>
           <Col md={2} className='mb-3'>
-            <Card className='text-center h-100 shadow-sm border-0 position-relative'>
+            <Card className='text-center h-100 shadow-sm border-0 position-relative bg-light'>
               {isRefreshing && (
                 <div className='position-absolute top-0 end-0 m-2'>
                   <div className='spinner-border spinner-border-sm text-primary' role='status'>
@@ -169,7 +169,7 @@ const SetupMetrics: React.FC = () => {
             </Card>
           </Col>
           <Col md={2} className='mb-3'>
-            <Card className='text-center h-100 shadow-sm border-0 position-relative'>
+            <Card className='text-center h-100 shadow-sm border-0 position-relative bg-light'>
               {isRefreshing && (
                 <div className='position-absolute top-0 end-0 m-2'>
                   <div className='spinner-border spinner-border-sm text-primary' role='status'>
@@ -184,7 +184,7 @@ const SetupMetrics: React.FC = () => {
             </Card>
           </Col>
           <Col md={2} className='mb-3'>
-            <Card className='text-center h-100 shadow-sm border-0 position-relative'>
+            <Card className='text-center h-100 shadow-sm border-0 position-relative bg-light'>
               {isRefreshing && (
                 <div className='position-absolute top-0 end-0 m-2'>
                   <div className='spinner-border spinner-border-sm text-primary' role='status'>
@@ -199,7 +199,7 @@ const SetupMetrics: React.FC = () => {
             </Card>
           </Col>
           <Col md={2} className='mb-3'>
-            <Card className='text-center h-100 shadow-sm border-0 position-relative'>
+            <Card className='text-center h-100 shadow-sm border-0 position-relative bg-light'>
               {isRefreshing && (
                 <div className='position-absolute top-0 end-0 m-2'>
                   <div className='spinner-border spinner-border-sm text-primary' role='status'>

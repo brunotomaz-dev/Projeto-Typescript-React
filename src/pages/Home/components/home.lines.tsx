@@ -1,9 +1,9 @@
 import React from 'react';
 import { Card, Row, Spinner, Table } from 'react-bootstrap';
-import { useLinesQuery } from '../../../hooks/queries/useLinesQuery';
+import useRunningLines from '../../../hooks/useRunningLines';
 
 const HomeLinesCard: React.FC = () => {
-  const { runningMachines, isLoading } = useLinesQuery();
+  const { runningMachines, isLoading } = useRunningLines();
 
   return (
     <Card className='shadow border-0 p-3 mb-2'>

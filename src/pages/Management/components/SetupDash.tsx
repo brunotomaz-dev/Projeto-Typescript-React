@@ -4,6 +4,7 @@ import { useFullInfoIHMQuery } from '../../../hooks/queries/useFullInfoIhmQuery'
 import {
   ComparacaoTempoMedioChart,
   DistribuicaoPorTipoChart,
+  EvolucaoMensalChart,
   SetupMetrics,
   SetupsPorLinhaChart,
   TempoMedioPorTurnoChart,
@@ -47,7 +48,7 @@ const SetupDash: React.FC = () => {
   }
 
   return (
-    <Card className='shadow border-0 mb-1 bg-transparent p-2'>
+    <Card className='shadow border-0 mb-3 bg-transparent p-2'>
       <h3 className='text-center'>Setup</h3>
 
       {/* Métricas */}
@@ -69,6 +70,13 @@ const SetupDash: React.FC = () => {
         </Col>
         <Col lg={6} className='mb-4'>
           <ComparacaoTempoMedioChart />
+        </Col>
+      </Row>
+
+      {/* Gráfico de Evolução Mensal - Linha inteira */}
+      <Row>
+        <Col lg={12}>
+          <EvolucaoMensalChart />
         </Col>
       </Row>
     </Card>

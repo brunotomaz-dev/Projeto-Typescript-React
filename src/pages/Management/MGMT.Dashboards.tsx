@@ -1,19 +1,18 @@
 //cSpell: words linepicker
-import React, { useEffect, useMemo, useState } from 'react';
-import { Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
+import React, { useEffect, useMemo } from 'react';
+import { Button, Card, Col, Container, Row } from 'react-bootstrap';
 import AnimatedFilterNotification from '../../components/AnimatedFilterNotification';
 import DateTurnFilter from '../../components/DateTurnFilter';
 import { useFullInfoIHMQuery } from '../../hooks/queries/useFullInfoIhmQuery';
 import { useFilters } from '../../hooks/useFilters';
 import { useFiltersVisibility } from '../../hooks/useFiltersVisibility';
-import DashBar from './components/Dash.Bar';
 import DashTimeline from './components/Dash.Timeline';
-import DashYamazumi from './components/Dash.Yamazumi';
 import SetupDash from './components/SetupDash';
+import StopsDash from './components/StopsDash';
 
 const ManagementDashboards: React.FC = () => {
   /* ------------------------------------------- Hooks -------------------------------------------- */
-  const { date, selectedLines, turn, type: dateType } = useFilters('management');
+  const { selectedLines, turn, type: dateType } = useFilters('management');
 
   const {
     isVisible: isFilterVisible,
@@ -34,9 +33,6 @@ const ManagementDashboards: React.FC = () => {
 
     return data;
   }, [data, selectedLines]);
-
-  /* ----------------------------------------- Local State ---------------------------------------- */
-  const [notAffBar, setNotAffBar] = useState<boolean>(false);
 
   /* ------------------------------------------- Effect ------------------------------------------- */
   useEffect(() => {
@@ -77,75 +73,8 @@ const ManagementDashboards: React.FC = () => {
 
       <SetupDash />
 
-      <Row className='mb-3 mt-2'>
-        <Col>
-          <Card className='p-2 bg-transparent border-0 shadow-sm'>
-            <DashYamazumi data={infoIhmData} />
-          </Card>
-        </Col>
-      </Row>
-      <Row className='mb-3'>
-        <Form.Switch className='mb-3 d-flex justify-content-center'>
-          <Form.Check.Input
-            id='custom-switch'
-            onChange={() => setNotAffBar(!notAffBar)}
-            checked={notAffBar}
-          />
-          <Form.Check.Label className='ms-2 text-muted fs-6'>
-            Exibir Paradas que não Afetam Eficiência
-          </Form.Check.Label>
-        </Form.Switch>
-        <Col xs={12} xl={6} className='mb-3'>
-          <Card className='p-2 bg-transparent border-0 shadow-sm'>
-            <DashBar
-              data={infoIhmData}
-              selectedLines={selectedLines}
-              selectedShift={turn}
-              selectedDate={date}
-              dataType={'ALL'}
-              notAffBar={notAffBar}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} xl={6}>
-          <Card className='p-2 bg-transparent border-0 shadow-sm'>
-            <DashBar
-              data={infoIhmData}
-              selectedLines={selectedLines}
-              selectedShift={turn}
-              selectedDate={date}
-              dataType={'Primeiro'}
-              notAffBar={notAffBar}
-            />
-          </Card>
-        </Col>
-      </Row>
-      <Row className='mb-3'>
-        <Col xs={12} xl={6} className='mb-3'>
-          <Card className='p-2 bg-transparent border-0 shadow-sm'>
-            <DashBar
-              data={infoIhmData}
-              selectedLines={selectedLines}
-              selectedShift={turn}
-              selectedDate={date}
-              dataType={'Segundo'}
-              notAffBar={notAffBar}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} xl={6}>
-          <Card className='p-2 bg-transparent border-0 shadow-sm'>
-            <DashBar
-              data={infoIhmData}
-              selectedLines={selectedLines}
-              selectedShift={turn}
-              selectedDate={date}
-              dataType={'Terceiro'}
-              notAffBar={notAffBar}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <StopsDash />
+
       {dateType === 'single' && (
         <Row>
           <Col xs={12}>
