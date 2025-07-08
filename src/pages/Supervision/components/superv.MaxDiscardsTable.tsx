@@ -45,17 +45,14 @@ const MaxDiscardsTable: React.FC = () => {
     [discardData]
   );
   const topBdjDiscards = useMemo(() => getTopDiscards(discardData, 'descarteBdj', 3), [discardData]);
-  const topReprocessoDiscards = useMemo(() => getTopDiscards(discardData, 'reprocessoBdj', 3), [discardData]);
 
   /* ---------------------------------------- Constantes ---------------------------------------- */
   const hasPastaDiscards = topPastaDiscards.length > 0;
   const hasPaesDiscards = topPaesDiscards.length > 0;
   const hasPaesPastaDiscards = topPaesPastaDiscards.length > 0;
   const hasBdjDiscards = topBdjDiscards.length > 0;
-  const hasReprocessoDiscards = topReprocessoDiscards.length > 0;
 
-  const hasAnyDiscards =
-    hasPastaDiscards || hasPaesDiscards || hasPaesPastaDiscards || hasBdjDiscards || hasReprocessoDiscards;
+  const hasAnyDiscards = hasPastaDiscards || hasPaesDiscards || hasPaesPastaDiscards || hasBdjDiscards;
 
   /* ---------------------------------- Componente Interno --------------------------------- */
   interface iDiscardCardProps {
@@ -137,16 +134,6 @@ const MaxDiscardsTable: React.FC = () => {
               <DiscardCard discardedItems={topBdjDiscards} un='un' />
             </Row>
             <hr />
-          </>
-        )}
-        {hasReprocessoDiscards && (
-          <>
-            <h6 className='text-center'>
-              <em>Reprocesso de Bandeja</em>
-            </h6>
-            <Row>
-              <DiscardCard discardedItems={topReprocessoDiscards} un='un' />
-            </Row>
           </>
         )}
         {!hasAnyDiscards && (

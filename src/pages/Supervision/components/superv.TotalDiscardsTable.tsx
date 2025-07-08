@@ -100,29 +100,6 @@ const TotalDiscardsTable: React.FC = () => {
     return { dados: resultado, total };
   }, [discardData]);
 
-  // Processamento dos dados para a tabela de Reprocesso de bandejas
-  const reprocessoBdjData = useMemo(() => {
-    const bdjAgregado: Record<string, number> = {};
-
-    discardData.forEach((item) => {
-      if (item.reprocessoBdj > 0) {
-        const tipoProduto = item.produto.split(' ')[1] || 'Produto';
-        const tipoBdj = item.produto.split('/')[1] || 'GR';
-        const chave = `Bandejas com bobina ${toTitleCase(tipoProduto)}/${tipoBdj}`;
-        bdjAgregado[chave] = (bdjAgregado[chave] || 0) + item.reprocessoBdj;
-      }
-    });
-
-    const resultado = Object.entries(bdjAgregado).map(([bandeja, quantidade]) => ({
-      nome: bandeja,
-      quantidade,
-    }));
-
-    const total = resultado.reduce((acc, curr) => acc + curr.quantidade, 0);
-
-    return { dados: resultado, total };
-  }, [discardData]);
-
   /* --------------------------------- Componentes Reutilizáveis -------------------------------- */
   // Componente de tabela reutilizável
   const DescarteTable = ({
@@ -173,10 +150,8 @@ const TotalDiscardsTable: React.FC = () => {
   const hasDescartePaes = descartePaesData.dados.length > 0;
   const hasDescartePaesPasta = descartePaesPastaData.dados.length > 0;
   const hasDescarteBdj = descarteBdjData.dados.length > 0;
-  const hasReprocessoBdj = reprocessoBdjData.dados.length > 0;
 
-  const hasAnyDescarte =
-    hasDescartePasta || hasDescartePaes || hasDescartePaesPasta || hasDescarteBdj || hasReprocessoBdj;
+  const hasAnyDescarte = hasDescartePasta || hasDescartePaes || hasDescartePaesPasta || hasDescarteBdj;
 
   /* -------------------------------------------------------------------------------------------- */
   /*                                            LAYOUT                                            */
@@ -215,12 +190,6 @@ const TotalDiscardsTable: React.FC = () => {
             unit='un'
           />
           <hr />
-          <DescarteTable
-            title='Reprocesso de bandejas'
-            data={reprocessoBdjData.dados}
-            total={reprocessoBdjData.total}
-            unit='un'
-          />
         </Card.Body>
       ) : (
         <Alert variant='warning' className='text-center p-2 mx-2 mt-3'>
