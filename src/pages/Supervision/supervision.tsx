@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo } from 'react';
 import { Button, Col, Container, Row } from 'react-bootstrap';
 import ActionPlanCards from '../../components/actionPlanCards';
+import AnimatedFilterNotification from '../../components/AnimatedFilterNotification';
 import DateTurnFilter from '../../components/DateTurnFilter';
-import PersonalizedTransition from '../../components/PersonalizedTransition';
 import { ActionPlanStatus, TurnoID, superTurns } from '../../helpers/constants';
 import { useActionPlansQuery } from '../../hooks/queries/useActionPlanQuery';
 import { useFilters } from '../../hooks/useFilters';
@@ -41,7 +41,7 @@ const SupervisionPage: React.FC = () => {
     toggle: toggleFilters,
     resetVisibility,
   } = useFiltersVisibility('supervision');
-  const { turn: shift, setTurnFilter } = useFilters('supervision');
+  const { turn: shift, updateTurn } = useFilters('supervision');
 
   // Status filter para planos de ação
   const statusFilter = useMemo(() => [ActionPlanStatus.Aberto, ActionPlanStatus.PDCA], []);
@@ -62,9 +62,9 @@ const SupervisionPage: React.FC = () => {
   // Efeito para definir o turno padrão com base no usuário
   useEffect(() => {
     if (userName in superTurns) {
-      setTurnFilter(superTurns[userName]);
+      updateTurn(superTurns[userName]);
     }
-  }, [userName, setTurnFilter, superTurns]);
+  }, [userName, updateTurn, superTurns]);
 
   // Efeito para carregar dados quando muda a data ou turno
   useEffect(() => {
@@ -106,7 +106,7 @@ const SupervisionPage: React.FC = () => {
         {/* DateTurnFilter com o escopo supervision */}
         <Row className='mb-1'>
           <DateTurnFilter show={showFilters} scope='supervision' all={false} disabled={{}} />
-          <PersonalizedTransition scope='supervision' />
+          <AnimatedFilterNotification scope='supervision' />
         </Row>
 
         <SupervActionCards />

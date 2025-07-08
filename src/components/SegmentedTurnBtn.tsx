@@ -7,7 +7,7 @@ interface iSegmentedTurnBtnProps {
   onTurnChange?: (turn: TurnoID) => void;
   all?: boolean;
   small?: boolean;
-  width?: 25 | 50 | 75 | 100;
+  width?: number;
   id?: string;
   disabled?: {
     [key in TurnoID]?: boolean;

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Button, Col, Container, Row, Spinner } from 'react-bootstrap';
+import AnimatedFilterNotification from '../../components/AnimatedFilterNotification';
 import DateTurnFilter from '../../components/DateTurnFilter';
-import PersonalizedTransition from '../../components/PersonalizedTransition';
 import { useIndicatorsQuery } from '../../hooks/queries/useIndicatorsQuery';
 import { useFilters } from '../../hooks/useFilters';
 import { useFiltersVisibility } from '../../hooks/useFiltersVisibility';
@@ -68,7 +68,7 @@ const Home: React.FC = () => {
 
         <Row className='p-1'>
           <DateTurnFilter show={showFilters} scope='home' />
-          <PersonalizedTransition scope='home' />
+          <AnimatedFilterNotification scope='home' />
         </Row>
       </section>
 

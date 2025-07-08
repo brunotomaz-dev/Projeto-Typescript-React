@@ -8,7 +8,7 @@ import { iMaquinaIHM } from '../pages/LiveLines/interfaces/maquinaIhm.interface'
 import api from './axiosConfig';
 type DateParam = string | string[];
 
-interface iParams {
+export interface iMaquinaInfoParams {
   data: DateParam;
   turno?: string;
   maquina_id?: string | string[];
@@ -197,7 +197,10 @@ export const getInfoIHM = async <T extends DateParam | (iBaseParams & { data: Da
   }
 };
 
-export const getMaquinaInfo = async ({ data, turno, maquina_id, status }: iParams, fields?: string[]) => {
+export const getMaquinaInfo = async (
+  { data, turno, maquina_id, status }: iMaquinaInfoParams,
+  fields?: string[]
+) => {
   // Cria o filtro de data
   const dateFilter = createDateFilter(data);
   // Define os parâmetros caso a data possua 2 valores

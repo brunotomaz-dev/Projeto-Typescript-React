@@ -13,7 +13,7 @@ interface iSegmentedButtonProps {
   value: string;
   onChange?: (value: string) => void;
   rounded?: 'full' | 'small' | 'medium';
-  width?: 25 | 50 | 75 | 100;
+  width?: number;
   small?: boolean;
   id?: string;
 }
@@ -59,7 +59,7 @@ const SegmentedButton: React.FC<iSegmentedButtonProps> = ({
   }[rounded];
 
   // Estilo para o botão se 'width' for verdadeiro
-  const fullWidthStyle = width ? `w-${width}` : 'w-25';
+  const fullWidthStyle = width ? `${width}%` : '25%';
 
   // Manipulador para quando o usuário clica em uma opção
   const handleSelect = (selectedKey: string | null) => {
@@ -109,7 +109,7 @@ const SegmentedButton: React.FC<iSegmentedButtonProps> = ({
       <Nav
         key={id}
         variant='pills'
-        className={`gap-1 p-1 bg-white ${roundStyle} shadow-sm ${fullWidthStyle} ${small ? 'small' : ''}`}
+        className={`gap-1 p-1 bg-white ${roundStyle} shadow-sm ${small ? 'small' : ''}`}
         activeKey={value}
         onSelect={handleSelect}
         fill
@@ -118,6 +118,7 @@ const SegmentedButton: React.FC<iSegmentedButtonProps> = ({
             '--bs-nav-pills-link-active-bg': 'var(--bs-light-grey)',
             '--bs-nav-pills-link-active-color': 'var(--bs-secondary)',
             '--bs-nav-link-color': 'var(--bs-secondary)',
+            width: fullWidthStyle,
           } as React.CSSProperties
         }
       >

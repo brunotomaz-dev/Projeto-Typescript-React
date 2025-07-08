@@ -1,9 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { format } from 'date-fns';
 import { useMemo } from 'react';
-import { getMaquinaInfo } from '../../api/apiRequests';
-import { useAppSelector } from '../../redux/store/hooks';
-import { useFilters } from '../useFilters';
+import { useAppSelector } from '../redux/store/hooks';
+import { useMaqInfoQuery } from './queries/useMaqInfoQuery';
 
 export interface iMaquinas {
   maquina_id: string;
@@ -12,32 +9,15 @@ export interface iMaquinas {
   produto: string;
 }
 
-export const useLinesQuery = (scope = 'home') => {
-  const { date, turn } = useFilters(scope);
+const useRunningLines = (scope = 'home') => {
+  /* ------------------------------------------------- Hooks ------------------------------------------------- */
+  const { data, isLoading, isFetching, error } = useMaqInfoQuery(scope);
   const lineMachine = useAppSelector((state) => state.home.lineMachine);
 
-  // Determinar se a data selecionada é hoje
-  const isToday = useMemo(() => {
-    const today = new Date();
-    return date === format(today, 'yyyy-MM-dd');
-  }, [date]);
-
-  // Query para máquinas rodando
-  const maquinaInfoQuery = useQuery({
-    queryKey: ['maquinaInfo', date, turn],
-    queryFn: async () => {
-      const params = turn === 'ALL' ? { data: date } : { data: date, turno: turn };
-
-      return await getMaquinaInfo(params);
-    },
-    refetchInterval: isToday ? 30000 : false, // Atualiza a cada 30 segundos se for hoje
-  });
-
+  /* ----------------------------------------------- Functions ----------------------------------------------- */
   // Processar dados para mostrar máquinas únicas rodando
   const runningMachines = useMemo(() => {
-    const data = maquinaInfoQuery.data || [];
-
-    if (data.length === 0) return [];
+    if (!data || data.length === 0) return [];
 
     // Ordenar por recno decrescente (mais recentes primeiro)
     const sortedData = [...data].sort((a, b) => b.recno - a.recno);
@@ -59,12 +39,14 @@ export const useLinesQuery = (scope = 'home') => {
     return Object.values(uniqueMachines)
       .filter((machine) => machine.status === 'Rodando')
       .sort((a, b) => a.linha - b.linha);
-  }, [maquinaInfoQuery.data, lineMachine]);
+  }, [data, lineMachine]);
 
   return {
     runningMachines,
-    isLoading: maquinaInfoQuery.isLoading,
-    isFetching: maquinaInfoQuery.isFetching,
-    error: maquinaInfoQuery.error,
+    isLoading,
+    isFetching,
+    error,
   };
 };
+
+export default useRunningLines;

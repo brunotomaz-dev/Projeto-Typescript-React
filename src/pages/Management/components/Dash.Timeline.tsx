@@ -1,25 +1,34 @@
 import { format } from 'date-fns';
 import EChartsReact from 'echarts-for-react';
-import React, { useMemo, useState } from 'react';
-import { Alert, Row, Spinner } from 'react-bootstrap';
-import { BSColors, TurnoID, colorObj } from '../../../helpers/constants';
-import { iInfoIHM } from '../../../interfaces/InfoIHM.interface';
+import React, { useMemo } from 'react';
+import { Card, Col, Row } from 'react-bootstrap';
+import { BSColors, colorObj } from '../../../helpers/constants';
+import { useFullInfoIHMQuery } from '../../../hooks/queries/useFullInfoIhmQuery';
+import { useFilters } from '../../../hooks/useFilters';
 
-interface DashTimelineProps {
-  data: iInfoIHM[];
-  selectedLines: number[];
-  selectedShift: TurnoID;
-}
+const DashTimeline: React.FC = () => {
+  const { selectedLines, turn: selectedShift } = useFilters('management');
 
-const DashTimeline: React.FC<DashTimelineProps> = ({ data, selectedLines, selectedShift }) => {
-  const [isLoading, setIsLoading] = useState(true);
+  const { data, isRefreshing } = useFullInfoIHMQuery('management');
+
+  const infoIhmData = useMemo(() => {
+    if (data.length === 0) {
+      return [];
+    }
+    // Filtrar dados pela linha, se não for [] ou length = 14
+    if (selectedLines.length > 0 && selectedLines.length !== 14) {
+      return data.filter((item) => selectedLines.includes(item.linha));
+    }
+
+    return data;
+  }, [data, selectedLines]);
 
   // Processa todos os dados para criar a timeline multi-linha
   const { processedData, timeRange, uniqueMotivos, lineNumbers } = useMemo(() => {
-    setIsLoading(true);
+    /* ------------------------------------------- Hooks -------------------------------------------- */
 
-    if (!data || data.length === 0) {
-      setIsLoading(false);
+    // Se não houver dados, retornar valores padrão
+    if (!infoIhmData || infoIhmData.length === 0) {
       return {
         processedData: [],
         timeRange: { min: 0, max: 24 * 60 },
@@ -36,11 +45,11 @@ const DashTimeline: React.FC<DashTimelineProps> = ({ data, selectedLines, select
       linesToShow = selectedLines;
     } else {
       // Extrair números de linha únicos dos dados
-      linesToShow = Array.from(new Set(data.map((item) => item.linha))).sort((a, b) => a - b);
+      linesToShow = Array.from(new Set(infoIhmData.map((item) => item.linha))).sort((a, b) => a - b);
     }
 
     // Processar os dados para o formato de timeline
-    const processed = data.map((item) => {
+    const processed = infoIhmData.map((item) => {
       // Converter timestamp para objetos Date
       const startTime = new Date(item.data_hora);
       const endTime = new Date(item.data_hora_final);
@@ -57,12 +66,7 @@ const DashTimeline: React.FC<DashTimelineProps> = ({ data, selectedLines, select
       // Processar os dados para formato padrão
       return {
         ...item,
-        causa:
-          item.status === 'rodando'
-            ? ''
-            : item.status === 'parada' && !item.motivo
-              ? ''
-              : item.causa,
+        causa: item.status === 'rodando' ? '' : item.status === 'parada' && !item.motivo ? '' : item.causa,
         motivo:
           item.status === 'rodando'
             ? 'Rodando'
@@ -72,11 +76,7 @@ const DashTimeline: React.FC<DashTimelineProps> = ({ data, selectedLines, select
                 ? 'Não apontado'
                 : item.motivo,
         problema:
-          item.status === 'rodando'
-            ? ''
-            : item.status === 'parada' && !item.motivo
-              ? ''
-              : item.problema,
+          item.status === 'rodando' ? '' : item.status === 'parada' && !item.motivo ? '' : item.problema,
         startMinutes,
         endMinutes,
       };
@@ -93,8 +93,6 @@ const DashTimeline: React.FC<DashTimelineProps> = ({ data, selectedLines, select
 
     // Extrair motivos únicos e ordená-los
     const motivos = Array.from(new Set(processed.map((item) => item.motivo))).sort();
-
-    setIsLoading(false);
 
     return {
       processedData: processed,
@@ -292,42 +290,40 @@ const DashTimeline: React.FC<DashTimelineProps> = ({ data, selectedLines, select
 
   // Cria uma key única baseada nos dados para forçar re-renderização
   const chartKey = useMemo(() => {
-    return `dashboard-timeline-${data.length}-${lineNumbers.join('-')}-${selectedShift}`;
-  }, [data.length, lineNumbers, selectedShift]);
+    return `dashboard-timeline-${infoIhmData.length}-${lineNumbers.join('-')}-${selectedShift}`;
+  }, [infoIhmData.length, lineNumbers, selectedShift]);
+
+  if (infoIhmData.length === 0 && !isRefreshing) {
+    return (
+      <Row className='mb-4'>
+        <Col>
+          <Card className='text-center py-5 shadow-sm border-0'>
+            <Card.Body>
+              <i className='bi bi-info-circle text-muted' style={{ fontSize: '3rem' }}></i>
+              <h4 className='mt-3 text-muted'>Nenhum dado encontrado para exibição de Timeline</h4>
+              <p className='text-muted'>
+                Não há registros para os filtros selecionados, impossibilitando exibição de Timeline.
+              </p>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    );
+  }
 
   return (
-    <>
-      {!isLoading ? (
-        processedData.length > 0 ? (
-          <Row className='p-2'>
-            <EChartsReact
-              key={chartKey}
-              option={option}
-              style={{ height: `${Math.max(300, lineNumbers.length * 50)}px` }}
-              opts={{ renderer: 'canvas' }}
-              notMerge={true}
-              lazyUpdate={false}
-            />
-          </Row>
-        ) : (
-          <Row
-            style={{ height: '200px' }}
-            className='d-flex justify-content-center align-items-center p-2'
-          >
-            <Alert variant='info' className='text-center'>
-              Sem dados disponíveis para exibição. Por favor, selecione outra data ou período.
-            </Alert>
-          </Row>
-        )
-      ) : (
-        <Row
-          className='d-flex justify-content-center align-items-center p-3'
-          style={{ height: '200px' }}
-        >
-          <Spinner animation='border' style={{ width: '3rem', height: '3rem' }} />
-        </Row>
-      )}
-    </>
+    <Card className='shadow border-0 bg-light p-2'>
+      <Row className='p-2'>
+        <EChartsReact
+          key={chartKey}
+          option={option}
+          style={{ height: `${Math.max(300, lineNumbers.length * 50)}px` }}
+          opts={{ renderer: 'canvas' }}
+          notMerge={true}
+          lazyUpdate={false}
+        />
+      </Row>
+    </Card>
   );
 };
 

@@ -7,6 +7,14 @@ import { getShift } from '../../../helpers/turn';
 export type DateTurnFilter = {
   date: string;
   turn: TurnoID | 'ALL';
+  // Campos opcionais para funcionalidades expandidas
+  type?: 'single' | 'range';
+  selectedRange?: {
+    startDate: string;
+    endDate: string;
+  };
+  selectedLines?: number[];
+  isResetLines?: boolean;
 };
 
 interface FiltersState {
@@ -17,12 +25,26 @@ interface FiltersState {
 const defaultDateTurnFilter = (): DateTurnFilter => ({
   date: format(startOfDay(new Date()), 'yyyy-MM-dd'),
   turn: 'ALL',
+  type: 'single',
+  selectedRange: {
+    startDate: '',
+    endDate: '',
+  },
+  selectedLines: [],
+  isResetLines: false,
 });
 
 // Turno atual padrão
 const alternativeDefaultTurnFilter = (): DateTurnFilter => ({
   date: format(startOfDay(new Date()), 'yyyy-MM-dd'),
   turn: getShift(),
+  type: 'single',
+  selectedRange: {
+    startDate: '',
+    endDate: '',
+  },
+  selectedLines: [],
+  isResetLines: false,
 });
 
 // Estado inicial com apenas alguns escopos comuns pré-definidos
@@ -31,6 +53,7 @@ const initialState: FiltersState = {
     home: defaultDateTurnFilter(),
     liveLines: alternativeDefaultTurnFilter(),
     supervision: alternativeDefaultTurnFilter(),
+    management: defaultDateTurnFilter(),
   },
 };
 
@@ -80,9 +103,67 @@ const filtersSlice = createSlice({
 
       state.dateTurn[to] = { ...state.dateTurn[from] };
     },
+
+    // Novas actions para funcionalidades expandidas
+    setFilterType: (state, action: PayloadAction<{ scope: string; typeDate: 'single' | 'range' }>) => {
+      const { scope, typeDate } = action.payload;
+
+      if (!state.dateTurn[scope]) {
+        state.dateTurn[scope] = defaultDateTurnFilter();
+      }
+
+      state.dateTurn[scope].type = typeDate;
+    },
+
+    setSelectedRange: (
+      state,
+      action: PayloadAction<{ scope: string; startDate: string; endDate: string }>
+    ) => {
+      const { scope, startDate, endDate } = action.payload;
+
+      if (!state.dateTurn[scope]) {
+        state.dateTurn[scope] = defaultDateTurnFilter();
+      }
+
+      if (!state.dateTurn[scope].selectedRange) {
+        state.dateTurn[scope].selectedRange = { startDate: '', endDate: '' };
+      }
+
+      state.dateTurn[scope].selectedRange!.startDate = startDate;
+      state.dateTurn[scope].selectedRange!.endDate = endDate;
+    },
+
+    setSelectedLines: (state, action: PayloadAction<{ scope: string; lines: number[] }>) => {
+      const { scope, lines } = action.payload;
+
+      if (!state.dateTurn[scope]) {
+        state.dateTurn[scope] = defaultDateTurnFilter();
+      }
+
+      state.dateTurn[scope].selectedLines = lines;
+    },
+
+    setIsResetLines: (state, action: PayloadAction<{ scope: string; reset: boolean }>) => {
+      const { scope, reset } = action.payload;
+
+      if (!state.dateTurn[scope]) {
+        state.dateTurn[scope] = defaultDateTurnFilter();
+      }
+
+      state.dateTurn[scope].isResetLines = reset;
+    },
   },
 });
 
-export const { setDate, setTurn, resetDateTurnFilter, copyFilters } = filtersSlice.actions;
+export const {
+  setDate,
+  setTurn,
+  resetDateTurnFilter,
+  copyFilters,
+  setFilterType,
+  setSelectedRange,
+  setSelectedLines,
+  setIsResetLines,
+} = filtersSlice.actions;
 
 export default filtersSlice.reducer;

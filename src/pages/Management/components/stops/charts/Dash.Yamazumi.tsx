@@ -1,32 +1,37 @@
 // cSpell: words yamazumi
 
 import ReactECharts from 'echarts-for-react';
-import React, { useMemo, useState } from 'react';
-import { Alert, Row, Spinner } from 'react-bootstrap';
-import { colorObj } from '../../../helpers/constants';
-import { iInfoIHM } from '../../../interfaces/InfoIHM.interface';
+import React, { useMemo } from 'react';
+import { Alert, Card, Row } from 'react-bootstrap';
+import { colorObj } from '../../../../../helpers/constants';
+import { useFullInfoIHMQuery } from '../../../../../hooks/queries/useFullInfoIhmQuery';
+import { useFilters } from '../../../../../hooks/useFilters';
 
-interface iYamazumiProps {
-  data: iInfoIHM[];
-}
+const DashYamazumi: React.FC = () => {
+  /* ------------------------------------------------- Hooks ------------------------------------------------- */
+  const { selectedLines } = useFilters('management');
+  const { data, isRefreshing, isFetching } = useFullInfoIHMQuery('management');
+  const infoIhmData = useMemo(() => {
+    if (data.length === 0) {
+      return [];
+    }
+    // Filtrar dados pela linha, se não for [] ou length = 14
+    if (selectedLines.length > 0 && selectedLines.length !== 14) {
+      return data.filter((item) => selectedLines.includes(item.linha));
+    }
 
-const DashYamazumi: React.FC<iYamazumiProps> = ({ data }) => {
-  /* --------------------------------------- Estados Locais --------------------------------------- */
-  const [isLoading, setIsLoading] = useState(true);
-
+    return data;
+  }, [data, selectedLines]);
   /* ------------------------------------------- Funções ------------------------------------------ */
   // Processar os dados para o formato ECharts
   const chartData = useMemo(() => {
     // Se não houver dados, retornar objeto vazio
-    if (!data || data.length === 0) {
-      setIsLoading(false);
+    if (!infoIhmData || infoIhmData.length === 0) {
       return { xAxis: [], series: [] };
     }
 
-    setIsLoading(true); // Iniciar o carregamento
-
     // Processar os dados conforme as regras
-    const processedData = data.map((item) => {
+    const processedData = infoIhmData.map((item) => {
       // Cópia do item para não modificar o original
       const processedItem = { ...item };
 
@@ -89,12 +94,11 @@ const DashYamazumi: React.FC<iYamazumiProps> = ({ data }) => {
     // Formatar os rótulos do eixo X (Linha 1, Linha 2, etc.)
     const linhasLabels = linhas.map((linha) => `Linha ${linha}`);
 
-    setIsLoading(false); // Finalizar o carregamento
     return {
       xAxis: linhasLabels,
       series,
     };
-  }, [data]);
+  }, [data, selectedLines]);
 
   /* ------------------------------------------- Option ------------------------------------------- */
   // Opções do gráfico
@@ -132,13 +136,13 @@ const DashYamazumi: React.FC<iYamazumiProps> = ({ data }) => {
       data: chartData.series.map((s) => s.name),
       textStyle: { fontSize: 11 },
       type: 'scroll',
-      bottom: 0,
+      bottom: 10,
     },
     grid: {
       left: '3%',
       right: '3%',
-      bottom: '7%',
-      top: '7%',
+      bottom: '12%',
+      top: '12%',
       containLabel: true,
     },
     xAxis: {
@@ -168,35 +172,32 @@ const DashYamazumi: React.FC<iYamazumiProps> = ({ data }) => {
   /* ---------------------------------------------------------------------------------------------- */
   /*                                             LAYOUT                                             */
   /* ---------------------------------------------------------------------------------------------- */
+  const spinnerColor = isFetching ? 'text-light-grey' : 'text-info';
+
   return (
-    <>
-      {!isLoading ? (
-        data && data.length > 0 ? (
-          <ReactECharts
-            option={options}
-            style={{ height: '400px', width: '100%' }}
-            className='react-echarts'
-            notMerge={true}
-          />
-        ) : (
-          <Row
-            style={{ height: '400px' }}
-            className='d-flex justify-content-center align-items-center p-2'
-          >
-            <Alert variant='info' className='text-center'>
-              Sem dados disponíveis para exibição. Por favor, selecione outra data ou período.
-            </Alert>
-          </Row>
-        )
+    <Card className='shadow-sm border-0 bg-light p-2'>
+      {isRefreshing && (
+        <div className='position-absolute top-0 start-0 m-3' style={{ zIndex: 10 }}>
+          <div className={`spinner-border spinner-border-sm ${spinnerColor}`} role='status'>
+            <span className='visually-hidden'>Atualizando...</span>
+          </div>
+        </div>
+      )}
+      {data && data.length > 0 ? (
+        <ReactECharts
+          option={options}
+          style={{ height: '400px', width: '100%' }}
+          className='react-echarts'
+          notMerge={true}
+        />
       ) : (
-        <Row
-          className='d-flex justify-content-center align-items-center p-3'
-          style={{ height: '400px' }}
-        >
-          <Spinner animation='border' style={{ width: '3rem', height: '3rem' }} />
+        <Row style={{ height: '400px' }} className='d-flex justify-content-center align-items-center p-2'>
+          <Alert variant='info' className='text-center'>
+            Sem dados disponíveis para exibição. Por favor, selecione outra data ou período.
+          </Alert>
         </Row>
       )}
-    </>
+    </Card>
   );
 };
 
