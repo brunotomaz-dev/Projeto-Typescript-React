@@ -53,6 +53,7 @@ const initialState: FiltersState = {
     home: defaultDateTurnFilter(),
     liveLines: alternativeDefaultTurnFilter(),
     supervision: alternativeDefaultTurnFilter(),
+    operators: alternativeDefaultTurnFilter(),
     management: defaultDateTurnFilter(),
   },
 };

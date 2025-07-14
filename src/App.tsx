@@ -15,7 +15,7 @@ import ActionPlanMGMT from './pages/Management/MGMT.ActionPlan';
 import ManagementDashboards from './pages/Management/MGMT.Dashboards';
 import ManagementProduction from './pages/Management/MGMT.Production';
 import Manusis from './pages/Manusis/Manusis';
-import OperationFillingPage from './pages/Operators/OperatorsFilling';
+import OperatorsFilling from './pages/Operators/OperatorsFilling';
 import Preventivas from './pages/Preventivas/Preventivas';
 import ProductionLive from './pages/ProductionLive/productionLive';
 import ShopFloor from './pages/ShopFloor/sfm';
@@ -62,7 +62,7 @@ function App() {
           />
           <Route
             path='operatorsFilling'
-            element={<PrivateRoute element={<OperationFillingPage />} requiredPage='operatorsFilling' />}
+            element={<PrivateRoute element={<OperatorsFilling />} requiredPage='operatorsFilling' />}
           />
           <Route path='manusis' element={<PrivateRoute element={<Manusis />} requiredPage='manusis' />} />
           <Route

@@ -1,0 +1,297 @@
+// Timeline Styles - Adaptado para React + Bootstrap 5
+.timeline-centered {
+  position: relative;
+  margin-bottom: 30px;
+
+  // Linha central
+  &:before {
+    content: '';
+    position: absolute;
+    display: block;
+    width: 4px;
+    background: #e9ecef;
+    left: 50%;
+    top: 20px;
+    bottom: 20px;
+    margin-left: -2px;
+    border-radius: 2px;
+  }
+
+  .timeline-entry {
+    position: relative;
+    width: 50%;
+    float: right;
+    margin-bottom: 40px;
+    clear: both;
+
+    // Entrada do lado esquerdo (alternada)
+    &.left-aligned {
+      float: left;
+
+      .timeline-entry-inner {
+        margin-left: 0;
+        margin-right: -22px;
+
+        .timeline-time {
+          left: auto;
+          right: -120px;
+          text-align: left;
+        }
+
+        .timeline-icon {
+          float: right;
+        }
+
+        .timeline-label {
+          margin-left: 0;
+          margin-right: 70px;
+
+          &:after {
+            left: auto;
+            right: 0;
+            margin-left: 0;
+            margin-right: -9px;
+            transform: rotate(180deg);
+          }
+        }
+      }
+    }
+
+    // Entrada especial de início
+    &.begin {
+      margin-bottom: 0;
+      
+      .timeline-entry-inner {
+        width: auto;
+        float: none;
+        margin-left: 0;
+      }
+    }
+
+    .timeline-entry-inner {
+      position: relative;
+      margin-left: -22px;
+
+      .timeline-time {
+        position: absolute;
+        left: -120px;
+        text-align: right;
+        min-width: 100px;
+        padding: 10px;
+        box-sizing: border-box;
+
+        span {
+          display: block;
+
+          &:first-child {
+            font-size: 15px;
+            font-weight: 600;
+            color: #495057;
+          }
+
+          &:last-child {
+            font-size: 12px;
+            color: #6c757d;
+            font-weight: 500;
+          }
+        }
+      }
+
+      .timeline-icon {
+        background: #fff;
+        color: #fff;
+        display: block;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        text-align: center;
+        box-shadow: 0 0 0 5px #e9ecef;
+        line-height: 40px;
+        font-size: 16px;
+        float: left;
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: scale(1.1);
+          box-shadow: 0 0 0 5px #e9ecef, 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        // Ícone especial de início
+        &.timeline-start {
+          background: linear-gradient(135deg, #28a745, #20c997);
+          transform: rotate(-45deg);
+          
+          i {
+            transform: rotate(45deg);
+          }
+        }
+      }
+
+      .timeline-label {
+        position: relative;
+        background: #fff;
+        padding: 1.5rem;
+        margin-left: 70px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+
+        &:hover {
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+          transform: translateY(-2px);
+        }
+
+        // Seta apontando para o ícone
+        &:after {
+          content: '';
+          display: block;
+          position: absolute;
+          width: 0;
+          height: 0;
+          border-style: solid;
+          border-width: 9px 9px 9px 0;
+          border-color: transparent #fff transparent transparent;
+          left: 0;
+          top: 20px;
+          margin-left: -9px;
+        }
+
+        h2 {
+          color: #495057;
+          font-size: 1.1rem;
+          margin-bottom: 0.75rem;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+
+          .badge {
+            font-size: 0.7rem;
+            font-weight: 500;
+          }
+        }
+
+        p {
+          color: #6c757d;
+          font-size: 0.9rem;
+          margin: 0;
+          line-height: 1.5;
+
+          strong {
+            color: #495057;
+            font-weight: 600;
+          }
+        }
+
+        .row {
+          margin-top: 0.75rem;
+          
+          .col-6 {
+            font-size: 0.85rem;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsividade
+@media (max-width: 768px) {
+  .timeline-centered {
+    &:before {
+      left: 30px;
+    }
+
+    .timeline-entry {
+      width: 100%;
+      float: none;
+      margin-left: 0;
+
+      &.left-aligned {
+        float: none;
+
+        .timeline-entry-inner {
+          margin-left: -22px;
+          margin-right: 0;
+
+          .timeline-time {
+            left: -120px;
+            right: auto;
+            text-align: right;
+          }
+
+          .timeline-icon {
+            float: left;
+          }
+
+          .timeline-label {
+            margin-left: 70px;
+            margin-right: 0;
+
+            &:after {
+              left: 0;
+              right: auto;
+              margin-left: -9px;
+              margin-right: 0;
+              transform: rotate(0deg);
+            }
+          }
+        }
+      }
+
+      .timeline-entry-inner {
+        margin-left: -22px;
+
+        .timeline-time {
+          position: relative;
+          left: auto;
+          text-align: left;
+          width: auto;
+          padding: 0 0 10px 0;
+          margin-bottom: 10px;
+        }
+
+        .timeline-label {
+          margin-left: 0;
+          margin-top: 10px;
+
+          &:after {
+            display: none;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Estados de loading
+.timeline-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+// Animações suaves
+.timeline-entry {
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+  transform: translateY(20px);
+
+  @for $i from 1 through 10 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{$i * 0.1}s;
+    }
+  }
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
