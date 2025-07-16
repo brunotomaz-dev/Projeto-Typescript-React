@@ -4,7 +4,6 @@ import { Card } from 'react-bootstrap';
 import { BSColors, colorObj, DESC_EFF } from '../../../helpers/constants';
 import { useFullInfoIHMQuery } from '../../../hooks/queries/useFullInfoIhmQuery';
 import { useFilters } from '../../../hooks/useFilters';
-import './timeline.scss';
 
 interface TimelineItem {
   recno: number;

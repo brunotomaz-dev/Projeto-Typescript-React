@@ -7,7 +7,7 @@ export const useLineCycleData = () => {
   const machineId = useAppSelector((state) => state.liveLines.selectedMachine);
 
   // Usar o hook de consulta existente para obter dados da máquina
-  const { machineInfo, isLoading, isFetching, error } = useMachineInfoQuery(machineId);
+  const { machineInfo, isLoading, isFetching, error } = useMachineInfoQuery({ machineId });
 
   // Processar os dados para o gráfico
   const processedData = useMemo(() => {

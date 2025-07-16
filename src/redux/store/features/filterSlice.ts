@@ -58,7 +58,7 @@ const initialState: FiltersState = {
   },
 };
 
-export const alternativeScopes = ['liveLines', 'supervision'];
+export const alternativeScopes = ['liveLines', 'supervision', 'operators'];
 
 const filtersSlice = createSlice({
   name: 'filters',

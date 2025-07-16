@@ -4,18 +4,26 @@ import { getInfoIHM } from '../../api/apiRequests';
 import { iInfoIhmLive } from '../../pages/LiveLines/interfaces/infoIhm.interface';
 import { useFilters } from '../useFilters';
 
-export const useInfoIHMQuery = (line: number) => {
+interface iInfoIHMQueryParams {
+  scope?: string;
+  selectedLine: number;
+}
+
+export const useInfoIHMQuery = ({ scope = 'liveLines', selectedLine }: iInfoIHMQueryParams) => {
   // Usar filtros com escopo 'liveLines'
-  const { date, turn } = useFilters('liveLines');
+  const { date, turn } = useFilters(scope);
 
   // Verificar se é a data atual para determinar refetch interval
   const isToday = date === format(startOfDay(new Date()), 'yyyy-MM-dd');
 
   // Query para informações do IHM
   const query = useQuery({
-    queryKey: ['infoIHM', date, turn, line],
+    queryKey: ['infoIHM', date, turn, selectedLine],
     queryFn: async (): Promise<iInfoIhmLive[]> => {
-      const params = turn === 'ALL' ? { data: date, linha: line } : { data: date, linha: line, turno: turn };
+      const params =
+        turn === 'ALL'
+          ? { data: date, linha: selectedLine }
+          : { data: date, linha: selectedLine, turno: turn };
 
       return getInfoIHM(params, [
         'status',

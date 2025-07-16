@@ -2,6 +2,7 @@ import { format, parseISO } from 'date-fns';
 import React from 'react';
 import { Card, Col, Row } from 'react-bootstrap';
 import { useFilters } from '../../hooks/useFilters';
+import IndicatorsForOperators from './components/IndicatorsForOperators';
 import SelectorsOperation from './components/seletores';
 import TimelineOperation from './components/timeline';
 
@@ -34,9 +35,7 @@ const OperatorsFilling: React.FC = () => {
           <TimelineOperation />
         </Col>
         <Col xs={12} xl={7}>
-          <Card className='shadow border-0 bg-light p-3 mb-3'>
-            <h3 className='text-center'>Indicadores</h3>
-          </Card>
+          <IndicatorsForOperators />
         </Col>
       </Row>
       <Row>

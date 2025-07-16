@@ -6,7 +6,7 @@ export const useLineIndicators = () => {
   const selectedLine = useAppSelector((state) => state.liveLines.selectedLine);
 
   // Utilizar o hook de query existente
-  const { indicators, isLoading, isFetching, error } = useLiveIndicatorsQuery(selectedLine);
+  const { indicators, isLoading, isFetching, error } = useLiveIndicatorsQuery({ selectedLine });
 
   return {
     efficiency: indicators.efficiency,

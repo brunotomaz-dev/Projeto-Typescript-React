@@ -7,7 +7,7 @@ export const useLineAverages = () => {
   const selectedLine = useAppSelector((state) => state.liveLines.selectedLine);
 
   // Reutilizar a consulta que já traz os dados das médias
-  const { metrics, isLoading, isFetching, error } = useLiveIndicatorsQuery(selectedLine);
+  const { metrics, isLoading, isFetching, error } = useLiveIndicatorsQuery({ selectedLine });
 
   // Processar e organizar os dados de média por turno
   const averages = useMemo(() => {

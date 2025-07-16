@@ -9,7 +9,7 @@ export const useEfficiencyComparison = () => {
   const currentTurn = useAppSelector((state) => state.liveLines.selectedShift);
 
   // Usar hook de query para obter dados
-  const { indicators, metrics, isLoading, isFetching } = useLiveIndicatorsQuery(selectedLine);
+  const { indicators, metrics, isLoading, isFetching } = useLiveIndicatorsQuery({ selectedLine });
 
   // Obter o nome do turno para exibição
   const turnName = useMemo(() => getTurnoName(currentTurn as TurnoID), [currentTurn]);

@@ -10,13 +10,18 @@ export const useBarStopsData = () => {
   const machineId = useAppSelector((state) => state.liveLines.selectedMachine);
 
   // Utilizar os hooks de query existentes
-  const { ihmData, isLoading: ihmLoading } = useInfoIHMQuery(selectedLine);
-  const { machineInfo, isLoading: machineLoading } = useMachineInfoQuery(machineId);
+  const { ihmData, isLoading: ihmLoading, isFetching: ihmFetching } = useInfoIHMQuery({ selectedLine });
+  const {
+    machineInfo,
+    isLoading: machineLoading,
+    isFetching: machineFetching,
+  } = useMachineInfoQuery({ machineId });
 
   return {
     data: ihmData,
     cycleData: machineInfo,
     isLoading: ihmLoading || machineLoading,
-    isFetching: false, // Adicionar se a API do hook de query original suportar
+    isFetching: ihmFetching || machineFetching,
+    isRefreshing: ihmFetching || machineFetching || ihmLoading || machineLoading,
   };
 };
