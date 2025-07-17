@@ -95,7 +95,7 @@ const Timeline: React.FC = () => {
             height: height,
           },
           style: {
-            fill: getMotivoColor(motivo),
+            fill: getMotivoColor(motivo, motivo),
           },
         };
       },
