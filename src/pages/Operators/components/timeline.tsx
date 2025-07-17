@@ -1,33 +1,10 @@
 import { format } from 'date-fns';
 import React from 'react';
 import { Card } from 'react-bootstrap';
-import { BSColors, colorObj, DESC_EFF } from '../../../helpers/constants';
+import { DESC_EFF, getMotivoColor, getMotivoIcon } from '../../../helpers/constants';
 import { useFullInfoIHMQuery } from '../../../hooks/queries/useFullInfoIhmQuery';
 import { useFilters } from '../../../hooks/useFilters';
-
-interface TimelineItem {
-  recno: number;
-  fabrica: number;
-  linha: number;
-  maquina_id: string;
-  turno: string;
-  status: string;
-  data_registro: string;
-  hora_registro: string;
-  motivo: string | null;
-  equipamento: string | null;
-  problema: string | null;
-  causa: string | null;
-  os_numero: string | null;
-  operador_id: string | null;
-  data_registro_ihm: string;
-  hora_registro_ihm: string;
-  s_backup: string | null;
-  data_hora: string;
-  data_hora_final: string;
-  tempo: number;
-  afeta_eff: number;
-}
+import { iInfoIHM } from '../../../interfaces/InfoIHM.interface';
 
 const TimelineOperation: React.FC = () => {
   const { data, isLoading, isRefreshing } = useFullInfoIHMQuery('operators');
@@ -40,10 +17,10 @@ const TimelineOperation: React.FC = () => {
       const dateTimeA = new Date(`${a.data_registro}T${a.hora_registro}`);
       const dateTimeB = new Date(`${b.data_registro}T${b.hora_registro}`);
       return dateTimeA.getTime() - dateTimeB.getTime();
-    }) as TimelineItem[];
+    }) as iInfoIHM[];
 
   // Função para calcular desconto de refeição no turno
-  const calcularDescontoRefeicao = (item: TimelineItem, allData: TimelineItem[]) => {
+  const calcularDescontoRefeicao = (item: iInfoIHM, allData: iInfoIHM[]) => {
     // Filtrar apenas refeições do mesmo turno e linha, ordenadas por data_hora
     const refeicoesDoTurno = allData
       .filter(
@@ -87,7 +64,7 @@ const TimelineOperation: React.FC = () => {
   };
 
   // Função para obter informações sobre desconto aplicado
-  const getDescontoInfo = (item: TimelineItem) => {
+  const getDescontoInfo = (item: iInfoIHM) => {
     if (item.afeta_eff === 1) return null;
 
     const descricaoParaDesconto = item.causa || item.problema || '';
@@ -127,7 +104,7 @@ const TimelineOperation: React.FC = () => {
   };
 
   // Função para calcular se realmente afeta a eficiência considerando descontos
-  const calculaAfetaEficiencia = (item: TimelineItem): boolean => {
+  const calculaAfetaEficiencia = (item: iInfoIHM): boolean => {
     // Se afeta_eff === 1, não afeta mesmo
     if (item.afeta_eff === 1) return false;
 
@@ -156,45 +133,6 @@ const TimelineOperation: React.FC = () => {
 
     // Caso padrão
     return item.afeta_eff === 0;
-  };
-
-  // Função para obter cor do motivo
-  const getMotivoColor = (motivo: string | null, causa: string | null): string => {
-    // Priorizar refeição se estiver na causa
-    if (causa === 'Refeição') {
-      return colorObj['Refeição'] || BSColors.PINK_COLOR;
-    }
-
-    if (!motivo) return BSColors.WARNING_COLOR;
-    return colorObj[motivo as keyof typeof colorObj] || BSColors.GREY_600_COLOR;
-  };
-
-  // Função para obter ícone do motivo
-  const getMotivoIcon = (motivo: string | null, causa: string | null): string => {
-    // Priorizar refeição se estiver na causa
-    if (causa === 'Refeição') {
-      return 'bi-cup-hot';
-    }
-
-    if (!motivo) return 'bi-question-circle';
-
-    const iconMap: Record<string, string> = {
-      Rodando: 'bi-play-circle-fill',
-      Refeição: 'bi-cup-hot',
-      Ajustes: 'bi-gear',
-      Manutenção: 'bi-wrench',
-      Setup: 'bi-tools',
-      Fluxo: 'bi-arrow-right-circle',
-      Qualidade: 'bi-shield-check',
-      'Saída para Backup': 'bi-archive',
-      Liberada: 'bi-unlock',
-      Limpeza: 'bi-brush',
-      'Parada Programada': 'bi-calendar-x',
-      'Não apontado': 'bi-exclamation-triangle',
-      'Perda de Ciclo': 'bi-speedometer2',
-    };
-
-    return iconMap[motivo] || 'bi-circle';
   };
 
   // Função para formatar tempo

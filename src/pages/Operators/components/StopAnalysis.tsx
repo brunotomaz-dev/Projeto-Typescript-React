@@ -1,7 +1,7 @@
 import EChartsReact from 'echarts-for-react';
 import React, { useMemo } from 'react';
 import { Badge, Card, Col, Row } from 'react-bootstrap';
-import { BSColors, colorObj } from '../../../helpers/constants';
+import { getMotivoColor, getMotivoIcon } from '../../../helpers/constants';
 import { useLiveIndicatorsQuery } from '../../../hooks/queries/useLiveIndicatorsQuery';
 import { useMachineInfoQuery } from '../../../hooks/queries/useLiveMachineInfoQuery';
 import { useFilters } from '../../../hooks/useFilters';
@@ -23,36 +23,11 @@ const StopAnalysis: React.FC<StopAnalysisProps> = ({ scope }) => {
 
   const { stopSummary } = useStopSummary(stopsData, machineInfo);
 
-  // Função para obter cor do motivo
-  const getMotivoColor = (motivo: string): string => {
-    return colorObj[motivo as keyof typeof colorObj] || BSColors.GREY_600_COLOR;
-  };
-
-  // Função para obter ícone do motivo
-  const getMotivoIcon = (motivo: string): string => {
-    const iconMap: Record<string, string> = {
-      Rodando: 'bi-play-circle-fill',
-      Refeição: 'bi-cup-hot',
-      Ajustes: 'bi-gear',
-      Manutenção: 'bi-wrench',
-      Setup: 'bi-tools',
-      Fluxo: 'bi-arrow-right-circle',
-      Qualidade: 'bi-shield-check',
-      'Saída para Backup': 'bi-archive',
-      Liberada: 'bi-unlock',
-      Limpeza: 'bi-brush',
-      'Parada Programada': 'bi-calendar-x',
-      'Não apontado': 'bi-exclamation-triangle',
-      'Perda de Ciclo': 'bi-speedometer2',
-    };
-    return iconMap[motivo] || 'bi-circle';
-  };
-
   // Dados ordenados por impacto (já vem ordenado do hook)
   const chartData = useMemo(() => {
     return stopSummary.map((item) => ({
       ...item,
-      color: getMotivoColor(item.motivo),
+      color: getMotivoColor(item.motivo, item.causa),
     }));
   }, [stopSummary]);
 
@@ -74,7 +49,7 @@ const StopAnalysis: React.FC<StopAnalysisProps> = ({ scope }) => {
           return `
             <div style="padding: 8px;">
               <strong style="color: ${item.color};">
-                <i class="${getMotivoIcon(item.motivo)}"></i> ${item.motivo}
+                <i class="${getMotivoIcon(item.motivo, item.causa)}"></i> ${item.motivo}
               </strong><br/>
               <span style="color: #666;">Problema:</span> ${item.problema}<br/>
               <span style="color: #666;">Causa:</span> ${item.causa}<br/>

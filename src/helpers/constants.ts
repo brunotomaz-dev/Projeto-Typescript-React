@@ -91,23 +91,8 @@ export enum BSColors {
   SPACE_CADET_COLOR = '#282f44',
   BLUE_DELFT_COLOR = '#353e5a',
   CAT_POLY_GREEN_COLOR = '#1E441E',
+  CAFE_COLOR = '#854A32',
 }
-
-export const colorObj = {
-  ['Rodando']: BSColors.SUCCESS_COLOR,
-  ['Refeição']: BSColors.PINK_COLOR,
-  ['Ajustes']: BSColors.PRIMARY_COLOR,
-  ['Manutenção']: BSColors.SPACE_CADET_COLOR,
-  ['Setup']: BSColors.BLUE_DELFT_COLOR,
-  ['Fluxo']: BSColors.INDIGO_COLOR,
-  ['Qualidade']: BSColors.INFO_COLOR,
-  ['Saída para Backup']: BSColors.TEAL_COLOR,
-  ['Liberada']: BSColors.GREY_500_COLOR,
-  ['Limpeza']: BSColors.ORANGE_COLOR,
-  ['Parada Programada']: BSColors.DANGER_COLOR,
-  ['Não apontado']: BSColors.WARNING_COLOR,
-  ['Perda de Ciclo']: BSColors.CAT_POLY_GREEN_COLOR,
-};
 
 export const DESC_EFF = {
   'Troca de Sabor': 15,
@@ -136,3 +121,68 @@ export const DETECTORES_ID = [
   { id: 6, name: 'Detector Linha 6' },
   { id: 7, name: 'Detector Linha 7' },
 ];
+
+const iconMap: Record<string, string> = {
+  Rodando: 'bi-play-circle-fill',
+  Refeição: 'bi-cup-hot',
+  Ajustes: 'bi-gear',
+  Manutenção: 'bi-wrench',
+  Setup: 'bi-tools',
+  Fluxo: 'bi-arrow-right-circle',
+  Qualidade: 'bi-shield-check',
+  'Saída para Backup': 'bi-archive',
+  Liberada: 'bi-unlock',
+  Limpeza: 'bi-brush',
+  'Parada Programada': 'bi-calendar-x',
+  'Não apontado': 'bi-exclamation-triangle',
+  'Perda de Ciclo': 'bi-speedometer2',
+};
+
+const iconMapCausa: Record<string, string> = {
+  Refeição: 'bi-cup-hot',
+  'Café e Ginástica Laboral': 'bi-cup',
+};
+
+export const getMotivoIcon = (motivo?: string, causa?: string): string => {
+  // Priorizar refeição se estiver na causa
+  if (causa && iconMapCausa[causa]) {
+    return iconMapCausa[causa] || 'bi-circle';
+  }
+
+  // Se motivo não for passado, retorna ícone de pergunta
+  if (!motivo) return 'bi-question-circle';
+  // Retorna o ícone correspondente ao motivo
+  return iconMap[motivo] || 'bi-circle';
+};
+
+export const colorObj: Record<string, string> = {
+  ['Rodando']: BSColors.SUCCESS_COLOR,
+  ['Refeição']: BSColors.PINK_COLOR,
+  ['Ajustes']: BSColors.PRIMARY_COLOR,
+  ['Manutenção']: BSColors.SPACE_CADET_COLOR,
+  ['Setup']: BSColors.BLUE_DELFT_COLOR,
+  ['Fluxo']: BSColors.INDIGO_COLOR,
+  ['Qualidade']: BSColors.INFO_COLOR,
+  ['Saída para Backup']: BSColors.TEAL_COLOR,
+  ['Liberada']: BSColors.GREY_500_COLOR,
+  ['Limpeza']: BSColors.ORANGE_COLOR,
+  ['Parada Programada']: BSColors.DANGER_COLOR,
+  ['Não apontado']: BSColors.WARNING_COLOR,
+  ['Perda de Ciclo']: BSColors.CAT_POLY_GREEN_COLOR,
+};
+
+const colorObjCausa: Record<string, string> = {
+  ['Refeição']: BSColors.PINK_COLOR,
+  ['Café e Ginástica Laboral']: BSColors.CAFE_COLOR,
+};
+
+// Função para obter cor do motivo
+export const getMotivoColor = (motivo?: string, causa?: string): string => {
+  // Priorizar refeição se estiver na causa
+  if (causa && colorObjCausa[causa]) {
+    return colorObjCausa[causa] || BSColors.PINK_COLOR;
+  }
+
+  if (!motivo) return BSColors.WARNING_COLOR;
+  return colorObj[motivo] || BSColors.GREY_600_COLOR;
+};

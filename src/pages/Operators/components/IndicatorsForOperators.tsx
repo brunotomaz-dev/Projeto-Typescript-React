@@ -22,14 +22,34 @@ const IndicatorsForOperators: React.FC = () => {
     indicators,
     isLoading: indicatorsLoading,
   } = useLiveIndicatorsQuery({ scope: SCOPE, selectedLine });
-  const { product: produto, isLoading: productionLoading } = useMachineInfoQuery({
+
+  const {
+    product: produto,
+    machineInfo,
+    isLoading: productionLoading,
+  } = useMachineInfoQuery({
     machineId,
     scope: SCOPE,
   });
+
   const { metrics, data: stopsData, isLoading: stopsLoading } = useTimelineMetrics(SCOPE);
 
   // Combinar estados de loading
   const isRefreshing = indicatorsLoading || productionLoading || stopsLoading;
+
+  // Média de Ciclos
+  const averageCycle = useMemo(() => {
+    // Calcula a media de ciclos usando o ciclo_1_min que for maior que 0
+    const totalCycles =
+      machineInfo?.reduce((acc, item) => {
+        return acc + (item.ciclo_1_min > 0 ? item.ciclo_1_min : 0);
+      }, 0) || 0;
+
+    // Conta o númerno de ocorrências com ciclo_1_min maior que 0
+    const countCycles = machineInfo?.filter((item) => item.ciclo_1_min > 0).length || 0;
+
+    return totalCycles > 0 ? Number((totalCycles / countCycles).toFixed(2)) : 0;
+  }, [machineInfo]);
 
   // Dados de resumo do turno
   const shiftSummary = useMemo(() => {
@@ -73,7 +93,7 @@ const IndicatorsForOperators: React.FC = () => {
       <Row className='mb-4'>
         <Col xs={12}>
           <Card className='shadow border-0 bg-white p-3'>
-            <h4 className='text-center mb-4'>Linha {selectedLines}</h4>
+            <h4 className='text-center mb-4'>Linha {selectedLine}</h4>
             <Row>
               <Col xs={12} md={3}>
                 <Card className='bg-transparent border-0 text-center'>
@@ -132,25 +152,31 @@ const IndicatorsForOperators: React.FC = () => {
           <Card className='shadow border-0 bg-white p-3'>
             <h5 className='mb-3'>Resumo do Turno</h5>
             <Row className='text-center'>
-              <Col xs={6} md={3}>
+              <Col md={4} xl={3}>
                 <div className='p-2'>
                   <h4 className='mb-1 text-success'>{shiftSummary.runningPercentage}%</h4>
                   <small className='text-muted'>Tempo Produzindo</small>
                 </div>
               </Col>
-              <Col xs={6} md={3}>
+              <Col md={4} xl={2}>
+                <div className='p-2'>
+                  <h4 className='mb-1 text-secondary'>{averageCycle}</h4>
+                  <small className='text-muted'>Média de ciclos</small>
+                </div>
+              </Col>
+              <Col md={3} xl={2}>
                 <div className='p-2'>
                   <h4 className='mb-1 text-danger'>{100 - shiftSummary.runningPercentage}%</h4>
                   <small className='text-muted'>Tempo Parado</small>
                 </div>
               </Col>
-              <Col xs={6} md={3}>
+              <Col md={6} xl={2}>
                 <div className='p-2'>
                   <h4 className='mb-1 text-info'>{shiftSummary.stopsCount}</h4>
                   <small className='text-muted'>Total de Paradas</small>
                 </div>
               </Col>
-              <Col xs={6} md={3}>
+              <Col md={6} xl={3}>
                 <div className='p-2'>
                   <h4 className='mb-1 text-primary'>{Math.round(metrics?.longestContinuousRun || 0)}</h4>
                   <small className='text-muted'>Maior Tempo Contínuo (min)</small>
