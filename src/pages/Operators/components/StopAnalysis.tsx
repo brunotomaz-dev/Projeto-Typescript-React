@@ -1,18 +1,23 @@
 import EChartsReact from 'echarts-for-react';
 import React, { useMemo } from 'react';
 import { Badge, Card, Col, Row } from 'react-bootstrap';
+import '../../../components/actionPlanOperatorsFormModal.scss';
 import { getMotivoColor, getMotivoIcon } from '../../../helpers/constants';
 import { useLiveIndicatorsQuery } from '../../../hooks/queries/useLiveIndicatorsQuery';
 import { useMachineInfoQuery } from '../../../hooks/queries/useLiveMachineInfoQuery';
+import { useActionPlanModal } from '../../../hooks/useActionPlanModal';
 import { useFilters } from '../../../hooks/useFilters';
 import { useStopSummary } from '../../../hooks/useStopSummary';
 import { useTimelineMetrics } from '../../../hooks/useTimelineMetrics';
 
 interface StopAnalysisProps {
   scope: string;
+  enableActionPlanCreation?: boolean;
 }
 
-const StopAnalysis: React.FC<StopAnalysisProps> = ({ scope }) => {
+const StopAnalysis: React.FC<StopAnalysisProps> = ({ scope, enableActionPlanCreation = false }) => {
+  const actionPlanModal = useActionPlanModal();
+
   // Usar hook de filtros para integração com o sistema
   const { selectedLines } = useFilters(scope);
 
@@ -35,6 +40,13 @@ const StopAnalysis: React.FC<StopAnalysisProps> = ({ scope }) => {
   const top3Impacts = useMemo(() => {
     return stopSummary.length > 3 ? stopSummary.slice(0, 3) : [];
   }, [stopSummary]);
+
+  // Função para criar Action Plan baseado na parada clicada
+  const handleCreateActionPlan = (stopData: any) => {
+    if (!enableActionPlanCreation) return;
+
+    actionPlanModal.createFromStopData(stopData);
+  };
 
   // Configuração do gráfico ECharts
   const option = useMemo(() => {
@@ -129,6 +141,14 @@ const StopAnalysis: React.FC<StopAnalysisProps> = ({ scope }) => {
     };
   }, [chartData]);
 
+  // Event handler para clique no gráfico
+  const onChartClick = (params: any) => {
+    if (enableActionPlanCreation && params.dataIndex !== undefined) {
+      const stopData = chartData[params.dataIndex];
+      handleCreateActionPlan(stopData);
+    }
+  };
+
   if (!stopSummary || stopSummary.length === 0) {
     return (
       <div className='text-center text-muted py-4'>
@@ -151,7 +171,11 @@ const StopAnalysis: React.FC<StopAnalysisProps> = ({ scope }) => {
             <Row>
               {top3Impacts.map((item, index) => (
                 <Col xs={12} md={4} key={`${item.motivo}-${item.causa}`} className='mb-2'>
-                  <Card className='border-0 shadow-sm bg-light h-100'>
+                  <Card
+                    className={`border-0 shadow-sm bg-light h-100 ${enableActionPlanCreation ? 'stop-analysis-clickable' : ''}`}
+                    style={enableActionPlanCreation ? { cursor: 'pointer' } : {}}
+                    onClick={() => enableActionPlanCreation && handleCreateActionPlan(item)}
+                  >
                     <Card.Body className='p-3'>
                       <div className='d-flex align-items-center mb-2'>
                         <Badge
@@ -178,6 +202,14 @@ const StopAnalysis: React.FC<StopAnalysisProps> = ({ scope }) => {
                       <div className='text-center'>
                         <h5 className='mb-1 text-danger'>{item.impacto.toFixed(1)}%</h5>
                         <small className='text-muted'>{item.tempo} minutos</small>
+                        {enableActionPlanCreation && (
+                          <div className='mt-2'>
+                            <Badge bg='primary' className='fs-7'>
+                              <i className='bi bi-plus-circle me-1'></i>
+                              Clique para criar Plano
+                            </Badge>
+                          </div>
+                        )}
                       </div>
                     </Card.Body>
                   </Card>
@@ -191,11 +223,17 @@ const StopAnalysis: React.FC<StopAnalysisProps> = ({ scope }) => {
       {/* Gráfico de Análise */}
       <Row>
         <Col xs={12}>
-          <div style={{ height: Math.max(300, stopSummary.length * 40 + 100) }}>
+          <div
+            style={{
+              height: Math.max(300, stopSummary.length * 40 + 100),
+              cursor: enableActionPlanCreation ? 'pointer' : 'default',
+            }}
+          >
             <EChartsReact
               option={option}
               style={{ height: '100%', width: '100%' }}
               opts={{ renderer: 'canvas' }}
+              onEvents={enableActionPlanCreation ? { click: onChartClick } : {}}
             />
           </div>
         </Col>

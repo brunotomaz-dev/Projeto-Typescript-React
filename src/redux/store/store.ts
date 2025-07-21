@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import useActionPlanReducer from './features/actionPlanSlice';
+import actionPlanReducer from './features/actionPlanSlice';
 import discardsSlice from './features/discardsSlice';
 import filterReducer from './features/filterSlice';
 import homeReducer from './features/homeSlice';
@@ -25,7 +25,7 @@ export const store = configureStore({
     filters: filterReducer,
     uiState: uiReducer,
     supervision: supervisionReducer,
-    actionPlans: useActionPlanReducer,
+    actionPlans: actionPlanReducer,
     production: productionSlice,
     discards: discardsSlice,
   },

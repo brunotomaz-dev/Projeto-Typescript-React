@@ -1,15 +1,20 @@
 import React, { useMemo } from 'react';
-import { Card, Col, Row } from 'react-bootstrap';
+import { Button, Card, Col, Row } from 'react-bootstrap';
+import { ActionPlanOperatorsFormModal } from '../../../components/actionPlanOperatorsFormModal';
 import GaugeChart from '../../../components/gauge';
 import { IndicatorType } from '../../../helpers/constants';
 import { useLiveIndicatorsQuery } from '../../../hooks/queries/useLiveIndicatorsQuery';
 import { useMachineInfoQuery } from '../../../hooks/queries/useLiveMachineInfoQuery';
+import { useActionPlanModal } from '../../../hooks/useActionPlanModal';
 import { useFilters } from '../../../hooks/useFilters';
 import { useTimelineMetrics } from '../../../hooks/useTimelineMetrics';
 import StopAnalysis from './StopAnalysis';
 
 const IndicatorsForOperators: React.FC = () => {
   const SCOPE = 'operators';
+
+  // Hook personalizado para Action Plan
+  const actionPlanModal = useActionPlanModal();
 
   // Usar hook de filtros para integração com o sistema
   const { selectedLines } = useFilters(SCOPE);
@@ -191,20 +196,63 @@ const IndicatorsForOperators: React.FC = () => {
       <Row className='mb-4'>
         <Col xs={12}>
           <Card className='shadow border-0 bg-white p-3'>
-            <h5 className='mb-3'>Análise de Paradas</h5>
-            <StopAnalysis scope={SCOPE} />
+            <h5 className='mb-3'>
+              Análise de Paradas
+              <small className='text-muted ms-2'>(Clique para criar Plano de Ação)</small>
+            </h5>
+            <StopAnalysis scope={SCOPE} enableActionPlanCreation={true} />
           </Card>
         </Col>
       </Row>
 
-      {/* Observações do Turno */}
+      {/* Plano de Ação */}
       <Row className='mb-4'>
         <Col xs={12}>
           <Card className='shadow border-0 bg-light p-3'>
-            <h5 className='mb-3'>Plano de Ação</h5>
+            <div className='d-flex justify-content-between align-items-center mb-3'>
+              <h5 className='mb-0'>Plano de Ação</h5>
+              <div className='d-flex gap-2'>
+                <Button
+                  variant='outline-primary'
+                  size='sm'
+                  onClick={() =>
+                    actionPlanModal.createFromStopData({
+                      motivo: 'Teste',
+                      causa: 'Teste de funcionalidade',
+                      impacto: 15,
+                      tempo: 30,
+                    })
+                  }
+                >
+                  <i className='bi bi-bug me-1'></i>
+                  Teste
+                </Button>
+                <Button
+                  variant='primary'
+                  size='sm'
+                  onClick={() => actionPlanModal.openModal({ mode: 'create' })}
+                >
+                  <i className='bi bi-plus-circle me-1'></i>
+                  Novo Plano
+                </Button>
+              </div>
+            </div>
+            <div className='text-center text-muted py-3'>
+              <i className='bi bi-clipboard-check' style={{ fontSize: '2rem' }}></i>
+              <p className='mt-2 mb-1'>Crie planos de ação para resolver problemas identificados</p>
+              <small>Clique nas paradas acima ou no botão "Novo Plano" para começar</small>
+            </div>
           </Card>
         </Col>
       </Row>
+
+      {/* Modal de Action Plan */}
+      <ActionPlanOperatorsFormModal
+        isOpen={actionPlanModal.isOpen}
+        onClose={actionPlanModal.closeModal}
+        editData={actionPlanModal.editData}
+        preFilledData={actionPlanModal.preFilledData || undefined}
+      />
     </Card>
   );
 };
