@@ -1,5 +1,5 @@
 import EChartsReact from 'echarts-for-react';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { Badge, Card, Col, Row } from 'react-bootstrap';
 import { getMotivoColor, getMotivoIcon } from '../../../helpers/constants';
 import { useLiveIndicatorsQuery } from '../../../hooks/queries/useLiveIndicatorsQuery';
@@ -7,12 +7,31 @@ import { useMachineInfoQuery } from '../../../hooks/queries/useLiveMachineInfoQu
 import { useFilters } from '../../../hooks/useFilters';
 import { useStopSummary } from '../../../hooks/useStopSummary';
 import { useTimelineMetrics } from '../../../hooks/useTimelineMetrics';
+import { iStopsData, setClickStopsData } from '../../../redux/store/features/clickDataSlice';
+import { setModalActionPlanCall } from '../../../redux/store/features/uiStateSlice';
+import { useAppDispatch } from '../../../redux/store/hooks';
 
 interface StopAnalysisProps {
   scope: string;
+  enableActionPlanCreation?: boolean;
 }
 
-const StopAnalysis: React.FC<StopAnalysisProps> = ({ scope }) => {
+// Função para criar uma chave única dos dados para comparação
+const createDataFingerprint = (data: any[]): string => {
+  if (!data || data.length === 0) return 'empty';
+
+  return data
+    .map((item) => `${item.motivo}-${item.causa}-${item.problema}-${item.tempo}-${item.impacto}`)
+    .join('|');
+};
+
+const StopAnalysis: React.FC<StopAnalysisProps> = ({ scope, enableActionPlanCreation = false }) => {
+  const dispatch = useAppDispatch();
+
+  // Ref para armazenar a "impressão digital" dos dados anteriores
+  const prevDataFingerprintRef = useRef<string>('');
+  const prevChartDataRef = useRef<any[]>([]);
+
   // Usar hook de filtros para integração com o sistema
   const { selectedLines } = useFilters(scope);
 
@@ -23,22 +42,62 @@ const StopAnalysis: React.FC<StopAnalysisProps> = ({ scope }) => {
 
   const { stopSummary } = useStopSummary(stopsData, machineInfo);
 
-  // Dados ordenados por impacto (já vem ordenado do hook)
+  // Memoização inteligente - só recalcula se os dados realmente mudaram
   const chartData = useMemo(() => {
-    return stopSummary.map((item) => ({
+    const currentFingerprint = createDataFingerprint(stopSummary);
+
+    // Se a "impressão digital" dos dados é a mesma, retorna a mesma referência
+    if (currentFingerprint === prevDataFingerprintRef.current && prevChartDataRef.current.length > 0) {
+      return prevChartDataRef.current;
+    }
+
+    // Dados mudaram, recalcula e armazena nova impressão digital
+    prevDataFingerprintRef.current = currentFingerprint;
+    const newChartData = stopSummary.map((item) => ({
       ...item,
       color: getMotivoColor(item.motivo, item.causa),
     }));
+
+    prevChartDataRef.current = newChartData;
+    return newChartData;
   }, [stopSummary]);
 
-  // Top 3 impactos (apenas se houver mais de 3 ocorrências)
+  // Top 3 impactos - memoizado baseado no chartData estável
   const top3Impacts = useMemo(() => {
-    return stopSummary.length > 3 ? stopSummary.slice(0, 3) : [];
-  }, [stopSummary]);
+    return chartData.length > 3 ? chartData.slice(0, 3) : [];
+  }, [chartData]);
 
-  // Configuração do gráfico ECharts
+  // Função memoizada para criar Action Plan
+  const handleCreateActionPlan = useCallback(
+    (data: iStopsData) => {
+      dispatch(setClickStopsData(data));
+
+      if (!enableActionPlanCreation) return;
+
+      dispatch(setModalActionPlanCall({ scope, isVisible: true }));
+    },
+    [dispatch, enableActionPlanCreation, scope]
+  );
+
+  // Event handler memoizado para clique no gráfico
+  const onChartClick = useCallback(
+    (params: any) => {
+      if (enableActionPlanCreation && params.dataIndex !== undefined) {
+        const stopData = chartData[params.dataIndex];
+        handleCreateActionPlan(stopData);
+      }
+    },
+    [enableActionPlanCreation, chartData, handleCreateActionPlan]
+  );
+
+  // Configuração do gráfico com animações mantidas
   const option = useMemo(() => {
     return {
+      // ✅ Mantém animações suaves
+      animation: true,
+      animationDuration: 800,
+      animationEasing: 'cubicOut',
+
       tooltip: {
         trigger: 'axis',
         axisPointer: {
@@ -124,6 +183,8 @@ const StopAnalysis: React.FC<StopAnalysisProps> = ({ scope }) => {
               shadowColor: 'rgba(0, 0, 0, 0.3)',
             },
           },
+          // ✅ Animação suave para as barras
+          animationDelay: (idx: number) => idx * 100,
         },
       ],
     };
@@ -150,8 +211,12 @@ const StopAnalysis: React.FC<StopAnalysisProps> = ({ scope }) => {
             </h6>
             <Row>
               {top3Impacts.map((item, index) => (
-                <Col xs={12} md={4} key={`${item.motivo}-${item.causa}`} className='mb-2'>
-                  <Card className='border-0 shadow-sm bg-light h-100'>
+                <Col xs={12} md={4} key={`${item.motivo}-${item.causa}-${item.tempo}`} className='mb-2'>
+                  <Card
+                    className={`border-0 shadow-sm bg-light h-100 ${enableActionPlanCreation ? 'stop-analysis-clickable' : ''}`}
+                    style={enableActionPlanCreation ? { cursor: 'pointer' } : {}}
+                    onClick={() => enableActionPlanCreation && handleCreateActionPlan(item)}
+                  >
                     <Card.Body className='p-3'>
                       <div className='d-flex align-items-center mb-2'>
                         <Badge
@@ -176,8 +241,17 @@ const StopAnalysis: React.FC<StopAnalysisProps> = ({ scope }) => {
                         <small className='text-muted fw-bold'>{item.motivo}</small>
                       </div>
                       <div className='text-center'>
+                        <small className='text-muted'>{item.causa}</small>
                         <h5 className='mb-1 text-danger'>{item.impacto.toFixed(1)}%</h5>
                         <small className='text-muted'>{item.tempo} minutos</small>
+                        {enableActionPlanCreation && (
+                          <div className='mt-2'>
+                            <Badge bg='primary' className='fs-7'>
+                              <i className='bi bi-plus-circle me-1'></i>
+                              Clique para criar Plano
+                            </Badge>
+                          </div>
+                        )}
                       </div>
                     </Card.Body>
                   </Card>
@@ -191,11 +265,22 @@ const StopAnalysis: React.FC<StopAnalysisProps> = ({ scope }) => {
       {/* Gráfico de Análise */}
       <Row>
         <Col xs={12}>
-          <div style={{ height: Math.max(300, stopSummary.length * 40 + 100) }}>
+          <div
+            style={{
+              height: Math.max(300, chartData.length * 40 + 100),
+              cursor: enableActionPlanCreation ? 'pointer' : 'default',
+            }}
+          >
             <EChartsReact
               option={option}
               style={{ height: '100%', width: '100%' }}
-              opts={{ renderer: 'canvas' }}
+              opts={{
+                renderer: 'canvas',
+              }}
+              onEvents={enableActionPlanCreation ? { click: onChartClick } : {}}
+              // ✅ Configurações inteligentes de merge
+              lazyUpdate={true}
+              notMerge={false} // Permite merge para evitar recriação completa
             />
           </div>
         </Col>
@@ -208,8 +293,8 @@ const StopAnalysis: React.FC<StopAnalysisProps> = ({ scope }) => {
             <i className='bi bi-list-ul me-2'></i>
             Detalhes das Paradas
           </h6>
-          {stopSummary.slice(0, 5).map((item, index) => (
-            <div key={`mobile-${item.motivo}-${item.causa}`} className='mb-2 p-2 border rounded'>
+          {chartData.slice(0, 5).map((item, index) => (
+            <div key={`mobile-${item.motivo}-${item.causa}-${index}`} className='mb-2 p-2 border rounded'>
               <div className='d-flex align-items-center justify-content-between'>
                 <div className='d-flex align-items-center'>
                   <span className='badge bg-secondary me-2'>{index + 1}</span>
@@ -239,9 +324,9 @@ const StopAnalysis: React.FC<StopAnalysisProps> = ({ scope }) => {
               </div>
             </div>
           ))}
-          {stopSummary.length > 5 && (
+          {chartData.length > 5 && (
             <div className='text-center text-muted mt-2'>
-              <small>+ {stopSummary.length - 5} outras paradas</small>
+              <small>+ {chartData.length - 5} outras paradas</small>
             </div>
           )}
         </Col>

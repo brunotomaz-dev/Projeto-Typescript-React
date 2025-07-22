@@ -29,6 +29,7 @@ export const useInfoIHMQuery = ({ scope = 'liveLines', selectedLine }: iInfoIHMQ
         'status',
         'data_hora',
         'data_hora_final',
+        'equipamento',
         'motivo',
         'problema',
         'causa',

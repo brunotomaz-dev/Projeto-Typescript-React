@@ -12,6 +12,7 @@ export interface iActionPlan {
   descricao: string;
   causa_raiz: string;
   contencao: string;
+  equipamento?: string;
   solucao: string;
   feedback: string;
   responsavel: string;

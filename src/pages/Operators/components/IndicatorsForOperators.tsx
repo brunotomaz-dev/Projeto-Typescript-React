@@ -6,6 +6,7 @@ import { useLiveIndicatorsQuery } from '../../../hooks/queries/useLiveIndicators
 import { useMachineInfoQuery } from '../../../hooks/queries/useLiveMachineInfoQuery';
 import { useFilters } from '../../../hooks/useFilters';
 import { useTimelineMetrics } from '../../../hooks/useTimelineMetrics';
+import ActionPlanCardOperators from './ActionPlanCard';
 import StopAnalysis from './StopAnalysis';
 
 const IndicatorsForOperators: React.FC = () => {
@@ -77,9 +78,7 @@ const IndicatorsForOperators: React.FC = () => {
   }
 
   return (
-    <Card className='shadow border-0 bg-light p-3 mb-3'>
-      <h3 className='text-center'>Indicadores</h3>
-
+    <>
       {/* Spinner de atualização */}
       {isRefreshing && (
         <Row className='position-absolute top-0 end-0 m-3' style={{ zIndex: 1050 }}>
@@ -93,7 +92,7 @@ const IndicatorsForOperators: React.FC = () => {
       <Row className='mb-4'>
         <Col xs={12}>
           <Card className='shadow border-0 bg-white p-3'>
-            <h4 className='text-center mb-4'>Linha {selectedLine}</h4>
+            <h3 className='text-center mb-4'>Indicadores - Linha {selectedLine}</h3>
             <Row>
               <Col xs={12} md={3}>
                 <Card className='bg-transparent border-0 text-center'>
@@ -191,21 +190,22 @@ const IndicatorsForOperators: React.FC = () => {
       <Row className='mb-4'>
         <Col xs={12}>
           <Card className='shadow border-0 bg-white p-3'>
-            <h5 className='mb-3'>Análise de Paradas</h5>
-            <StopAnalysis scope={SCOPE} />
+            <h5 className='mb-3'>
+              Análise de Paradas
+              <small className='text-muted ms-2'>(Clique para criar Plano de Ação)</small>
+            </h5>
+            <StopAnalysis scope={SCOPE} enableActionPlanCreation={true} />
           </Card>
         </Col>
       </Row>
 
-      {/* Observações do Turno */}
+      {/* Plano de Ação */}
       <Row className='mb-4'>
         <Col xs={12}>
-          <Card className='shadow border-0 bg-light p-3'>
-            <h5 className='mb-3'>Plano de Ação</h5>
-          </Card>
+          <ActionPlanCardOperators />
         </Col>
       </Row>
-    </Card>
+    </>
   );
 };
 
