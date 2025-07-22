@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import actionPlanReducer from './features/actionPlanSlice';
+import clickDataReducer from './features/clickDataSlice';
 import discardsSlice from './features/discardsSlice';
 import filterReducer from './features/filterSlice';
 import homeReducer from './features/homeSlice';
@@ -28,6 +29,7 @@ export const store = configureStore({
     actionPlans: actionPlanReducer,
     production: productionSlice,
     discards: discardsSlice,
+    clickData: clickDataReducer,
   },
 });
 

@@ -1,20 +1,21 @@
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { TurnoID } from '../helpers/constants';
 import { iActionPlanCards, iActionPlanFormData } from '../interfaces/ActionPlan.interface';
 import { closeActionPlanModal, openActionPlanModal } from '../redux/store/features/actionPlanSlice';
+import { useAppSelector } from '../redux/store/hooks';
 import { RootState } from '../redux/store/store';
+import { useFilters } from './useFilters';
 
 /**
  * Hook personalizado para gerenciar o estado do modal de Action Plan
  */
-export const useActionPlanModal = () => {
+export const useActionPlanModal = (scope: string) => {
   const dispatch = useDispatch();
-  const { formModal } = useSelector((state: RootState) => state.actionPlans);
+  const { formModalOperators: formModal } = useAppSelector((state: RootState) => state.actionPlans);
+  const { sectors } = useAppSelector((state: RootState) => state.user);
 
   // Acessar filtros do escopo operators para pegar o turno atual e linha selecionada
-  const operatorsFilters = useSelector(
-    (state: RootState) => state.filters.dateTurn['operators'] || { turn: 'ALL', selectedLines: [] }
-  );
+  const { selectedLines, turn } = useFilters(scope);
 
   const openModal = (options: {
     mode: 'create' | 'edit';
@@ -30,7 +31,8 @@ export const useActionPlanModal = () => {
 
   const createFromStopData = (stopData: {
     motivo: string;
-    problema?: string;
+    problema: string;
+    equipamento?: string;
     causa: string;
     impacto: number;
     tempo: number;
@@ -44,37 +46,36 @@ export const useActionPlanModal = () => {
 
     // Determinar turno baseado no filtro atual
     const getCurrentTurn = (): TurnoID => {
-      if (operatorsFilters.turn && operatorsFilters.turn !== 'ALL') {
-        return operatorsFilters.turn as TurnoID;
+      if (turn && turn !== 'ALL') {
+        return turn as TurnoID;
       }
       return 'MAT'; // Padrão se não houver filtro específico
     };
 
     // Obter a linha selecionada
     const getSelectedLine = (): string => {
-      if (operatorsFilters.selectedLines && operatorsFilters.selectedLines.length > 0) {
-        return `Linha ${operatorsFilters.selectedLines[0]}`;
+      if (selectedLines && selectedLines.length > 0) {
+        return `Linha ${selectedLines[0]}`;
       }
       return 'Linha 1'; // Padrão se não houver linha selecionada
+    };
+
+    // Obter o setor atual
+    const getCurrentSector = (): string => {
+      if (sectors && sectors.length > 0) {
+        return sectors[0]; // Retorna o primeiro setor como padrão
+      }
+      return 'Produção'; // Padrão se não houver setores definidos
     };
 
     const preFilledData: Partial<iActionPlanFormData> = {
       // Indicador nunca é preenchido automaticamente
       prioridade: getPriorityFromImpact(stopData.impacto),
-      impacto: Math.floor(stopData.impacto), // Arredonda para baixo o valor do gráfico
-      turno: getCurrentTurn(), // Preenche automaticamente baseado no filtro
-      descricao: stopData.problema
-        ? `${getSelectedLine()} - ${stopData.motivo} - ${stopData.problema} - ${stopData.causa}`
-        : `${getSelectedLine()} - ${stopData.motivo} - ${stopData.causa}`,
-      // causa_raiz fica vazia para preenchimento manual
-      lvl: 1,
-      // Sugestão inicial de contenção baseada no tipo de parada
-      contencao:
-        stopData.motivo === 'Manutenção'
-          ? 'Análise técnica da falha e ação corretiva imediata'
-          : stopData.motivo === 'Ajustes'
-            ? 'Reajuste dos parâmetros e verificação do processo'
-            : 'Análise da causa e implementação de correção',
+      impacto: Math.floor(stopData.impacto),
+      turno: getCurrentTurn(),
+      descricao: stopData.equipamento
+        ? `${getSelectedLine()} - ${getCurrentSector()} - ${stopData.equipamento} - ${stopData.motivo} - ${stopData.problema} - ${stopData.causa}`
+        : `${getSelectedLine()} - ${getCurrentSector()} - ${stopData.motivo} - ${stopData.problema} - ${stopData.causa}`,
     };
 
     openModal({

@@ -9,6 +9,7 @@ export interface StopSummary {
   causa: string;
   tempo: number;
   impacto: number;
+  equipamento: string; // Adicionado para incluir o equipamento no resumo
 }
 
 export interface CycleData {
@@ -62,11 +63,12 @@ export const calculateStopSummary = (
 
     return {
       ['Perda de Ciclo-Ciclo Baixo-Ciclo Perdido Min']: {
-        problema: `${cycleDiff.toFixed(2)} ciclos/min - ${Math.round((cycleDiff * 2 * totalRunTime) / 10)} cxs/turno`,
+        problema: `${cycleDiff.toFixed(2)} ciclos/min (${Math.round((cycleDiff * 2 * totalRunTime) / 10)} cxs/turno)`,
         impacto: 0,
         motivo: 'Perda de Ciclo',
         causa: 'Ciclo Baixo',
         tempo: Math.round((cycleDiff * totalRunTime) / ciclosIdeais),
+        equipamento: 'Termoformadora',
       },
     };
   })();
@@ -84,6 +86,7 @@ export const calculateStopSummary = (
               motivo: item.motivo || 'Não apontado',
               problema: item.problema || 'Não apontado',
               causa: item.causa || 'Não apontado',
+              equipamento: item.equipamento || 'Não apontado',
               tempo: 0,
               impacto: 0,
             };

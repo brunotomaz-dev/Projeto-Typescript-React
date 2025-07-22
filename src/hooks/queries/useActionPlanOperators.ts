@@ -21,7 +21,7 @@ export const useActionPlanOperatorsQuery = (options: UseActionPlanOperatorsQuery
 
   return useQuery({
     queryKey: ['actionPlanOperators', data, conclusao],
-    queryFn: () => getActionPlan(data, conclusao),
+    queryFn: async () => await getActionPlan(data, conclusao),
     enabled,
     staleTime: 5 * 60 * 1000, // 5 minutos
     gcTime: 10 * 60 * 1000, // 10 minutos
@@ -35,7 +35,7 @@ export const useCreateActionPlanOperatorsMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: ActionPlanCreateData) => createActionPlan(data),
+    mutationFn: async (data: ActionPlanCreateData) => await createActionPlan(data),
     onSuccess: () => {
       // Invalida todas as queries relacionadas ao action plan
       queryClient.invalidateQueries({ queryKey: ['actionPlanOperators'] });
@@ -53,7 +53,7 @@ export const useUpdateActionPlanOperatorsMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: ActionPlanUpdateData) => updateActionPlan(data),
+    mutationFn: async (data: ActionPlanUpdateData) => await updateActionPlan(data),
     onSuccess: () => {
       // Invalida todas as queries relacionadas ao action plan
       queryClient.invalidateQueries({ queryKey: ['actionPlanOperators'] });

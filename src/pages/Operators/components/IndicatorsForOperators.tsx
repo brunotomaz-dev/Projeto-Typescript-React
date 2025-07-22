@@ -1,20 +1,16 @@
 import React, { useMemo } from 'react';
-import { Button, Card, Col, Row } from 'react-bootstrap';
-import { ActionPlanOperatorsFormModal } from '../../../components/actionPlanOperatorsFormModal';
+import { Card, Col, Row } from 'react-bootstrap';
 import GaugeChart from '../../../components/gauge';
 import { IndicatorType } from '../../../helpers/constants';
 import { useLiveIndicatorsQuery } from '../../../hooks/queries/useLiveIndicatorsQuery';
 import { useMachineInfoQuery } from '../../../hooks/queries/useLiveMachineInfoQuery';
-import { useActionPlanModal } from '../../../hooks/useActionPlanModal';
 import { useFilters } from '../../../hooks/useFilters';
 import { useTimelineMetrics } from '../../../hooks/useTimelineMetrics';
+import ActionPlanCardOperators from './ActionPlanCard';
 import StopAnalysis from './StopAnalysis';
 
 const IndicatorsForOperators: React.FC = () => {
   const SCOPE = 'operators';
-
-  // Hook personalizado para Action Plan
-  const actionPlanModal = useActionPlanModal();
 
   // Usar hook de filtros para integração com o sistema
   const { selectedLines } = useFilters(SCOPE);
@@ -82,9 +78,7 @@ const IndicatorsForOperators: React.FC = () => {
   }
 
   return (
-    <Card className='shadow border-0 bg-light p-3 mb-3'>
-      <h3 className='text-center'>Indicadores</h3>
-
+    <>
       {/* Spinner de atualização */}
       {isRefreshing && (
         <Row className='position-absolute top-0 end-0 m-3' style={{ zIndex: 1050 }}>
@@ -98,7 +92,7 @@ const IndicatorsForOperators: React.FC = () => {
       <Row className='mb-4'>
         <Col xs={12}>
           <Card className='shadow border-0 bg-white p-3'>
-            <h4 className='text-center mb-4'>Linha {selectedLine}</h4>
+            <h3 className='text-center mb-4'>Indicadores - Linha {selectedLine}</h3>
             <Row>
               <Col xs={12} md={3}>
                 <Card className='bg-transparent border-0 text-center'>
@@ -208,52 +202,10 @@ const IndicatorsForOperators: React.FC = () => {
       {/* Plano de Ação */}
       <Row className='mb-4'>
         <Col xs={12}>
-          <Card className='shadow border-0 bg-light p-3'>
-            <div className='d-flex justify-content-between align-items-center mb-3'>
-              <h5 className='mb-0'>Plano de Ação</h5>
-              <div className='d-flex gap-2'>
-                <Button
-                  variant='outline-primary'
-                  size='sm'
-                  onClick={() =>
-                    actionPlanModal.createFromStopData({
-                      motivo: 'Teste',
-                      causa: 'Teste de funcionalidade',
-                      impacto: 15,
-                      tempo: 30,
-                    })
-                  }
-                >
-                  <i className='bi bi-bug me-1'></i>
-                  Teste
-                </Button>
-                <Button
-                  variant='primary'
-                  size='sm'
-                  onClick={() => actionPlanModal.openModal({ mode: 'create' })}
-                >
-                  <i className='bi bi-plus-circle me-1'></i>
-                  Novo Plano
-                </Button>
-              </div>
-            </div>
-            <div className='text-center text-muted py-3'>
-              <i className='bi bi-clipboard-check' style={{ fontSize: '2rem' }}></i>
-              <p className='mt-2 mb-1'>Crie planos de ação para resolver problemas identificados</p>
-              <small>Clique nas paradas acima ou no botão "Novo Plano" para começar</small>
-            </div>
-          </Card>
+          <ActionPlanCardOperators />
         </Col>
       </Row>
-
-      {/* Modal de Action Plan */}
-      <ActionPlanOperatorsFormModal
-        isOpen={actionPlanModal.isOpen}
-        onClose={actionPlanModal.closeModal}
-        editData={actionPlanModal.editData}
-        preFilledData={actionPlanModal.preFilledData || undefined}
-      />
-    </Card>
+    </>
   );
 };
 

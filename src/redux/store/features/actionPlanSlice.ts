@@ -12,7 +12,7 @@ interface ActionPlansState {
   loading: boolean;
   error: string | null;
   // Estado para o formulário
-  formModal: {
+  formModalOperators: {
     isOpen: boolean;
     mode: 'create' | 'edit';
     editData: iActionPlanCards | null;
@@ -25,7 +25,7 @@ const initialState: ActionPlansState = {
   processedData: [],
   loading: false,
   error: null,
-  formModal: {
+  formModalOperators: {
     isOpen: false,
     mode: 'create',
     editData: null,
@@ -59,16 +59,16 @@ export const actionPlansSlice = createSlice({
         preFilledData?: Partial<iActionPlanFormData>;
       }>
     ) => {
-      state.formModal.isOpen = true;
-      state.formModal.mode = action.payload.mode;
-      state.formModal.editData = action.payload.editData || null;
-      state.formModal.preFilledData = action.payload.preFilledData || null;
+      state.formModalOperators.isOpen = true;
+      state.formModalOperators.mode = action.payload.mode;
+      state.formModalOperators.editData = action.payload.editData || null;
+      state.formModalOperators.preFilledData = action.payload.preFilledData || null;
     },
     closeActionPlanModal: (state) => {
-      state.formModal.isOpen = false;
-      state.formModal.mode = 'create';
-      state.formModal.editData = null;
-      state.formModal.preFilledData = null;
+      state.formModalOperators.isOpen = false;
+      state.formModalOperators.mode = 'create';
+      state.formModalOperators.editData = null;
+      state.formModalOperators.preFilledData = null;
     },
   },
 });
