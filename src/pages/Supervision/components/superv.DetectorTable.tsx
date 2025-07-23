@@ -73,7 +73,7 @@ const DetectorTable: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {data?.map((item, index) => (
+                {filteredData?.map((item, index) => (
                   <tr key={index} className={item.metal_detectado ? 'table-danger' : ''}>
                     <td>{item.produto}</td>
                     <td className='text-center align-middle'>Linha {item.detector_id}</td>
