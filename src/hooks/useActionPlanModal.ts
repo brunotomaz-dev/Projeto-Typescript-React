@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
 import { TurnoID } from '../helpers/constants';
-import { iActionPlanCards, iActionPlanFormData } from '../interfaces/ActionPlan.interface';
+import { iActionPlan, iActionPlanFormData } from '../interfaces/ActionPlan.interface';
 import { closeActionPlanModal, openActionPlanModal } from '../redux/store/features/actionPlanSlice';
 import { useAppSelector } from '../redux/store/hooks';
 import { RootState } from '../redux/store/store';
@@ -19,7 +19,7 @@ export const useActionPlanModal = (scope: string) => {
 
   const openModal = (options: {
     mode: 'create' | 'edit';
-    editData?: iActionPlanCards;
+    editData?: iActionPlan;
     preFilledData?: Partial<iActionPlanFormData>;
   }) => {
     dispatch(openActionPlanModal(options));

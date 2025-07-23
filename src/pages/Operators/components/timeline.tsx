@@ -175,7 +175,7 @@ const TimelineOperation: React.FC = () => {
   }
 
   return (
-    <Card className='shadow border-0 bg-light p-3 mb-3'>
+    <Card className='shadow border-0 bg-light p-3 mb-3 h-100'>
       <h3 className='text-center mb-4'>Timeline</h3>
 
       {isRefreshing && (

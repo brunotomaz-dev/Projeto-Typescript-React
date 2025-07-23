@@ -186,3 +186,10 @@ export const getMotivoColor = (motivo?: string, causa?: string): string => {
   if (!motivo) return BSColors.WARNING_COLOR;
   return colorObj[motivo] || BSColors.GREY_600_COLOR;
 };
+
+export const indicatorsActionPlan: Record<string, string> = {
+  Q: 'Qualidade',
+  D: 'Desempenho',
+  S: 'Segurança',
+  C: 'Custo',
+};

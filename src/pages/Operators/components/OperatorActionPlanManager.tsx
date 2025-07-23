@@ -5,7 +5,7 @@ import { useActionPlanModal } from '../../../hooks/useActionPlanModal';
 import { resetModalActionPlanCall } from '../../../redux/store/features/uiStateSlice';
 import { useAppDispatch, useAppSelector } from '../../../redux/store/hooks';
 
-const ActionPlanCardOperators: React.FC = () => {
+const OperatorActionPlanManager: React.FC = () => {
   const SCOPE = 'operators';
   /* ------------------------------------------------- Hooks ------------------------------------------------- */
   // Hook do Modal de Plano de ação
@@ -28,7 +28,7 @@ const ActionPlanCardOperators: React.FC = () => {
   /* --------------------------------------------------------------------------------------------------------- */
   return (
     <>
-      <Card className='shadow border-0 bg-light p-3 mb-3'>
+      <Card className='shadow border-0 bg-light p-3'>
         <section className='d-flex justify-content-between align-items-center mb-3'>
           <h5 className='mb-0'>Plano de Ação</h5>
           <Button variant='primary' size='sm' onClick={handleBtnClick}>
@@ -47,4 +47,4 @@ const ActionPlanCardOperators: React.FC = () => {
   );
 };
 
-export default ActionPlanCardOperators;
+export default OperatorActionPlanManager;

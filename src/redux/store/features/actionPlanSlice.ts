@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { iActionPlanCards, iActionPlanFormData } from '../../../interfaces/ActionPlan.interface';
+import { iActionPlan, iActionPlanCards, iActionPlanFormData } from '../../../interfaces/ActionPlan.interface';
 
 export interface iActionToShow extends iActionPlanCards {
   nivelExibicao: number;
@@ -15,7 +15,7 @@ interface ActionPlansState {
   formModalOperators: {
     isOpen: boolean;
     mode: 'create' | 'edit';
-    editData: iActionPlanCards | null;
+    editData: iActionPlan | null;
     preFilledData: Partial<iActionPlanFormData> | null;
   };
 }
@@ -55,7 +55,7 @@ export const actionPlansSlice = createSlice({
       state,
       action: PayloadAction<{
         mode: 'create' | 'edit';
-        editData?: iActionPlanCards;
+        editData?: iActionPlan;
         preFilledData?: Partial<iActionPlanFormData>;
       }>
     ) => {

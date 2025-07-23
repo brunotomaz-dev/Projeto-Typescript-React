@@ -38,13 +38,6 @@ const OperatorsFilling: React.FC = () => {
           <IndicatorsForOperators />
         </Col>
       </Row>
-      <Row>
-        <Col xs={12}>
-          <Card className='shadow border-0 bg-light p-3 mb-3'>
-            <h3 className='text-center'>Plano de Ação</h3>
-          </Card>
-        </Col>
-      </Row>
     </>
   );
 };

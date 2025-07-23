@@ -6,7 +6,8 @@ import { useLiveIndicatorsQuery } from '../../../hooks/queries/useLiveIndicators
 import { useMachineInfoQuery } from '../../../hooks/queries/useLiveMachineInfoQuery';
 import { useFilters } from '../../../hooks/useFilters';
 import { useTimelineMetrics } from '../../../hooks/useTimelineMetrics';
-import ActionPlanCardOperators from './ActionPlanCard';
+import CardActionPlan from './CardActionPlan';
+import OperatorActionPlanManager from './OperatorActionPlanManager';
 import StopAnalysis from './StopAnalysis';
 
 const IndicatorsForOperators: React.FC = () => {
@@ -200,9 +201,16 @@ const IndicatorsForOperators: React.FC = () => {
       </Row>
 
       {/* Plano de Ação */}
-      <Row className='mb-4'>
+      <Row>
         <Col xs={12}>
-          <ActionPlanCardOperators />
+          <OperatorActionPlanManager />
+        </Col>
+      </Row>
+
+      {/* Cards dos Planos de ação abertos */}
+      <Row>
+        <Col xs={12}>
+          <CardActionPlan scope={SCOPE} />
         </Col>
       </Row>
     </>

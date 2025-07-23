@@ -59,18 +59,42 @@ const ActionPlanOperatorsFormModal: React.FC = () => {
   const [selectedEquipment, setSelectedEquipment] = useState<string>('');
   const [availableEquipments, setAvailableEquipments] = useState<string[]>([]);
 
+  // Função para verificar se a descrição tem formato completo e extrair observações
+  const parseDescription = (description: string) => {
+    const parts = description.split(' - ');
+    const hasCompleteFormat = parts.length >= 6; // Linha, Setor, Equipamento, Motivo, Problema, Causa (+ Observações opcional)
+
+    let observations = '';
+    if (hasCompleteFormat) {
+      // Procurar por "Observações:" na string
+      const obsIndex = description.indexOf('Observações:');
+      if (obsIndex !== -1) {
+        observations = description.substring(obsIndex + 'Observações:'.length).trim();
+      }
+    }
+
+    return { hasCompleteFormat, observations };
+  };
+
   /* ------------------------------------------------ Effects ------------------------------------------------ */
   // Efeito para inicializar o formaulário em caso de edição ou autocomplete
   useEffect(() => {
     if (editData) {
+      // Modo de Edição
+      const { hasCompleteFormat, observations } = parseDescription(editData.descricao);
+
       setFormData({
-        // Modo de Edição
         ...editData,
         data_registro: new Date(editData.data_registro),
         data_conclusao: editData.data_conclusao ? new Date(editData.data_conclusao) : null,
       });
+
+      // Se a descrição tem formato completo, extrair observações
+      if (hasCompleteFormat && observations) {
+        setObs(observations);
+      }
     } else {
-      // Pré Peencimento do formulário
+      // Pré Preenchimento do formulário
       setFormData({
         ...emptyFormData,
         ...preFilledData,
@@ -123,12 +147,13 @@ const ActionPlanOperatorsFormModal: React.FC = () => {
     if (preFilledData) return;
 
     let descricao = `Linha ${selectedLines[0]} - ${sectors[0]}`;
-    if (selectedMotive) {
-      descricao += ` - ${selectedMotive}`;
-    }
 
     if (selectedEquipment) {
       descricao += ` - ${selectedEquipment}`;
+    }
+
+    if (selectedMotive) {
+      descricao += ` - ${selectedMotive}`;
     }
 
     if (selectedProblem) {
@@ -144,6 +169,10 @@ const ActionPlanOperatorsFormModal: React.FC = () => {
       descricao,
     }));
   }, [selectedMotive, selectedEquipment, selectedProblem, selectedCause, preFilledData]);
+
+  // Determinar se os selects devem ser obrigatórios
+  const isEditWithCompleteDescription = editData && parseDescription(editData.descricao).hasCompleteFormat;
+  const motivoRequired = !isEditWithCompleteDescription;
 
   /* ------------------------------------------------ Handles ------------------------------------------------ */
   // Fechar modal
@@ -175,11 +204,22 @@ const ActionPlanOperatorsFormModal: React.FC = () => {
 
     try {
       // Ajustar o formato da data de registro e adicionar observações
+      let finalDescription = formData.descricao;
+
+      // Se não for edição com descrição completa, adicionar observações
+      if (!isEditWithCompleteDescription) {
+        finalDescription = `${formData.descricao} - Observações: ${obs}`;
+      } else {
+        // Se for edição com descrição completa, reconstruir com novas observações
+        const baseDescription = formData.descricao.split(' - Observações:')[0];
+        finalDescription = `${baseDescription} - Observações: ${obs}`;
+      }
+
       const adjustedData = {
         ...formData,
         data_registro: format(formData.data_registro, 'yyyy-MM-dd'),
         data_conclusao: formData?.data_conclusao ? format(formData.data_conclusao, 'yyyy-MM-dd') : null,
-        descricao: `${formData.descricao} - Observações: ${obs}`,
+        descricao: finalDescription,
       };
 
       if (editData) {
@@ -398,7 +438,7 @@ const ActionPlanOperatorsFormModal: React.FC = () => {
                       name='motivo'
                       value={selectedMotive}
                       onChange={(e) => setSelectedMotive(e.target.value)}
-                      required
+                      required={motivoRequired}
                       disabled={isLoading}
                     >
                       <option value=''>Selecione um motivo</option>
@@ -416,7 +456,7 @@ const ActionPlanOperatorsFormModal: React.FC = () => {
                       value={selectedEquipment}
                       onChange={(e) => setSelectedEquipment(e.target.value)}
                       disabled={!selectedMotive || isLoading}
-                      required
+                      required={!!selectedMotive}
                     >
                       <option value=''>Selecione um equipamento</option>
                       {availableEquipments.map((equipamento) => (
@@ -435,7 +475,7 @@ const ActionPlanOperatorsFormModal: React.FC = () => {
                       value={selectedProblem}
                       onChange={(e) => setSelectedProblem(e.target.value)}
                       disabled={!selectedEquipment || !selectedMotive || isLoading}
-                      required
+                      required={!!selectedMotive && !!selectedEquipment}
                     >
                       <option value=''>Selecione um problema</option>
                       {availableProblems.map((problema) => (
@@ -452,7 +492,7 @@ const ActionPlanOperatorsFormModal: React.FC = () => {
                       value={selectedCause}
                       onChange={(e) => setSelectedCause(e.target.value)}
                       disabled={!selectedProblem || !selectedEquipment || !selectedMotive || isLoading}
-                      required
+                      required={!!selectedMotive && !!selectedEquipment && !!selectedProblem}
                     >
                       <option value=''>Selecione uma causa</option>
                       {availableCauses.map((causa) => (
