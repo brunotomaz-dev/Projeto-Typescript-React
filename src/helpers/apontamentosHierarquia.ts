@@ -1,4 +1,12 @@
-export const apontamentosHierarquia = {
+interface iApontamentosHierarquia {
+  [key: string]: {
+    [key: string]: {
+      [key: string]: string[];
+    };
+  };
+}
+
+export const apontamentosHierarquia: iApontamentosHierarquia = {
   Ajustes: {
     Recheadora: {
       'Quantidade de Recheio não Conforme': [

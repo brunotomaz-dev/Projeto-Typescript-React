@@ -17,16 +17,21 @@ interface iEfficiencyComparison {
   eficiencia: number;
 }
 
-export const useLiveIndicatorsQuery = (line: number) => {
+interface iLiveIndicatorsQueryProps {
+  selectedLine: number;
+  scope?: string;
+}
+
+export const useLiveIndicatorsQuery = ({ scope = 'liveLines', selectedLine }: iLiveIndicatorsQueryProps) => {
   // Usar o hook de filtros com escopo específico para LiveLines
-  const { date, turn } = useFilters('liveLines');
+  const { date, turn } = useFilters(scope);
 
   // Verificar se é data atual para determinar refetch interval
   const isToday = date === format(startOfDay(new Date()), 'yyyy-MM-dd');
 
   // Query principal para indicadores (eficiência, performance, reparo)
   const indicatorsQuery = useQuery({
-    queryKey: ['liveIndicators', date, line, turn],
+    queryKey: ['liveIndicators', date, selectedLine, turn],
     queryFn: async (): Promise<IndicatorData> => {
       const [effData, perfData, repData] = await Promise.all([
         getIndicator(IndicatorType.EFFICIENCY, date, [
@@ -53,7 +58,7 @@ export const useLiveIndicatorsQuery = (line: number) => {
 
   // Query para métricas de eficiência (médias mensais, por turno, etc.)
   const metricsQuery = useQuery({
-    queryKey: ['liveEfficiencyMetrics', line, turn],
+    queryKey: ['liveEfficiencyMetrics', selectedLine, turn],
     queryFn: async () => {
       // Data inicial do mês atual
       const now = startOfDay(new Date());
@@ -94,7 +99,7 @@ export const useLiveIndicatorsQuery = (line: number) => {
       const turnAverage = calculateMetricAverage(turnData);
 
       // Eficiência da linha
-      const lineData = filteredData.filter((item) => item.linha === line);
+      const lineData = filteredData.filter((item) => item.linha === selectedLine);
       const lineAverage = calculateMetricAverage(lineData);
 
       // Eficiência da linha por turno
@@ -122,9 +127,9 @@ export const useLiveIndicatorsQuery = (line: number) => {
   // Função auxiliar para filtrar dados por linha e turno (com tipos genéricos)
   const filterData = <T extends { linha: number; turno: string }>(data: T[]): T[] => {
     if (turn === 'ALL') {
-      return data.filter((item) => item.linha === line);
+      return data.filter((item) => item.linha === selectedLine);
     }
-    return data.filter((item) => item.linha === line && item.turno === turn);
+    return data.filter((item) => item.linha === selectedLine && item.turno === turn);
   };
 
   // Filtrar dados com base na linha e turno selecionados

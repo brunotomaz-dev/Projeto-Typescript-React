@@ -4,6 +4,7 @@ import { Card, Col, Row } from 'react-bootstrap';
 import GaugeChart from '../../components/gauge';
 import { IndicatorType, RecheioMeta } from '../../helpers/constants';
 import { useIndicatorData } from '../../hooks/useIndicatorData';
+import { usePermissions } from '../../hooks/usePermissions';
 import Heatmap from './components/sfm.heatmap';
 import HeatmapBxPeople from './components/sfm.HeatmapBxPeople';
 import LineSFM from './components/sfm.line';
@@ -11,6 +12,8 @@ import PinnedActionPlans from './components/sfm.PinnedActionPlan';
 import TodayActionPlans from './components/sfm.TodayActionPlans';
 
 const ShopFloor: React.FC = () => {
+  /* ------------------------------------------------- Hooks ------------------------------------------------- */
+  const { hasElementAccess } = usePermissions();
   /* ------------------------------------------- Encontra as datas ------------------------------------------ */
   // Encontrar a data de hoje, primeiro dia do mês passado e ultimo dia do mês passado
   const now = startOfDay(new Date());
@@ -162,8 +165,12 @@ const ShopFloor: React.FC = () => {
           <HeatmapBxPeople />
         </Row>
       </Card>
-      <TodayActionPlans />
-      <PinnedActionPlans />
+      {hasElementAccess('sfm_action_plan') && (
+        <>
+          <TodayActionPlans />
+          <PinnedActionPlans />
+        </>
+      )}
     </>
   );
 };

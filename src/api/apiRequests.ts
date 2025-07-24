@@ -382,7 +382,10 @@ export const updatePresenceData = async (data: iPresence) => {
 /* ---------------------------------------------------------------------------------------------- */
 /*                                          PLANO DE AÇÃO                                         */
 /* ---------------------------------------------------------------------------------------------- */
-export const getActionPlan = async (data?: DateParam, conclusao?: number | number[]) => {
+export const getActionPlan = async (
+  data?: DateParam,
+  conclusao?: number | number[]
+): Promise<iActionPlan[]> => {
   // Se data não for fornecida, não aplicamos filtro de data
   const dateFilter = data ? createDateFilter(data) : {};
 

@@ -3,10 +3,15 @@ import { useAppSelector } from '../redux/store/hooks';
 
 export type PermissionAction = 'view' | 'create' | 'update' | 'delete' | 'flag';
 export type PermissionResource = 'absence' | 'presence' | 'action_plan' | 'ihm_appointments';
-export type PermissionElement = 'btn_pin_action' | 'post_it_action' | 'btn_OS_preventive_history';
+export type PermissionElement =
+  | 'btn_pin_action'
+  | 'post_it_action'
+  | 'btn_OS_preventive_history'
+  | 'sfm_action_plan';
 
 export type PermissionPage =
   | 'supervision'
+  | 'operatorsFilling'
   | 'shop_floor'
   | 'hour_production'
   | 'live_lines'
@@ -28,7 +33,15 @@ type FunctionalRole =
   | 'Dev';
 
 // Contexto setorial
-type SectorRole = 'Produção' | 'Manutenção' | 'Qualidade' | 'PCP' | 'TI' | 'Basic' | 'Almoxarifado';
+type SectorRole =
+  | 'Produção'
+  | 'Manutenção'
+  | 'Qualidade'
+  | 'PCP'
+  | 'TI'
+  | 'Basic'
+  | 'Almoxarifado'
+  | 'Recheio';
 
 // Mapear níveis para cada contexto
 export const functionalLevelMap: Record<FunctionalRole, number> = {
@@ -46,6 +59,7 @@ export const functionalLevelMap: Record<FunctionalRole, number> = {
 export const sectorAccessMap: Record<SectorRole, string[]> = {
   Basic: ['shop_floor', 'live_lines'],
   Produção: ['supervision', 'hour_production', 'management'],
+  Recheio: ['operatorsFilling'],
   Manutenção: ['manusis', 'management', 'preventive'],
   Qualidade: [''],
   PCP: [''],
@@ -153,9 +167,10 @@ export function usePermissions() {
         }
       > = {
         supervision: { minLevel: 1 },
+        operatorsFilling: { minLevel: 0.5, maxLevel: 0.5, requiredSectors: ['Recheio'] },
         shop_floor: { minLevel: 0.5 },
         hour_production: { minLevel: 1 },
-        live_lines: { minLevel: 0.5 },
+        live_lines: { minLevel: 1 },
         management: { minLevel: 2 },
         action_plan_management: { minLevel: 3 },
         manusis: {
@@ -303,6 +318,7 @@ export function usePermissions() {
             return false; // Caso contrário, não permite
           },
         },
+        sfm_action_plan: { minLevel: 1, requiredSectors: ['Produção'] },
       };
 
       const requirements = elementRequirements[elementId];

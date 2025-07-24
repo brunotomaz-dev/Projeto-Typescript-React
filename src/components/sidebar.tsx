@@ -34,7 +34,7 @@ interface NavElement {
   label: string;
   icon: React.ReactNode | string;
   href?: string; // Opcional para grupos
-  hasAccess: boolean; // Agora obrigatório para todos os elementos
+  hasAccess: boolean;
   items?: NavSubItem[]; // Somente para grupos
 }
 
@@ -66,6 +66,7 @@ const Sidebar: React.FC = () => {
 
   /* ----------------------------------------- RolesMap ----------------------------------------- */
   const roleMap: RoleMapping = {
+    Operadores: 'Operacional',
     Lideres: 'Liderança',
     Supervisores: 'Supervisão',
     Gerentes: 'Gerência',
@@ -133,6 +134,13 @@ const Sidebar: React.FC = () => {
       icon: 'bi bi-eye',
       href: '/supervision',
       hasAccess: hasPageAccess('supervision'),
+    },
+    {
+      type: 'item',
+      label: 'Operadores',
+      icon: 'bi bi-person-workspace',
+      href: '/operatorsFilling',
+      hasAccess: hasPageAccess('operatorsFilling'),
     },
     {
       type: 'group',

@@ -40,7 +40,7 @@ const LiveLines: React.FC = () => {
 
   /* ----------------------------------------------- USE QUERIES --------------------------------------------- */
   // Hooks de query
-  const { machineId } = useLiveIndicatorsQuery(selectedLine);
+  const { machineId } = useLiveIndicatorsQuery({ selectedLine });
 
   /* ------------------------------------------------ USE MEMO ----------------------------------------------- */
   // Verificar quais turnos devem ser desabilitados

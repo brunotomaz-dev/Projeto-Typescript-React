@@ -53,11 +53,12 @@ const initialState: FiltersState = {
     home: defaultDateTurnFilter(),
     liveLines: alternativeDefaultTurnFilter(),
     supervision: alternativeDefaultTurnFilter(),
+    operators: alternativeDefaultTurnFilter(),
     management: defaultDateTurnFilter(),
   },
 };
 
-export const alternativeScopes = ['liveLines', 'supervision'];
+export const alternativeScopes = ['liveLines', 'supervision', 'operators'];
 
 const filtersSlice = createSlice({
   name: 'filters',

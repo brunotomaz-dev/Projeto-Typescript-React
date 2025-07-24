@@ -7,6 +7,7 @@ interface FiltersVisibilityPayload {
 
 interface UiStateState {
   filtersVisibility: Record<string, boolean>;
+  modalActionPlanCall: Record<string, boolean>;
 }
 
 const initialState: UiStateState = {
@@ -14,6 +15,9 @@ const initialState: UiStateState = {
     home: false,
     liveLines: false,
     supervision: false,
+  },
+  modalActionPlanCall: {
+    operators: false,
   },
 };
 
@@ -24,6 +28,19 @@ export const uiStateSlice = createSlice({
     setFiltersVisibility: (state, action: PayloadAction<FiltersVisibilityPayload>) => {
       const { scope, isVisible } = action.payload;
       state.filtersVisibility[scope] = isVisible;
+    },
+    setModalActionPlanCall: (state, action: PayloadAction<FiltersVisibilityPayload>) => {
+      const { scope, isVisible } = action.payload;
+      state.modalActionPlanCall[scope] = isVisible;
+    },
+    resetModalActionPlanCall: (state, action: PayloadAction<string | undefined>) => {
+      const scope = action.payload;
+      if (scope) {
+        state.modalActionPlanCall[scope] = false;
+      } else {
+        // Reset de todos os escopos
+        state.modalActionPlanCall = { ...initialState.modalActionPlanCall };
+      }
     },
     resetFiltersVisibility: (state, action: PayloadAction<string | undefined>) => {
       const scope = action.payload;
@@ -38,6 +55,11 @@ export const uiStateSlice = createSlice({
   },
 });
 
-export const { setFiltersVisibility, resetFiltersVisibility } = uiStateSlice.actions;
+export const {
+  setFiltersVisibility,
+  resetFiltersVisibility,
+  setModalActionPlanCall,
+  resetModalActionPlanCall,
+} = uiStateSlice.actions;
 
 export default uiStateSlice.reducer;

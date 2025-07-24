@@ -18,7 +18,7 @@ const LineControls: React.FC = () => {
   const selectedLine = useAppSelector((state) => state.liveLines.selectedLine);
 
   // Buscar informações de parada
-  const { lastInfoIHM } = useInfoIHMQuery(selectedLine);
+  const { lastInfoIHM } = useInfoIHMQuery({ selectedLine });
 
   // Variáveis
   const nowDate = format(startOfDay(new Date()), 'yyyy-MM-dd');

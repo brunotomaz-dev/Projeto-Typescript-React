@@ -1,14 +1,16 @@
 import { useMemo } from 'react';
 import { impactFilter } from '../helpers/ImpactFilter';
-import { useAppSelector } from '../redux/store/hooks';
 import { useInfoIHMQuery } from './queries/useLiveInfoIHMQuery';
+import { useFilters } from './useFilters';
 
-export const useTimelineData = () => {
-  // Obter a linha selecionada do Redux
-  const selectedLine = useAppSelector((state) => state.liveLines.selectedLine);
+export const useTimelineMetrics = (scope: string) => {
+  const { selectedLines } = useFilters(scope);
 
   // Utilizar o hook de query existente
-  const { ihmData, isLoading, isFetching, error } = useInfoIHMQuery({ selectedLine });
+  const { ihmData, isLoading, isFetching, error } = useInfoIHMQuery({
+    scope: 'operators',
+    selectedLine: selectedLines[0],
+  });
 
   // Calcular métricas de resumo
   const metrics = useMemo(() => {
@@ -142,6 +144,30 @@ export const useTimelineData = () => {
       showAsProblem,
     };
   }, [ihmData]);
+
+  if (selectedLines.length !== 1) {
+    // Lógica para múltiplas linhas selecionadas
+    return {
+      data: [],
+      isLoading: false,
+      isFetching: false,
+      error: null,
+      metrics: {
+        totalRunningTime: 0,
+        totalStoppedTime: 0,
+        longestContinuousRun: 0,
+        percentageRunning: 0,
+        totalEvents: 0,
+        stopEvents: 0,
+        stopEventsImpactingEfficiency: 0,
+        mainCause: 'N/A',
+        mainCauseText: 'N/A',
+        mainCauseTime: 0,
+        showAsProblem: false,
+      },
+      hasData: false,
+    };
+  }
 
   return {
     data: ihmData,

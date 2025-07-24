@@ -7,12 +7,17 @@ import { setMachineStatus } from '../../redux/store/features/liveLinesSlice';
 import { useAppDispatch } from '../../redux/store/hooks';
 import { useFilters } from '../useFilters';
 
-export const useMachineInfoQuery = (machineId: string) => {
+interface iMachineInfoProps {
+  scope?: string;
+  machineId: string;
+}
+
+export const useMachineInfoQuery = ({ scope = 'liveLines', machineId }: iMachineInfoProps) => {
   // Dispatch para Redux
   const dispatch = useAppDispatch();
 
   // Usar filtros com escopo 'liveLines'
-  const { date, turn } = useFilters('liveLines');
+  const { date, turn } = useFilters(scope);
 
   // Verificar se é a data atual para determinar refetch interval
   const isToday = date === format(startOfDay(new Date()), 'yyyy-MM-dd');
@@ -49,6 +54,7 @@ export const useMachineInfoQuery = (machineId: string) => {
 
   // Efeito para atualizar o status no Redux
   useEffect(() => {
+    if (scope !== 'liveLines') return; // Só atualiza se for o escopo correto
     dispatch(setMachineStatus(status));
   }, [status, dispatch]);
 

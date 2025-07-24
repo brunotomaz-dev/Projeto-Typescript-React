@@ -195,7 +195,12 @@ const DetectorModal: React.FC = () => {
               </Form.Group>
               <Form.Group className='mb-3'>
                 <Form.Label>Hora Registro</Form.Label>
-                <Form.Control type='time' name='hora_registro' value={form.hora_registro} disabled />
+                <Form.Control
+                  type='time'
+                  name='hora_registro'
+                  value={form.hora_registro}
+                  onChange={handleChange}
+                />
               </Form.Group>
               <Form.Group className='mb-3'>
                 <Form.Label>
@@ -270,6 +275,17 @@ const DetectorModal: React.FC = () => {
                 </Stack>
               </React.Fragment>
             ))}
+
+            <Form.Group className='mb-3 col-md-2'>
+              <Form.Label>Metal Detectado</Form.Label>
+              <Form.Control
+                type='number'
+                name='metal_detectado'
+                value={form.metal_detectado}
+                onChange={handleChange}
+                placeholder='Quantidade de metal detectado'
+              />
+            </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>

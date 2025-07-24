@@ -13,8 +13,12 @@ export const useProductionData = () => {
     indicators,
     isLoading: indicatorsLoading,
     isFetching: indicatorsFetching,
-  } = useLiveIndicatorsQuery(selectedLine);
-  const { product, isLoading: machineLoading, isFetching: machineFetching } = useMachineInfoQuery(machineId);
+  } = useLiveIndicatorsQuery({ selectedLine });
+  const {
+    product,
+    isLoading: machineLoading,
+    isFetching: machineFetching,
+  } = useMachineInfoQuery({ machineId });
 
   return {
     productionTotal: indicators.productionTotal,

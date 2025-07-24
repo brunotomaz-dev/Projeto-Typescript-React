@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 import EChartsReact from 'echarts-for-react';
 import React, { useMemo } from 'react';
 import { Row } from 'react-bootstrap';
-import { BSColors, colorObj } from '../../../helpers/constants';
+import { getMotivoColor } from '../../../helpers/constants';
 import { useTimelineData } from '../../../hooks/useTimelineData';
 
 const Timeline: React.FC = () => {
@@ -79,7 +79,7 @@ const Timeline: React.FC = () => {
       type: 'custom',
       legendHoverLink: true,
       itemStyle: {
-        color: colorObj[motivo as keyof typeof colorObj] || BSColors.GREY_600_COLOR,
+        color: getMotivoColor(motivo),
       },
       renderItem: (params: any, api: any) => {
         const start = api.coord([api.value(0), params.coordSys.y[0]]);
@@ -95,7 +95,7 @@ const Timeline: React.FC = () => {
             height: height,
           },
           style: {
-            fill: colorObj[motivo as keyof typeof colorObj] || BSColors.GREY_600_COLOR,
+            fill: getMotivoColor(motivo, motivo),
           },
         };
       },
