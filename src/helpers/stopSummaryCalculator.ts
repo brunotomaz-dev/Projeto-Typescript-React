@@ -1,6 +1,6 @@
 import { iInfoIHM } from '../interfaces/InfoIHM.interface';
 import { iInfoIhmLive } from '../pages/LiveLines/interfaces/infoIhm.interface';
-import { CICLOS_ESPERADOS, CICLOS_ESPERADOS_BOL } from './constants';
+import { CICLOS_ESPERADOS, CICLOS_ESPERADOS_240, CICLOS_ESPERADOS_BOL } from './constants';
 import { impactFilter } from './ImpactFilter';
 
 export interface StopSummary {
@@ -46,20 +46,44 @@ export const calculateStopSummary = (
     // Filtra pela maquina rodando
     const filteredCycleData = cycleData.filter((item) => item.ciclo_1_min > 0);
 
-    // Produto único
-    const product = filteredCycleData.length > 0 ? filteredCycleData[0].produto : '';
+    if (filteredCycleData.length === 0) {
+      return {
+        ['Perda de Ciclo-Ciclo Baixo-Ciclo Perdido Min']: {
+          problema: '0.00 ciclos/min (0 cxs/turno)',
+          impacto: 0,
+          motivo: 'Perda de Ciclo',
+          causa: 'Ciclo Baixo',
+          tempo: 0,
+          equipamento: 'Termoformadora',
+        },
+      };
+    }
 
-    // Verifica se o produto contém a palavra ' BOL', se tiver usa CICLOS_ESPERADOS, se não CICLOS_ESPERADOS_BOL
-    const ciclosIdeais = product.includes(' BOL') ? CICLOS_ESPERADOS_BOL : CICLOS_ESPERADOS;
+    // Adicionar ciclo_ideal para cada máquina baseado no tipo de produto
+    const cycleDataWithIdeal = filteredCycleData.map((machine) => {
+      let ciclo_ideal: number;
 
-    // Média de ciclos por minuto
+      if (machine.produto.includes(' BOL')) {
+        ciclo_ideal = CICLOS_ESPERADOS_BOL;
+      } else if (machine.produto.includes('240')) {
+        ciclo_ideal = CICLOS_ESPERADOS_240;
+      } else {
+        ciclo_ideal = CICLOS_ESPERADOS;
+      }
+
+      return { ...machine, ciclo_ideal };
+    });
+
+    // Média de ciclos por minuto real
     const cycleAverage =
-      filteredCycleData.length > 0
-        ? filteredCycleData.reduce((acc, item) => acc + item.ciclo_1_min, 0) / filteredCycleData.length
-        : 0;
+      cycleDataWithIdeal.reduce((acc, item) => acc + item.ciclo_1_min, 0) / cycleDataWithIdeal.length;
 
-    // Diferença entre a média e o esperado
-    const cycleDiff = ciclosIdeais > cycleAverage ? ciclosIdeais - cycleAverage : 0;
+    // Média de ciclos ideais
+    const idealCycleAverage =
+      cycleDataWithIdeal.reduce((acc, item) => acc + item.ciclo_ideal, 0) / cycleDataWithIdeal.length;
+
+    // Diferença entre a média ideal e a real
+    const cycleDiff = idealCycleAverage > cycleAverage ? idealCycleAverage - cycleAverage : 0;
 
     return {
       ['Perda de Ciclo-Ciclo Baixo-Ciclo Perdido Min']: {
@@ -67,7 +91,7 @@ export const calculateStopSummary = (
         impacto: 0,
         motivo: 'Perda de Ciclo',
         causa: 'Ciclo Baixo',
-        tempo: Math.round((cycleDiff * totalRunTime) / ciclosIdeais),
+        tempo: Math.round((cycleDiff * totalRunTime) / idealCycleAverage),
         equipamento: 'Termoformadora',
       },
     };

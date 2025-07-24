@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { iMaquinaInfoParams } from '../api/apiRequests';
-import { CICLOS_ESPERADOS, CICLOS_ESPERADOS_BOL } from '../helpers/constants';
+import { CICLOS_ESPERADOS, CICLOS_ESPERADOS_240, CICLOS_ESPERADOS_BOL } from '../helpers/constants';
 import { useAppSelector } from '../redux/store/hooks';
 import { useFullInfoIHMQuery } from './queries/useFullInfoIhmQuery';
 import { useMaqInfoQuery } from './queries/useMaqInfoQuery';
@@ -95,20 +95,36 @@ const useStopsWithCycles = (scope: string) => {
 
       if (lineMachines.length === 0) return;
 
-      // Primeiro, calcular a média de ciclos por minuto da linha
+      // Adicionar ciclo_ideal para cada máquina baseado no tipo de produto
+      const lineMachinesWithIdealCycle = lineMachines.map((machine) => {
+        let ciclo_ideal: number;
+
+        if (machine.produto.includes(' BOL')) {
+          ciclo_ideal = CICLOS_ESPERADOS_BOL;
+        } else if (machine.produto.includes('240')) {
+          ciclo_ideal = CICLOS_ESPERADOS_240;
+        } else {
+          ciclo_ideal = CICLOS_ESPERADOS;
+        }
+
+        return { ...machine, ciclo_ideal };
+      });
+
+      // Calcular a média de ciclos por minuto da linha
       const averageCyclesByMin =
-        lineMachines.reduce((acc, item) => acc + item.ciclo_1_min, 0) / lineMachines.length;
+        lineMachinesWithIdealCycle.reduce((acc, item) => acc + item.ciclo_1_min, 0) /
+        lineMachinesWithIdealCycle.length;
 
-      // Determinar o ciclo ideal baseado no tipo de produto mais comum na linha
-      const bolProducts = lineMachines.filter((item) => item.produto.includes(' BOL')).length;
-      const regularProducts = lineMachines.length - bolProducts;
+      // Calcular a média de ciclos ideais da linha
+      const averageIdealCycles =
+        lineMachinesWithIdealCycle.reduce((acc, item) => acc + item.ciclo_ideal, 0) /
+        lineMachinesWithIdealCycle.length;
 
-      // Usar o ciclo ideal baseado na maioria dos produtos na linha
-      const idealCycle = bolProducts > regularProducts ? CICLOS_ESPERADOS_BOL : CICLOS_ESPERADOS;
-
-      // Calcular a perda de ciclo com base na média da linha vs. ciclo ideal
+      // Calcular a perda de ciclo com base na média da linha vs. média do ciclo ideal
       const cycleLossPercent =
-        idealCycle > averageCyclesByMin ? ((idealCycle - averageCyclesByMin) * 100) / idealCycle : 0;
+        averageIdealCycles > averageCyclesByMin
+          ? ((averageIdealCycles - averageCyclesByMin) * 100) / averageIdealCycles
+          : 0;
 
       // Calcular tempo perdido para esta linha
       const runTime = runTimeByLine[linha] || 0;

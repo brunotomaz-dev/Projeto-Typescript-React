@@ -1,6 +1,7 @@
 // Definindo tipos e constantes globais
-export const CICLOS_ESPERADOS = 11.2;
+export const CICLOS_ESPERADOS = 11.5;
 export const CICLOS_ESPERADOS_BOL = 7;
+export const CICLOS_ESPERADOS_240 = 13;
 
 export type TurnoID = 'MAT' | 'VES' | 'NOT' | 'ALL';
 
