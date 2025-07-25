@@ -56,8 +56,6 @@ const ManagementDashboards: React.FC = () => {
         <AnimatedFilterNotification scope='management' />
       </Row>
 
-      <SetupDash />
-
       <StopsDash />
 
       {dateType === 'single' && (
@@ -67,6 +65,8 @@ const ManagementDashboards: React.FC = () => {
           </Col>
         </Row>
       )}
+
+      <SetupDash />
     </Container>
   );
 };

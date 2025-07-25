@@ -33,7 +33,7 @@ const SetupDash: React.FC = () => {
   // No data state - apenas quando não há dados e não está carregando
   if (setupData.length === 0 && !isRefreshing) {
     return (
-      <Row className='mb-4'>
+      <Row className='mt-3'>
         <Col>
           <Card className='text-center py-5 shadow-sm border-0'>
             <Card.Body>
@@ -48,7 +48,7 @@ const SetupDash: React.FC = () => {
   }
 
   return (
-    <Card className='shadow border-0 mb-3 bg-transparent p-2'>
+    <Card className='shadow border-0 mt-3 bg-transparent p-2'>
       <h3 className='text-center'>Setup</h3>
 
       {/* Métricas */}
