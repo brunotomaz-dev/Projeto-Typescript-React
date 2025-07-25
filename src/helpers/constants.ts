@@ -194,3 +194,5 @@ export const indicatorsActionPlan: Record<string, string> = {
   S: 'Segurança',
   C: 'Custo',
 };
+
+export const setoresNames: string[] = ['Panificação', 'Forno', 'Pasta', 'Recheio', 'Embalagem', 'Farofa'];

@@ -3,10 +3,11 @@
 import { format, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
 import React, { useEffect, useState } from 'react';
-import { Button, Col, FloatingLabel, Form, Modal, Row, Stack } from 'react-bootstrap';
+import { Button, Col, Form, Modal, Row, Stack } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 import { createActionPlan, updateActionPlan } from '../api/apiRequests';
-import { TurnoID } from '../helpers/constants';
+import { apontamentosHierarquia } from '../helpers/apontamentosHierarquia';
+import { setoresNames, TurnoID } from '../helpers/constants';
 import { iActionPlan, iActionPlanCards, iActionPlanFormData } from '../interfaces/ActionPlan.interface';
 import { useAppSelector } from '../redux/store/hooks';
 
@@ -31,10 +32,24 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
   /* ------------------------------------------ CONSTANTS ----------------------------------------- */
   const MAX_DESCRIPTION_LENGTH = 512;
   const MAX_LENGTH = 256;
+  // Array de linhas disponíveis (1-14)
+  const LINES = Array.from({ length: 14 }, (_, i) => i + 1);
 
   /* ----------------------------------------- LOCAL STATE ---------------------------------------- */
   const [validated, setValidated] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Estados locais para os selects
+  const [selectedCause, setSelectedCause] = useState<string>('');
+  const [availableCauses, setAvailableCauses] = useState<string[]>([]);
+  const [selectedProblem, setSelectedProblem] = useState<string>('');
+  const [availableProblems, setAvailableProblems] = useState<string[]>([]);
+  const [selectedMotive, setSelectedMotive] = useState<string>('');
+  const [selectedEquipment, setSelectedEquipment] = useState<string>('');
+  const [availableEquipments, setAvailableEquipments] = useState<string[]>([]);
+  const [selectedLine, setSelectedLine] = useState<string>('');
+  const [selectedSector, setSelectedSector] = useState<string>('');
+  const [obs, setObs] = useState<string>('');
 
   // Helper para garantir que datas sejam objetos Date
   const ensureDate = (date: string | Date | null | undefined): Date => {
@@ -74,9 +89,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
       : { ...emptyForm }
   );
 
-  const [descriptionCharsLeft, setDescriptionCharsLeft] = useState(
-    MAX_DESCRIPTION_LENGTH - (formData.descricao?.length || 0)
-  );
+  const OBSERVATION_LENGTH_LIMIT = MAX_DESCRIPTION_LENGTH - formData.descricao.length;
 
   /* ------------------------------------------- EFFECTS ------------------------------------------ */
   // Atualizar o formulário quando o actionPlan mudar
@@ -89,16 +102,14 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
         // Garantir que data_conclusao é um objeto Date ou null
         data_conclusao: actionPlan.data_conclusao ? ensureDate(actionPlan.data_conclusao) : null,
       });
+
+      const { hasCompleteFormat, observations } = parseDescription(actionPlan.descricao);
+      // Se a descrição tem formato completo, extrair observações
+      if (hasCompleteFormat && observations) {
+        setObs(observations);
+      }
     }
   }, [actionPlan, isEditing]);
-
-  useEffect(() => {
-    if (formData.descricao) {
-      setDescriptionCharsLeft(MAX_DESCRIPTION_LENGTH - formData.descricao.length);
-    } else {
-      setDescriptionCharsLeft(MAX_DESCRIPTION_LENGTH);
-    }
-  }, [formData.descricao]);
 
   /* ------------------------------------------- HANDLERS ----------------------------------------- */
   // Handler para mudanças nos campos do formulário
@@ -117,17 +128,6 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
         ...formData,
         [name]: value,
       });
-    }
-
-    // Tratamento especial para descrição (limitar caracteres)
-    if (name === 'descricao') {
-      // Limita o valor ao máximo permitido
-      const limitedValue = value.slice(0, MAX_DESCRIPTION_LENGTH);
-      setFormData({
-        ...formData,
-        [name]: limitedValue,
-      });
-      setDescriptionCharsLeft(MAX_DESCRIPTION_LENGTH - limitedValue.length);
     }
   };
 
@@ -181,10 +181,23 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
     setIsSaving(true);
 
     try {
+      // Ajustar o formato da data de registro e adicionar observações
+      let finalDescription = formData.descricao;
+
+      // Se não for edição com descrição completa, adicionar observações
+      if (!isEditWithCompleteDescription) {
+        finalDescription = `${formData.descricao} - Observações: ${obs}`;
+      } else {
+        // Se for edição com descrição completa, reconstruir com novas observações
+        const baseDescription = formData.descricao.split(' - Observações:')[0];
+        finalDescription = `${baseDescription} - Observações: ${obs}`;
+      }
+
       const apiData = {
         ...formData,
         data_registro: formatDateForAPI(formData.data_registro as Date),
         data_conclusao: formData.data_conclusao ? formatDateForAPI(formData.data_conclusao as Date) : null,
+        descricao: finalDescription,
       };
 
       let result;
@@ -228,16 +241,125 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
   };
 
   const handleCancel = () => {
+    handleHide();
+  };
+
+  const handleHide = () => {
     setFormData(emptyForm);
+    setObs('');
+    setSelectedCause('');
+    setSelectedProblem('');
+    setSelectedEquipment('');
+    setSelectedMotive('');
+    setSelectedLine('');
+    setSelectedSector('');
     setValidated(false);
     onHide();
   };
+
+  /* ------------------------------------------- Selects De Motivo ------------------------------------------- */
+  //Effects para controlar e popular os selects
+
+  useEffect(() => {
+    // Resetar o setor se não houver linha selecionada
+    if (selectedSector === '') {
+      setSelectedLine('');
+    }
+  }, [selectedSector]);
+
+  useEffect(() => {
+    // Popular equipamento de acordo com o Motivo
+    if (selectedMotive) {
+      const equipment = Object.keys(apontamentosHierarquia[selectedMotive] || {});
+      setAvailableEquipments(equipment);
+    } else {
+      setAvailableEquipments([]);
+      setSelectedEquipment('');
+    }
+  }, [selectedMotive]);
+
+  useEffect(() => {
+    // Popular problemas de acordo com o equipamento selecionado
+    if (selectedEquipment && selectedMotive) {
+      const problems = Object.keys(apontamentosHierarquia[selectedMotive]?.[selectedEquipment] || {});
+      setAvailableProblems(problems);
+    } else {
+      setAvailableProblems([]);
+      setSelectedProblem('');
+    }
+  }, [selectedEquipment]);
+
+  useEffect(() => {
+    // Popular causas de acordo com o problema selecionado
+    if (selectedProblem && selectedMotive && selectedEquipment) {
+      const causes = apontamentosHierarquia[selectedMotive]?.[selectedEquipment]?.[selectedProblem] || [];
+      setAvailableCauses(causes);
+    } else {
+      setAvailableCauses([]);
+      setSelectedCause('');
+    }
+  }, [selectedProblem, selectedMotive, selectedEquipment]);
+
+  // Efeito para preencher descrição com base nos selects
+  useEffect(() => {
+    let descricao = formData.descricao;
+
+    if (selectedLine) {
+      descricao = `Linha ${selectedLine}`;
+    }
+
+    if (selectedSector) {
+      descricao += ` - ${selectedSector}`;
+    }
+
+    if (selectedEquipment) {
+      descricao += ` - ${selectedEquipment}`;
+    }
+
+    if (selectedMotive) {
+      descricao += ` - ${selectedMotive}`;
+    }
+
+    if (selectedProblem) {
+      descricao += ` - ${selectedProblem}`;
+    }
+
+    if (selectedCause) {
+      descricao += ` - ${selectedCause}`;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      descricao,
+    }));
+  }, [selectedMotive, selectedEquipment, selectedProblem, selectedCause, selectedSector, selectedLine]);
+
+  // Função para verificar se a descrição tem formato completo e extrair observações
+  const parseDescription = (description: string) => {
+    const parts = description.split(' - ');
+    const hasCompleteFormat = parts.length >= 6; // Linha, Setor, Equipamento, Motivo, Problema, Causa (+ Observações opcional)
+
+    let observations = '';
+    if (hasCompleteFormat) {
+      // Procurar por "Observações:" na string
+      const obsIndex = description.indexOf('Observações:');
+      if (obsIndex !== -1) {
+        observations = description.substring(obsIndex + 'Observações:'.length).trim();
+      }
+    }
+
+    return { hasCompleteFormat, observations };
+  };
+
+  // Determinar se os selects devem ser obrigatórios
+  const isEditWithCompleteDescription = isEditing && parseDescription(formData.descricao).hasCompleteFormat;
+  const motivoRequired = !isEditWithCompleteDescription;
 
   /* ---------------------------------------------------------------------------------------------- */
   /*                                             Layout                                             */
   /* ---------------------------------------------------------------------------------------------- */
   return (
-    <Modal show={show} onHide={onHide} size='lg' centered>
+    <Modal show={show} onHide={handleHide} size='lg' centered>
       <Modal.Header closeButton>
         <Modal.Title>{isEditing ? 'Editar Plano de Ação' : 'Novo Plano de Ação'}</Modal.Title>
       </Modal.Header>
@@ -245,16 +367,22 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
       <Form noValidate validated={validated} onSubmit={handleSubmit}>
         <Modal.Body>
           <Row className='mb-3'>
-            <Form.Group as={Col} md='3'>
+            <Form.Group controlId='turnoForm' className='col-md-3'>
               <Form.Label>Turno</Form.Label>
-              <Form.Select name='turno' value={formData.turno || 'MAT'} onChange={handleChange} required>
+              <Form.Select
+                id='turnoSelect'
+                name='turno'
+                value={formData.turno || 'MAT'}
+                onChange={handleChange}
+                required
+              >
                 <option value='MAT'>Matutino</option>
                 <option value='VES'>Vespertino</option>
                 <option value='NOT'>Noturno</option>
               </Form.Select>
             </Form.Group>
 
-            <Form.Group as={Col} md='3'>
+            <Form.Group controlId='dataRegistro' className='col-md-3'>
               <Form.Label>Data de Registro</Form.Label>
 
               <DatePicker
@@ -272,9 +400,10 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
                 required
               />
             </Form.Group>
-            <Form.Group as={Col} md='3'>
+            <Form.Group controlId='prioridadeForm' className='col-md-3'>
               <Form.Label>Prioridade</Form.Label>
               <Form.Select
+                id='prioridadeSelect'
                 name='prioridade'
                 value={formData.prioridade || 1}
                 onChange={handleChange}
@@ -285,7 +414,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
                 <option value={3}>Alta</option>
               </Form.Select>
             </Form.Group>
-            <Form.Group as={Col} md='3'>
+            <Form.Group controlId='impactoForm' className='col-md-3'>
               <Form.Label>Impacto (%)</Form.Label>
               <Form.Control
                 type='number'
@@ -374,33 +503,149 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
               </Form.Group>
             </div>
           )}
-          <Form.Group className='mb-3'>
-            <Form.Label>Descrição</Form.Label>
-            <FloatingLabel
-              className='mb-2'
-              label='Descreva na ordem: Linha | Equipamento | Operador | Setor | Problema e demais observações.'
-            >
+
+          <Row className='mb-3'>
+            <Form.Group controlId='setorForm' className='col-md-6'>
+              <Form.Label>Setor</Form.Label>
+              <Form.Select
+                name='setor'
+                value={selectedSector}
+                onChange={(e) => setSelectedSector(e.target.value)}
+                required={motivoRequired}
+              >
+                <option value=''>Selecione um Setor</option>
+                {setoresNames.map((setor) => (
+                  <option key={setor} value={setor}>
+                    {setor}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+            <Form.Group controlId='linhaForm' className='col-md-6'>
+              <Form.Label>Linha</Form.Label>
+              <Form.Select
+                name='linha'
+                value={selectedLine}
+                onChange={(e) => setSelectedLine(e.target.value)}
+                disabled={!selectedSector}
+                required={!!selectedSector}
+              >
+                <option value=''>Selecione uma Linha</option>
+                {LINES.map((linha) => (
+                  <option key={linha} value={linha}>
+                    Linha {linha}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+          </Row>
+          <Row className='mb-3'>
+            <Form.Group controlId='motivoForm' className='col-md-6'>
+              <Form.Label>Motivo</Form.Label>
+              <Form.Select
+                name='motivo'
+                value={selectedMotive}
+                onChange={(e) => setSelectedMotive(e.target.value)}
+                required={!!selectedLine && !!selectedSector}
+                disabled={!selectedLine || !selectedSector}
+              >
+                <option value=''>Selecione um motivo</option>
+                {Object.keys(apontamentosHierarquia).map((motivo) => (
+                  <option key={motivo} value={motivo}>
+                    {motivo}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+            <Form.Group controlId='equipamentoForm' className='col-md-6'>
+              <Form.Label>Equipamento</Form.Label>
+              <Form.Select
+                name='equipamento'
+                value={selectedEquipment}
+                onChange={(e) => setSelectedEquipment(e.target.value)}
+                disabled={!selectedMotive}
+                required={!!selectedMotive}
+              >
+                <option value=''>Selecione um equipamento</option>
+                {availableEquipments.map((equipamento) => (
+                  <option key={equipamento} value={equipamento}>
+                    {equipamento}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+          </Row>
+          <Row className='mb-3'>
+            <Form.Group controlId='problemaForm' className='col-md-6'>
+              <Form.Label>Problema</Form.Label>
+              <Form.Select
+                name='problema'
+                value={selectedProblem}
+                onChange={(e) => setSelectedProblem(e.target.value)}
+                disabled={!selectedEquipment || !selectedMotive}
+                required={!!selectedMotive && !!selectedEquipment}
+              >
+                <option value=''>Selecione um problema</option>
+                {availableProblems.map((problema) => (
+                  <option key={problema} value={problema}>
+                    {problema}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+            <Form.Group controlId='causaForm' className='col-md-6'>
+              <Form.Label>Causa</Form.Label>
+              <Form.Select
+                name='causa'
+                value={selectedCause}
+                onChange={(e) => setSelectedCause(e.target.value)}
+                disabled={!selectedProblem || !selectedEquipment || !selectedMotive}
+                required={!!selectedMotive && !!selectedEquipment && !!selectedProblem}
+              >
+                <option value=''>Selecione uma causa</option>
+                {availableCauses.map((causa) => (
+                  <option key={causa} value={causa}>
+                    {causa}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+          </Row>
+
+          <Row className='mb-3'>
+            <Form.Group controlId='descricaoForm' className='col-md-12'>
+              <Form.Label>Descrição</Form.Label>
+              <br />
+              <Form.Text className='text-muted mb-2'>{formData.descricao}</Form.Text>
+            </Form.Group>
+          </Row>
+          <Row className='mb-3'>
+            <Form.Group controlId='observacoesForm' className='col-md-12'>
+              <Form.Label>Observações</Form.Label>
               <Form.Control
                 as='textarea'
-                rows={4}
-                placeholder=''
-                style={{ height: '150px', minHeight: '150px' }}
-                name='descricao'
-                value={formData.descricao || ''}
-                maxLength={MAX_DESCRIPTION_LENGTH}
-                onChange={handleChange}
+                name='observacoes'
+                value={obs}
+                onChange={(e) => setObs(e.target.value)}
+                maxLength={OBSERVATION_LENGTH_LIMIT}
+                rows={3}
                 required
               />
-            </FloatingLabel>
-            <Form.Control.Feedback type='invalid'>Informe a descrição do plano.</Form.Control.Feedback>
-            <Row className='d-flex justify-content-between mt-1'>
-              {descriptionCharsLeft < 512 && (
-                <small className={`${descriptionCharsLeft < 50 ? 'text-danger' : 'text-muted'}`}>
-                  {descriptionCharsLeft} caracteres restantes
+              <Form.Text
+                className={`${OBSERVATION_LENGTH_LIMIT - obs.length < 50 ? 'text-danger' : 'text-muted'}`}
+              >
+                <small>
+                  {OBSERVATION_LENGTH_LIMIT - obs.length < 50 && (
+                    <i className='bi bi-exclamation-triangle-fill me-1'></i>
+                  )}
+                  {obs.length === 0
+                    ? `Máximo ${OBSERVATION_LENGTH_LIMIT} caracteres.`
+                    : `Restam ${OBSERVATION_LENGTH_LIMIT - obs.length} caracteres.`}
                 </small>
-              )}
-            </Row>
-          </Form.Group>
+              </Form.Text>
+              <Form.Control.Feedback type='invalid'>Informe as observações.</Form.Control.Feedback>
+            </Form.Group>
+          </Row>
 
           <Form.Group className='mb-3'>
             <Form.Label>Contenção</Form.Label>
@@ -423,7 +668,7 @@ const ActionPlanFormModal: React.FC<iActionPlanFormModalProps> = ({
               as='textarea'
               rows={1}
               name='causa_raiz'
-              placeholder='Por que o problema ocorreu?'
+              placeholder='Por que o problema ocorreu? (Aplique o 5 porquês)'
               value={formData.causa_raiz || ''}
               maxLength={MAX_LENGTH}
               onChange={handleChange}

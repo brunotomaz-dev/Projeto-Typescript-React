@@ -430,7 +430,7 @@ const ActionPlanOperatorsFormModal: React.FC = () => {
               </Row>
             )}
             {!preFilledData && (
-              <div>
+              <>
                 <Row className='mb-3'>
                   <Form.Group controlId='motivoForm' className='col-md-6'>
                     <Form.Label>Motivo</Form.Label>
@@ -503,7 +503,7 @@ const ActionPlanOperatorsFormModal: React.FC = () => {
                     </Form.Select>
                   </Form.Group>
                 </Row>
-              </div>
+              </>
             )}
             <Row className='mb-3'>
               <Form.Group controlId='descricaoForm' className='col-md-12'>
