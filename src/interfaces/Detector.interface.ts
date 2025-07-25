@@ -15,4 +15,5 @@ export interface iDetectorData {
   peso_baixo_porcentagem: number;
   metal_detectado: number;
   produto: string;
+  usuario: string;
 }

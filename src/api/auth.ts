@@ -113,6 +113,7 @@ export const login = async (username: string, password: string): Promise<Decoded
         fullName: `${first_name} ${last_name}`,
         groups: groups,
         userId: decoded.user_id,
+        userName: username,
         functionalRole: functionalGroups,
         functionalLevel: Math.max(
           0,
@@ -165,6 +166,7 @@ export const initAuth = (): boolean => {
         fullName: username,
         groups,
         userId: decoded.user_id,
+        userName: username,
         functionalRole: functionalGroups,
         functionalLevel: Math.max(
           0,

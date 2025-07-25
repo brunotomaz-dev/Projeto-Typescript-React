@@ -4,6 +4,7 @@ export interface UserState {
   isLoggedIn: boolean;
   fullName: string;
   userId: string;
+  userName: string;
   groups: string[];
   functionalRole: string[];
   functionalLevel: number;
@@ -19,6 +20,7 @@ const initialState: UserState = {
   isLoggedIn: false,
   fullName: '',
   userId: '',
+  userName: '',
   groups: [],
   functionalRole: [],
   functionalLevel: 0,
@@ -38,6 +40,7 @@ export const userSlice = createSlice({
       state.isLoggedIn = true;
       state.fullName = action.payload.fullName;
       state.userId = action.payload.userId;
+      state.userName = action.payload.userName;
       state.groups = action.payload.groups;
       state.functionalRole = action.payload.functionalRole;
       state.functionalLevel = action.payload.functionalLevel;
@@ -47,6 +50,7 @@ export const userSlice = createSlice({
       state.isLoggedIn = false;
       state.fullName = '';
       state.userId = '';
+      state.userName = '';
       state.groups = [];
       state.functionalRole = [];
       state.functionalLevel = 0;

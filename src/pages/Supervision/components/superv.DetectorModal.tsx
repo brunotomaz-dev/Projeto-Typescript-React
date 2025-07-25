@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import React, { useMemo, useState } from 'react';
 import { Button, Form, FormSelect, Modal, Stack } from 'react-bootstrap';
 import { DETECTORES_ID } from '../../../helpers/constants';
@@ -14,6 +14,7 @@ const DetectorModal: React.FC = () => {
   /* ------------------------------------------------- Redux ------------------------------------------------- */
   const dispatch = useAppDispatch();
   const { detectorModalVisible } = useAppSelector((state) => state.supervision.detectorModal);
+  const { userName, fullName } = useAppSelector((state) => state.user);
 
   /* ------------------------------------------------- Hooks ------------------------------------------------- */
   const { productionDetails } = useProductionQuery('supervision');
@@ -41,6 +42,7 @@ const DetectorModal: React.FC = () => {
     peso_baixo_porcentagem: 0,
     metal_detectado: 0,
     produto: '',
+    usuario: userName,
   };
 
   const [form, setForm] = useState<iDetectorData>(formDefault);
@@ -143,22 +145,38 @@ const DetectorModal: React.FC = () => {
         <Modal.Body className='text-dark bg-warning-subtle'>
           <p>Você tem certeza que deseja salvar os dados do detector?</p>
           <ul>
-            <li>Data: {format(form.data_registro, 'dd/MM/yyyy')}</li>
+            <li>Data: {format(parseISO(form.data_registro), 'dd/MM/yyyy')}</li>
+            <li>Hora: {form.hora_registro}</li>
             <li>Produto: {form.produto}</li>
             <li>Detector ID: {form.detector_id}</li>
             <li>Turno: {form.turno}</li>
             <hr />
-            <li>Peso Alto Bandejas: {form.peso_alto_bandejas} gr</li>
-            <li>Peso ok Bandejas: {form.peso_ok_bandejas} gr</li>
-            <li>Peso Baixo Bandejas: {form.peso_baixo_bandejas} gr</li>
+            <li>
+              <strong>Quantidade de Bandejas</strong>
+            </li>
+            <li>Peso Alto: {form.peso_alto_bandejas}</li>
+            <li>Peso ok: {form.peso_ok_bandejas}</li>
+            <li>Peso Baixo: {form.peso_baixo_bandejas}</li>
             <hr />
-            <li>Peso Alto Média: {form.peso_alto_media} gr</li>
-            <li>Peso ok Média: {form.peso_ok_media} gr</li>
-            <li>Peso Baixo Média: {form.peso_baixo_media} gr</li>
+            <li>
+              <strong>Média de Pesos</strong>
+            </li>
+            <li>Peso Alto: {form.peso_alto_media} gr</li>
+            <li>Peso ok: {form.peso_ok_media} gr</li>
+            <li>Peso Baixo: {form.peso_baixo_media} gr</li>
             <hr />
-            <li>Peso Alto %: {form.peso_alto_porcentagem}%</li>
-            <li>Peso ok %: {form.peso_ok_porcentagem}%</li>
-            <li>Peso Baixo %: {form.peso_baixo_porcentagem}%</li>
+            <li>
+              <strong>Porcentagens</strong>
+            </li>
+            <li>Peso Alto: {form.peso_alto_porcentagem}%</li>
+            <li>Peso ok: {form.peso_ok_porcentagem}%</li>
+            <li>Peso Baixo: {form.peso_baixo_porcentagem}%</li>
+            <hr />
+            <li>
+              <strong>Metal Detectado</strong>
+            </li>
+            <li>Quantidade: {form.metal_detectado}</li>
+            <li>Registrado por: {fullName}</li>
           </ul>
         </Modal.Body>
         <Modal.Footer className='bg-warning-subtle'>
@@ -262,7 +280,7 @@ const DetectorModal: React.FC = () => {
                 <Stack gap={3} className='mb-3' direction='horizontal'>
                   {['bandejas', 'media', 'porcentagem'].map((type) => (
                     <Form.Group className='mb-3' key={`${status}-${type}`}>
-                      <Form.Label>{`Peso ${status} ${type}`}</Form.Label>
+                      <Form.Label>{`${type.charAt(0).toUpperCase() + type.slice(1)}`}</Form.Label>
                       <Form.Control
                         type='number'
                         name={`peso_${status}_${type}`}
